@@ -1,3 +1,19 @@
+"""
+global_properties.py
+
+Reports some global properties of the simulation, including grid structure, 
+number and mass of dark matter particles, and simple halo information. Will
+print this information to console and write an output file.
+
+Takes 2 required and 1 optional parameter.
+1 - Location of the simulation output. Can be relative to the working directory
+    where this code was called from, or an absolute path.
+2 - Directory containing the outputs of the halo finder run on the simulation
+    given in argument 1. Can be relative or absolute.
+3 - Optional argument. Must be "clobber" if included. This will bypass the 
+    check whether we overwrite a previously existing output file.
+"""
+
 import sys
 import os
 
@@ -22,6 +38,10 @@ ad = ds.all_data()
 name = ds_loc.replace(os.sep, "_").replace(".art", "")
 name = name.lstrip("_")
 
+# Check that the third argument is correct
+if len(sys.argv) == 4 and sys.argv[3] != "clobber":
+    raise ValueError("Argument 3 (if included), must be 'clobber'")
+
 # get the location of where to write the file.
 file_dir = "/u/home/gillenb/analysis/snapshot_checks/"
 file_path = file_dir + "summary_" + name + ".txt"
@@ -30,22 +50,24 @@ print("Output being written to:")
 print(file_path)
 
 # see if there is an existing file here that we don't want to replace.
-if os.path.isfile(file_path):
-    good = False
-    while not good:
-        choice = input("This output file already exists. Overwrite? (y/n): ")
-        if choice.lower() in ["y", "n"]:
-            good = True
-        else:
-            print("Choose 'y' or 'n'")
+if "clobber" not in sys.argv:
+    if os.path.isfile(file_path):
+        good = False
+        while not good:
+            choice = input("This output file already exists. "
+                           "Overwrite? (y/n): ")
+            if choice.lower() in ["y", "n"]:
+                good = True
+            else:
+                print("Choose 'y' or 'n'")
 
-    if choice.lower() == "n":
-        # don't overwrite, so the code ends
-        print("File won't be overwritten, so nothing will be done.")
-        exit()
-    # Don't need to do anything here inside this block if the user does 
-    # want to overwrite, since the file created later will automatically 
-    # overwrite any existing file.
+        if choice.lower() == "n":
+            # don't overwrite, so the code ends
+            print("File won't be overwritten, so nothing will be done.")
+            exit()
+        # Don't need to do anything here inside this block if the user does 
+        # want to overwrite, since the file created later will automatically 
+        # overwrite any existing file.
 # open the file
 out_file = open(file_path, "w")
 
