@@ -2,10 +2,12 @@ import sys
 import os
 
 import yt
+from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
 import numpy as np
-import matplotlib
 
 import betterplotlib as bpl
+from matplotlib.patches import Circle
+
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 bpl.presentation_style()
 bpl.presentation_style()  # for some reason this needs to be there twice
@@ -14,10 +16,10 @@ def print_and_write(info, file_obj):
     file_obj.write(info + "\n")
     print(info)
 
-ds_loc = sys.argv[1]
+ds_loc = os.path.abspath(sys.argv[1])
 ds = yt.load(ds_loc)
 ad = ds.all_data()
-name = os.path.abspath(ds_loc).replace(os.sep, "_").replace(".art", "")
+name = ds_loc.replace(os.sep, "_").replace(".art", "")
 name = name.lstrip("_")
 
 # get the location of where to write the file.
@@ -132,9 +134,6 @@ for level in range(len(masses)):
 # =========================================================================
 grid_plot_name = plots_dir + "grid_idxs_{}.png".format(name)
 n_body_plot_name = plots_dir + "n_body_{}.png".format(name)
-print_and_write("\nPlots will be saved to:", out_file)
-print_and_write(grid_plot_name, out_file)
-print_and_write(n_body_plot_name, out_file)
 
 n_body_field = ("deposit", "N-BODY_density")
 grid_level_field = ('index', 'grid_level')
@@ -149,5 +148,119 @@ grid_plot.save(grid_plot_name)
 n_body_plot = yt.SlicePlot(ds, normal=[1, 0, 0], fields=n_body_field, 
                            width=(15, "Mpccm"))
 n_body_plot.save(n_body_plot_name)
+
+# =========================================================================
+#         
+# Halo analysis - printing app
+# 
+# =========================================================================
+hc_dir = os.path.abspath(sys.argv[2]) + os.sep
+
+with open(hc_dir + "datasets.txt") as datasets:
+    found = False
+    for row in datasets:
+        if row.startswith("#"):
+            continue
+        this_ds_name = row.split()[0]
+        idx = row.split()[1]
+        
+        # parse the filename to get the scale factor
+        this_a = float(this_ds_name.rstrip(".art")[-6:])
+        
+        # compare to the scale factor in our simulation.
+        if np.isclose(a, this_a, atol=0.0001):
+            found = True
+            break
+    
+    if not found:
+        raise ValueError("Rockstar halo output not found")
+# now we have the right index, so we can load the file
+halo_file = hc_dir + "halos_{}.0.bin".format(idx)
+ds_halos = yt.load(halo_file)
+
+# Then create the halo catalogs
+hc = HaloCatalog(halos_ds=ds_halos, data_ds=ds, output_dir="./")
+hc.create(save_catalog=False)
+
+# make better names for the quantities in the halo catalog
+quantity_names = {"virial_radius": "Virial Radius", 
+                  "particle_position_x": "Position X", 
+                  "particle_position_y": "Position Y", 
+                  "particle_position_z": "Position Z",
+                  "particle_mass": "Virial Mass"}
+
+# then print the information for the top 5 halos in the catalog
+# First we have to find these top 5 halos. 
+halo_masses = yt.YTArray([item["particle_mass"] for item in hc.catalog])
+# We get the indices that sort it. The reversing there makes the biggest halos
+# first, like we want.
+rank_idxs = np.argsort(halo_masses)[::-1]
+for rank in range(1, 6):
+    print_and_write("\nRank {} halo:".format(rank), out_file)
+    idx = rank_idxs[rank - 1]  # since rank starts at 1, but indexing at zero
+    halo = hc.catalog[idx]
+    for quantity in halo:   
+        if quantity not in quantity_names:  
+            continue  # skip this quantity
+        q_name = quantity_names[quantity]
+        if q_name == "Virial Radius" or "Position" in q_name:
+            value = halo[quantity].to("kpc")
+            print_and_write("{}: {:<7.3f}".format(q_name, value), 
+                            out_file)
+        elif "Mass" in q_name:
+            value = halo[quantity].to("Msun")
+            print_and_write("{}: {:<2.7e}".format(q_name, value), 
+                            out_file)
+        
+# Then print the separation of the two biggest halos
+halo_1 = hc.catalog[rank_idxs[0]]
+halo_2 = hc.catalog[rank_idxs[1]]
+dx = halo_1["particle_position_x"] - halo_2["particle_position_x"]
+dy = halo_1["particle_position_y"] - halo_2["particle_position_y"]
+dz = halo_1["particle_position_z"] - halo_2["particle_position_z"]
+dist = np.sqrt(dx**2 + dy**2 + dz**2).to("kpc")
+print_and_write("\nSeparation of two largest halos: {:.2f}".format(dist), 
+                out_file)
+
+# Then do a plot of the halos
+halos_plot_name = plots_dir + "halos_{}.png".format(name)
+def add_virial_radii(hc, axis_1, axis_2, ax):
+    for halo in hc.catalog:
+        if halo["particle_mass"].to("Msun").value > 10**10:
+            coord_1 = halo["particle_position_{}".format(axis_1)].to("Mpc").value
+            coord_2 = halo["particle_position_{}".format(axis_2)].to("Mpc").value
+            radius = halo["virial_radius"].to("Mpc").value
+            c = Circle((coord_1, coord_2), radius, 
+                       fill=False, clip_on=True, ls="--")
+            ax.add_artist(c)
+
+x = ad[('N-BODY_0', 'POSITION_X')].to("Mpc").value
+y = ad[('N-BODY_0', 'POSITION_Y')].to("Mpc").value
+z = ad[('N-BODY_0', 'POSITION_Z')].to("Mpc").value
+
+fig, axs = bpl.subplots(ncols=3, figsize=[15, 5])
+ax_xy, ax_xz, ax_yz = axs.flatten()
+
+ax_xy.scatter(x[::10000], y[::10000], s=10)
+add_virial_radii(hc, "x", "y", ax_xy)
+ax_xy.add_labels("X [Mpc]", "Y [Mpc]")
+ax_xy.equal_scale()
+
+ax_xz.scatter(x[::10000], z[::10000], s=10)
+add_virial_radii(hc, "x", "z", ax_xz)
+ax_xz.add_labels("X [Mpc]", "Z [Mpc]")
+ax_xz.equal_scale()
+
+ax_yz.scatter(y[::10000], z[::10000], s=10)
+add_virial_radii(hc, "y", "z", ax_yz)
+ax_yz.add_labels("Y [Mpc]", "Z [Mpc]")
+ax_yz.equal_scale()
+
+fig.savefig(halos_plot_name)
+
+print_and_write("\nPlots will be saved to:", out_file)
+print_and_write(grid_plot_name, out_file)
+print_and_write(n_body_plot_name, out_file)
+print_and_write(halos_plot_name, out_file)
 
 out_file.close()
