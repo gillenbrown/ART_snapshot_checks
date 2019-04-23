@@ -8,10 +8,13 @@ print this information to console and write an output file.
 Takes 2 required and 1 optional parameter.
 1 - Location of the simulation output. Can be relative to the working directory
     where this code was called from, or an absolute path.
-2 - Directory containing the outputs of the halo finder run on the simulation
-    given in argument 1. Can be relative or absolute.
+2 - Location of the halo finder outputs from ROCKSTAR. This file should be the
+    *.0.bin file. Can be relative or absolute.
 3 - Optional argument. Must be "clobber" if included. This will bypass the 
     check whether we overwrite a previously existing output file.
+4 - Optional argument. Must be "silent" if included. Will print info and 
+    write it to the file if this is not included. Will only write to file
+    if this is included.
 """
 
 import sys
@@ -28,26 +31,33 @@ yt.funcs.mylog.setLevel(50)  # ignore yt's output
 bpl.presentation_style()
 bpl.presentation_style()  # for some reason this needs to be there twice
 
+# Check that the third argument is correct
+if len(sys.argv) == 4 and sys.argv[3] not in ["clobber", "silent"]:
+    raise ValueError("Argument 3 (if used), must be 'clobber' or 'silent'")
+if "silent" in sys.argv:
+    silent = True
+else:
+    silent = False
+
 def print_and_write(info, file_obj):
-    file_obj.write(info + "\n")
-    print(info)
+    if file_obj is not None:
+        file_obj.write(info + "\n")
+    if not silent:
+        print(info)
 
 ds_loc = os.path.abspath(sys.argv[1])
+scale_factor = ds_loc[-10:-4]
 ds = yt.load(ds_loc)
 ad = ds.all_data()
-name = ds_loc.replace(os.sep, "_").replace(".art", "")
-name = name.lstrip("_")
-
-# Check that the third argument is correct
-if len(sys.argv) == 4 and sys.argv[3] != "clobber":
-    raise ValueError("Argument 3 (if included), must be 'clobber'")
 
 # get the location of where to write the file.
-file_dir = "/u/home/gillenb/analysis/snapshot_checks/"
-file_path = file_dir + "summary_" + name + ".txt"
-plots_dir = file_dir + "plots/"
-print("Output being written to:")
-print(file_path)
+sim_dir = os.path.dirname(ds_loc) + os.sep
+file_dir = sim_dir.replace("/out/", "/checks/")
+file_path = file_dir + "summary_a" + scale_factor + ".txt"
+plots_dir = sim_dir.replace("/out/", "/plots/")
+
+print_and_write("Output being written to:", None)
+print_and_write(file_path, None)
 
 # see if there is an existing file here that we don't want to replace.
 if "clobber" not in sys.argv:
@@ -76,7 +86,7 @@ out_file = open(file_path, "w")
 # Basic information
 # 
 # =============================================================================
-print()  # no write since this is just for console formatting
+print_and_write("", None)  # no write since this is just for console formatting
 print_and_write("Simulation location:", out_file)
 print_and_write(ds_loc, out_file)
 
@@ -101,7 +111,7 @@ min_cell_size = np.min(cell_sizes)
 max_cell_size = np.max(cell_sizes)
 base_grid_size = np.log2(box_size / max_cell_size)
 
-print_and_write("\nGrid Structure\n=============", out_file)
+print_and_write("\nGrid Structure\n==============", out_file)
 print_and_write("box size: {:.3f}".format(box_size), out_file)
 print_and_write("base grid size: {:.3f}".format(base_grid_size), out_file)
 print_and_write("total cells: {:,}".format(total_cells), out_file)
@@ -154,8 +164,8 @@ for level in range(len(masses)):
 # Plots
 # 
 # =========================================================================
-grid_plot_name = plots_dir + "grid_idxs_{}.png".format(name)
-n_body_plot_name = plots_dir + "n_body_{}.png".format(name)
+grid_plot_name = plots_dir + "grid_idxs_{}.png".format(scale_factor)
+n_body_plot_name = plots_dir + "n_body_{}.png".format(scale_factor)
 
 n_body_field = ("deposit", "N-BODY_density")
 grid_level_field = ('index', 'grid_level')
@@ -176,28 +186,7 @@ n_body_plot.save(n_body_plot_name)
 # Halo analysis - printing app
 # 
 # =========================================================================
-hc_dir = os.path.abspath(sys.argv[2]) + os.sep
-
-with open(hc_dir + "datasets.txt") as datasets:
-    found = False
-    for row in datasets:
-        if row.startswith("#"):
-            continue
-        this_ds_name = row.split()[0]
-        idx = row.split()[1]
-        
-        # parse the filename to get the scale factor
-        this_a = float(this_ds_name.rstrip(".art")[-6:])
-        
-        # compare to the scale factor in our simulation.
-        if np.isclose(a, this_a, atol=0.0001):
-            found = True
-            break
-    
-    if not found:
-        raise ValueError("Rockstar halo output not found")
-# now we have the right index, so we can load the file
-halo_file = hc_dir + "halos_{}.0.bin".format(idx)
+halo_file = os.path.abspath(sys.argv[2])
 ds_halos = yt.load(halo_file)
 
 # Then create the halo catalogs
@@ -214,10 +203,16 @@ quantity_names = {"virial_radius": "Virial Radius",
 # then print the information for the top 5 halos in the catalog
 # First we have to find these top 5 halos. 
 halo_masses = yt.YTArray([item["particle_mass"] for item in hc.catalog])
+# check that we have any halos at all. If not, we can exit. This can happen
+# for early outputs where nothing has collapsed yet.
+if len(halo_masses) == 0:
+    print_and_write("No halos at this redshift", out_file)
+    out_file.close()
+    exit()
 # We get the indices that sort it. The reversing there makes the biggest halos
 # first, like we want.
 rank_idxs = np.argsort(halo_masses)[::-1]
-for rank in range(1, 6):
+for rank in range(1, min([len(halo_masses), 6])):
     print_and_write("\nRank {} halo:".format(rank), out_file)
     idx = rank_idxs[rank - 1]  # since rank starts at 1, but indexing at zero
     halo = hc.catalog[idx]
@@ -245,7 +240,7 @@ print_and_write("\nSeparation of two largest halos: {:.2f}".format(dist),
                 out_file)
 
 # Then do a plot of the halos
-halos_plot_name = plots_dir + "halos_{}.png".format(name)
+halos_plot_name = plots_dir + "halos_{}.png".format(scale_factor)
 def add_virial_radii(hc, axis_1, axis_2, ax):
     for halo in hc.catalog:
         if halo["particle_mass"].to("Msun").value > 10**10:
