@@ -3,10 +3,14 @@
 #  Code locations
 # 
 # ------------------------------------------------------------------------------
-halo_finding_script = /u/home/gillenb/code/mine/halo_scripts/run_rockstar.sh
-rename_script = /u/home/gillenb/code/mine/ART_snapshot_checks/rename_halos.py
-summary_script = /u/home/gillenb/code/mine/ART_snapshot_checks/global_properties.py
+halo_finding_script = ./run_rockstar.sh
+rename_script = ./rename_halos.py
+summary_script = ./global_properties.py
 tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
+tree_dir = /u/home/gillenb/code/not_mine/consistent-trees/
+read_tree_dir = ./read_tree
+read_tree_exe = $(read_tree_dir)/halo_history
+read_tree_src = $(read_tree_dir)/halo_history.c
 
 # ------------------------------------------------------------------------------
 #
@@ -14,7 +18,8 @@ tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_c
 # 
 # ------------------------------------------------------------------------------
 runs_home = /u/home/gillenb/art_runs/runs/
-sim_dirs = $(runs_home)shangrila/nbody/run/outputs/rj \
+sim_dirs = $(runs_home)shangrila/test_mine/run \
+           $(runs_home)shangrila/nbody/run/outputs/rj \
            $(runs_home)shangrila/nbody/run/outputs/tl \
            $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 \
            $(runs_home)pleiades/nbody/intel/br_1.1.28_pleiades_no_refine \
@@ -32,11 +37,11 @@ sim_dirs = $(runs_home)shangrila/nbody/run/outputs/rj \
 #  Directories for each simulation, where outputs will be stored
 # 
 # ------------------------------------------------------------------------------
-sim_out_dirs = $(foreach dir, $(sim_dirs), $(dir)/out/)
-sim_rockstar_halos_dirs = $(foreach dir, $(sim_dirs), $(dir)/rockstar_halos/)
-sim_human_halos_dirs = $(foreach dir, $(sim_dirs), $(dir)/halos/)
-sim_checks_dirs = $(foreach dir, $(sim_dirs), $(dir)/checks/)
-sim_plots_dirs = $(foreach dir, $(sim_dirs), $(dir)/plots/)
+sim_out_dirs = $(foreach dir,$(sim_dirs),$(dir)/out)
+sim_rockstar_halos_dirs = $(foreach dir,$(sim_dirs),$(dir)/rockstar_halos)
+sim_human_halos_dirs = $(foreach dir,$(sim_dirs),$(dir)/halos)
+sim_checks_dirs = $(foreach dir,$(sim_dirs),$(dir)/checks)
+sim_plots_dirs = $(foreach dir,$(sim_dirs),$(dir)/plots)
 all_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos_dirs) $(sim_plots_dirs)
 
 # ------------------------------------------------------------------------------
@@ -44,11 +49,11 @@ all_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halo
 #  List of all simulation outputs and their corresponding halo catalogs
 # 
 # ------------------------------------------------------------------------------
-snapshots = $(foreach dir, $(sim_out_dirs), $(wildcard $(dir)*_a*.art))
+snapshots = $(foreach dir,$(sim_out_dirs),$(wildcard $(dir)/*_a*.art))
 # Parse the snapshot names into halo catalogs 
 # replace the directory and suffix
-sim_to_halo = $(subst .art,.0.bin, $(subst out/continuous,halos/halos, $(1)))
-halos_catalogs = $(foreach snapshot, $(snapshots), $(call sim_to_halo, $(snapshot)))
+sim_to_halo = $(subst .art,.0.bin,$(subst out/continuous,halos/halos,$(1)))
+halos_catalogs = $(foreach snapshot,$(snapshots),$(call sim_to_halo,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
@@ -58,7 +63,7 @@ halos_catalogs = $(foreach snapshot, $(snapshots), $(call sim_to_halo, $(snapsho
 # A sentinel file just shows that rockstar has run for a given set of 
 # simulation outputs. I do it this way since we run ROCKSTAR on all outputs
 # at once, and the sentinel file is an easier way to show that dependency
-rockstar_sentinels = $(foreach dir, $(sim_rockstar_halos_dirs), $(dir)sentinel.txt)
+rockstar_sentinels = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/sentinel.txt)
 # Function to get all simulations that are prerequisites to this sentinel
 sentinel_to_sims = $(wildcard $(subst rockstar_halos/sentinel.txt,out/,$(1))*_a*.art)
 sentinel_to_out_dir = $(subst rockstar_halos/sentinel.txt,out/,$(1))
@@ -81,26 +86,39 @@ halo_to_sentinel = $(call words_to_path,$(call halo_words_to_sentinel_words,$(ca
 #  Summary files
 # 
 # ------------------------------------------------------------------------------
-sim_to_summary = $(subst .art,.txt, $(subst out/continuous,checks/summary, $(1)))
-summary_to_sim = $(subst .txt,.art, $(subst checks/summary,out/continuous, $(1)))
-summary_to_halo = $(subst .txt,.0.bin, $(subst checks/summary,halos/halos, $(1)))
-summaries = $(foreach snapshot, $(snapshots), $(call sim_to_summary, $(snapshot)))
+sim_to_summary = $(subst .art,.txt,$(subst out/continuous,checks/summary, $(1)))
+summary_to_sim = $(subst .txt,.art,$(subst checks/summary,out/continuous, $(1)))
+summary_to_halo = $(subst .txt,.0.bin,$(subst checks/summary,halos/halos, $(1)))
+summaries = $(foreach snapshot,$(snapshots),$(call sim_to_summary,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
 #  Consistent trees
 # 
 # ------------------------------------------------------------------------------
-tree_cfgs = $(foreach dir, $(sim_rockstar_halos_dirs), $(dir)/outputs/merger_tree.cfg)
+# first are the config files
+tree_cfgs = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/outputs/merger_tree.cfg)
 tree_cfg_to_rockstar_cfg = $(subst outputs/merger_tree.cfg,rockstar.cfg,$(1))
 tree_cfg_to_sentinel = $(subst outputs/merger_tree.cfg,sentinel.txt,$(1))
 
+# then the actual halo trees
+trees = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/trees/tree_0_0_0.dat)
+tree_to_tree_cfg = $(subst trees/tree_0_0_0.dat,outputs/merger_tree.cfg,$(1))
+
+# ------------------------------------------------------------------------------
+#
+#  Parsing merger trees
+# 
+# ------------------------------------------------------------------------------
+merger_histories = $(foreach dir,$(sim_checks_dirs),$(dir)/mergers.txt)
+# need to get the trees that the sim should parse
+merger_to_tree = $(subst checks/mergers.txt,rockstar_halos/trees/tree_0_0_0.dat,$(1))
 # ------------------------------------------------------------------------------
 #
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(all_directories) $(summaries)
+all: $(all_directories) $(trees) $(merger_histories)
 
 # Make directories if they don't exist
 $(all_directories):
@@ -128,4 +146,16 @@ $(summaries): %: $$(call summary_to_halo, %) $(summary_script)
 $(tree_cfgs): %: $$(call tree_cfg_to_sentinel,%)
 	perl $(tree_config_script) $(call tree_cfg_to_rockstar_cfg,$@)
 
+# Then build the merger trees
+.SECONDEXPANSION:
+$(trees): %: $$(call tree_to_tree_cfg,%)
+	cd $(tree_dir) && perl do_merger_tree.pl $<
 
+# Build the merger tree reading code
+$(read_tree_exe): $(read_tree_src)
+	cd $(read_tree_dir) && make
+
+# Build the accretion history output files
+.SECONDEXPANSION:
+$(merger_histories): %: $$(call merger_to_tree,%) $(read_tree_exe)
+	$(read_tree_exe) $(call merger_to_tree,$@)
