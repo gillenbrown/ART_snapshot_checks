@@ -251,9 +251,16 @@ def add_virial_radii(hc, axis_1, axis_2, ax):
                        fill=False, clip_on=True, ls="--")
             ax.add_artist(c)
 
-x = ad[('N-BODY_0', 'POSITION_X')].to("Mpc").value
-y = ad[('N-BODY_0', 'POSITION_Y')].to("Mpc").value
-z = ad[('N-BODY_0', 'POSITION_Z')].to("Mpc").value
+# get the N-body particle locations. These are different in the old and new
+# simulations, so we have to check 
+try:
+    x = ad[('N-BODY_0', 'POSITION_X')].to("Mpc").value
+    y = ad[('N-BODY_0', 'POSITION_Y')].to("Mpc").value
+    z = ad[('N-BODY_0', 'POSITION_Z')].to("Mpc").value
+except yt.utilities.exceptions.YTFieldNotFound:  
+    x = ad[('N-BODY', 'POSITION_X')].to("Mpc").value
+    y = ad[('N-BODY', 'POSITION_Y')].to("Mpc").value
+    z = ad[('N-BODY', 'POSITION_Z')].to("Mpc").value
 
 fig, axs = bpl.subplots(ncols=3, figsize=[15, 5])
 ax_xy, ax_xz, ax_yz = axs.flatten()

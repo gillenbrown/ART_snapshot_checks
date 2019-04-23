@@ -14,8 +14,7 @@ tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_c
 # 
 # ------------------------------------------------------------------------------
 runs_home = /u/home/gillenb/art_runs/runs/
-sim_dirs = $(runs_home)shangrila/test_mine/run \
-           $(runs_home)shangrila/nbody/run/outputs/rj \
+sim_dirs = $(runs_home)shangrila/nbody/run/outputs/rj \
            $(runs_home)shangrila/nbody/run/outputs/tl \
            $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 \
            $(runs_home)pleiades/nbody/intel/br_1.1.28_pleiades_no_refine \
@@ -127,4 +126,6 @@ $(summaries): %: $$(call summary_to_halo, %) $(summary_script)
 # Make the consistent trees config files
 .SECONDEXPANSION:
 $(tree_cfgs): %: $$(call tree_cfg_to_sentinel,%)
-  perl $(tree_config_script) $(call tree_cfg_to_rockstar_cfg,$@)
+	perl $(tree_config_script) $(call tree_cfg_to_rockstar_cfg,$@)
+
+
