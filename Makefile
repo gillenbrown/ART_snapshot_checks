@@ -14,23 +14,27 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 
 # ------------------------------------------------------------------------------
 #
-#  Simulation outputs to run this on
+#  Simulation outputs to run this on: shangrila and Lou
 # 
 # ------------------------------------------------------------------------------
-runs_home = /u/home/gillenb/art_runs/runs/
-sim_dirs = $(runs_home)shangrila/test_mine/run \
-           $(runs_home)shangrila/nbody/run/outputs/rj \
-           $(runs_home)shangrila/nbody/run/outputs/tl \
-           $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 \
-           $(runs_home)pleiades/nbody/intel/br_1.1.28_pleiades_no_refine \
-           $(runs_home)pleiades/nbody/intel/br_2.1.28_pleiades_no_refine \
-           $(runs_home)pleiades/nbody/intel/br_4.1.28_pleiades_no_refine \
-           $(runs_home)pleiades/nbody/intel/br_8.1.28_pleiades_no_refine \
-           $(runs_home)pleiades/nbody/intel/br_8.1.28_electra_no_refine \
-           $(runs_home)pleiades/nbody/intel/br_8.2.14_pleiades_no_refine \
-           $(runs_home)pleiades/nbody/intel/br_production \
-           $(runs_home)pleiades/nbody/intel/rj_production \
-           $(runs_home)pleiades/nbody/intel/tl_production 
+#runs_home = /u/home/gillenb/art_runs/runs/
+#sim_dirs = $(runs_home)shangrila/test_mine/run \
+#           $(runs_home)shangrila/nbody/run/outputs/rj \
+#           $(runs_home)shangrila/nbody/run/outputs/tl \
+#           $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 \
+#           $(runs_home)pleiades/nbody/intel/br_1.1.28_pleiades_no_refine \
+#           $(runs_home)pleiades/nbody/intel/br_2.1.28_pleiades_no_refine \
+#           $(runs_home)pleiades/nbody/intel/br_4.1.28_pleiades_no_refine \
+#           $(runs_home)pleiades/nbody/intel/br_8.1.28_pleiades_no_refine \
+#           $(runs_home)pleiades/nbody/intel/br_8.1.28_electra_no_refine \
+#           $(runs_home)pleiades/nbody/intel/br_8.2.14_pleiades_no_refine \
+#           $(runs_home)pleiades/nbody/intel/br_production \
+#           $(runs_home)pleiades/nbody/intel/rj_production \
+#           $(runs_home)pleiades/nbody/intel/tl_production 
+runs_home = /u/gbrown12/art_runs/runs/nbody/intel/run/outputs/
+sim_dirs = $(runs_home)br_production \
+           $(runs_home)tl_production \
+           $(runs_home)rj_production
 
 # ------------------------------------------------------------------------------
 #
