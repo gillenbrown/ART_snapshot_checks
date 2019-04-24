@@ -129,6 +129,11 @@ $(all_directories):
 	mkdir $@
 
 # Rule to make the rockstar sentinel files
+# Phony target to allow us to make only the rockstar halos, for example on 
+# a PBS script where we don't want to waste computation on the serial aspects
+# that come later
+.PHONY: halos
+halos: $(rockstar_sentinels)
 # We run the script with parameters to the output directory and rockstar halo 
 # directory, plus the remove keyword to replace previous halo catalogs
 .SECONDEXPANSION:

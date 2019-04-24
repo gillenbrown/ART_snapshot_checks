@@ -5,13 +5,14 @@ import shutil
 import yt
 from yt.extensions.astro_analysis.halo_finding.rockstar.api import RockstarHaloFinder
 from yt.data_objects.particle_filters import add_particle_filter
+yt.funcs.mylog.setLevel(50)  # ignore yt's output
 yt.enable_parallelism()
 
 # format of sys.argv:
 # idx 0: name of script
 # ids 1: directory of simulation outputs to run halos on
 # idx 2: directory to store halo finding outputs in
-# idx 3: must be `remove` or not present
+# idx 3: must be `remove`, `silent` or not present
 
 # do error checking on root only.
 if yt.is_root():
@@ -60,8 +61,10 @@ if ('N-BODY_0', 'MASS') in ts[0].derived_field_list:
     particle_type = "N-BODY_0"
 else:
     particle_type = "N-BODY"
-    
-rh = RockstarHaloFinder(ts, num_readers=2, num_writers=3, outbase=out_dir,
+
+# Lou analysis machines have Skylake nodes with 20 cores. We have one master
+# process too.
+rh = RockstarHaloFinder(ts, num_readers=5, num_writers=14, outbase=out_dir,
                         particle_type=particle_type)
 rh.run()
 
