@@ -1,40 +1,54 @@
 # ------------------------------------------------------------------------------
 #
-#  Code locations
+#  Code locations - depend on the machine
+# 
+# ------------------------------------------------------------------------------
+tree_config_script_lou = /u/gbrown12/yt-conda/src/rockstar/scripts/gen_merger_cfg.pl
+tree_config_script_shangrila = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
+tree_dir_lou = /u/gbrown12/code/consistent-trees/
+tree_dir_shangrila = /u/home/gillenb/code/not_mine/consistent-trees/
+
+tree_config_script = $(tree_config_script_shangrila)
+tree_dir = $(tree_dir_shangrila)
+
+# ------------------------------------------------------------------------------
+#
+#  Code locations that are relative to this file
 # 
 # ------------------------------------------------------------------------------
 halo_finding_script = ./run_rockstar.sh
 rename_script = ./rename_halos.py
 summary_script = ./global_properties.py
-tree_config_script = /u/gbrown12/yt-conda/src/rockstar/scripts/gen_merger_cfg.pl
-tree_dir = /u/gbrown12/code/consistent-trees/
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
 read_tree_src = $(read_tree_dir)/halo_history.c
 
 # ------------------------------------------------------------------------------
 #
-#  Simulation outputs to run this on: shangrila and Lou
+#  Simulation outputs to run this on - depend on the machine
 # 
 # ------------------------------------------------------------------------------
-#runs_home = /u/home/gillenb/art_runs/runs/
-#sim_dirs = $(runs_home)shangrila/test_mine/run \
-#           $(runs_home)shangrila/nbody/run/outputs/rj \
-#           $(runs_home)shangrila/nbody/run/outputs/tl \
-#           $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 \
-#           $(runs_home)pleiades/nbody/intel/br_1.1.28_pleiades_no_refine \
-#           $(runs_home)pleiades/nbody/intel/br_2.1.28_pleiades_no_refine \
-#           $(runs_home)pleiades/nbody/intel/br_4.1.28_pleiades_no_refine \
-#           $(runs_home)pleiades/nbody/intel/br_8.1.28_pleiades_no_refine \
-#           $(runs_home)pleiades/nbody/intel/br_8.1.28_electra_no_refine \
-#           $(runs_home)pleiades/nbody/intel/br_8.2.14_pleiades_no_refine \
-#           $(runs_home)pleiades/nbody/intel/br_production \
-#           $(runs_home)pleiades/nbody/intel/rj_production \
-#           $(runs_home)pleiades/nbody/intel/tl_production 
-runs_home = /u/gbrown12/art_runs/runs/nbody/intel/run/outputs/
-sim_dirs = $(runs_home)br_production \
-           $(runs_home)tl_production \
-           $(runs_home)rj_production 
+runs_home_shangrila = /u/home/gillenb/art_runs/runs/
+sim_dirs_shangrila = $(runs_home_shangrila)shangrila/test_mine/run \
+                     $(runs_home_shangrila)shangrila/nbody/run/outputs/rj \
+         			 $(runs_home_shangrila)shangrila/nbody/run/outputs/tl \
+       			     $(runs_home_shangrila)shangrila/nbody/run/outputs/br_no_refine_1 \
+         			 $(runs_home_shangrila)pleiades/nbody/intel/br_1.1.28_pleiades_no_refine \
+        		     $(runs_home_shangrila)pleiades/nbody/intel/br_2.1.28_pleiades_no_refine \
+         			 $(runs_home_shangrila)pleiades/nbody/intel/br_4.1.28_pleiades_no_refine \
+         			 $(runs_home_shangrila)pleiades/nbody/intel/br_8.1.28_pleiades_no_refine \
+         			 $(runs_home_shangrila)pleiades/nbody/intel/br_8.1.28_electra_no_refine \
+         			 $(runs_home_shangrila)pleiades/nbody/intel/br_8.2.14_pleiades_no_refine \
+         			 $(runs_home_shangrila)pleiades/nbody/intel/br_production \
+         			 $(runs_home_shangrila)pleiades/nbody/intel/rj_production \
+         			 $(runs_home_shangrila)pleiades/nbody/intel/tl_production 
+runs_home_lou = /u/gbrown12/art_runs/runs/nbody/intel/run/outputs/
+sim_dirs_lou = $(runs_home_lou)br_production \
+          	   $(runs_home_lou)tl_production \
+         	   $(runs_home_lou)rj_production 
+
+runs_home = $(runs_home_shangrila)
+sim_dirs = $(sim_dirs_shangrila)
 
 # ------------------------------------------------------------------------------
 #
@@ -114,15 +128,17 @@ tree_to_tree_cfg = $(subst trees/tree_0_0_0.dat,outputs/merger_tree.cfg,$(1))
 #  Parsing merger trees
 # 
 # ------------------------------------------------------------------------------
-merger_histories = $(foreach dir,$(sim_checks_dirs),$(dir)/mergers.txt)
+# Here I again use a sentinel file, since there will be multiple files created
+# by the one C file:
+merger_sentinel = $(foreach dir,$(sim_checks_dirs),$(dir)/merger_sentinel.txt)
 # need to get the trees that the sim should parse
-merger_to_tree = $(subst checks/mergers.txt,rockstar_halos/trees/tree_0_0_0.dat,$(1))
+merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_0_0.dat,$(1))
 # ------------------------------------------------------------------------------
 #
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(all_directories) $(trees) $(merger_histories)
+all: $(all_directories) $(halos_catalogs) $(summaries) $(merger_sentinel)
 
 # Make directories if they don't exist
 $(all_directories):
@@ -166,5 +182,5 @@ $(read_tree_exe): $(read_tree_src)
 
 # Build the accretion history output files
 .SECONDEXPANSION:
-$(merger_histories): %: $$(call merger_to_tree,%) $(read_tree_exe)
-	$(read_tree_exe) $(call merger_to_tree,$@)
+$(merger_sentinel): %: $$(call merger_to_tree,%) $(read_tree_exe)
+	$(read_tree_exe) $(call merger_to_tree,$@) && touch $@
