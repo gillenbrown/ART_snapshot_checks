@@ -64,7 +64,7 @@ else:
 
 # Lou analysis machines have Skylake nodes with 20 cores. We have one master
 # process too.
-rh = RockstarHaloFinder(ts, num_readers=5, num_writers=14, outbase=out_dir,
+rh = RockstarHaloFinder(ts, num_readers=2, num_writers=17, outbase=out_dir,
                         particle_type=particle_type)
 rh.run()
 

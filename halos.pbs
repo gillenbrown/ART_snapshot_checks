@@ -1,0 +1,22 @@
+#PBS -S /bin/bash
+#PBS -N rockstar
+#PBS -l select=1:ncpus=20
+#PBS -l walltime=48:00:00
+#PBS -q ldan
+#PBS -r n
+#PBS -M gillenb@umich.edu
+#PBS -m abe
+#PBS -j oe
+#PBS -l site=needed=/u/gbrown12/
+
+source ~/.bashrc
+
+module purge
+module load mpi-sgi/mpt
+
+cd $PBS_O_WORKDIR
+
+export MPI_LAUNCH_TIMEOUT=120
+export SEVERAL_TRIES_MAXTIME=130
+
+make halos &> $PBS_JOBNAME.stdout.$PBS_JOBID

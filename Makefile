@@ -6,8 +6,8 @@
 halo_finding_script = ./run_rockstar.sh
 rename_script = ./rename_halos.py
 summary_script = ./global_properties.py
-tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
-tree_dir = /u/home/gillenb/code/not_mine/consistent-trees/
+tree_config_script = /u/gbrown12/yt-conda/src/rockstar/scripts/gen_merger_cfg.pl
+tree_dir = /u/gbrown12/code/consistent-trees/
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
 read_tree_src = $(read_tree_dir)/halo_history.c
@@ -34,7 +34,7 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 runs_home = /u/gbrown12/art_runs/runs/nbody/intel/run/outputs/
 sim_dirs = $(runs_home)br_production \
            $(runs_home)tl_production \
-           $(runs_home)rj_production
+           $(runs_home)rj_production 
 
 # ------------------------------------------------------------------------------
 #
