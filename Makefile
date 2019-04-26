@@ -130,7 +130,7 @@ tree_to_tree_cfg = $(subst trees/tree_0_0_0.dat,outputs/merger_tree.cfg,$(1))
 # ------------------------------------------------------------------------------
 # Here I again use a sentinel file, since there will be multiple files created
 # by the one C file:
-merger_sentinel = $(foreach dir,$(sim_checks_dirs),$(dir)/merger_sentinel.txt)
+merger_sentinels = $(foreach dir,$(sim_checks_dirs),$(dir)/merger_sentinel.txt)
 # need to get the trees that the sim should parse
 merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_0_0.dat,$(1))
 # ------------------------------------------------------------------------------
@@ -138,7 +138,7 @@ merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(all_directories) $(halos_catalogs) $(summaries) $(merger_sentinel)
+all: $(all_directories) $(halos_catalogs) $(summaries) $(merger_sentinels)
 
 # Make directories if they don't exist
 $(all_directories):
@@ -182,5 +182,5 @@ $(read_tree_exe): $(read_tree_src)
 
 # Build the accretion history output files
 .SECONDEXPANSION:
-$(merger_sentinel): %: $$(call merger_to_tree,%) $(read_tree_exe)
+$(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 	$(read_tree_exe) $(call merger_to_tree,$@) && touch $@
