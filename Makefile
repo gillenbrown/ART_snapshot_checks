@@ -18,7 +18,8 @@ tree_dir = $(tree_dir_lou)
 # ------------------------------------------------------------------------------
 halo_finding_script = ./run_rockstar.sh
 rename_script = ./rename_halos.py
-summary_script = ./global_properties.py
+summary_nbody_script = ./summary_nbody.py
+summary_metal_script = ./summary_metals.py
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
 read_tree_src = $(read_tree_dir)/halo_history.c
@@ -29,18 +30,24 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 # 
 # ------------------------------------------------------------------------------
 runs_home_shangrila = /u/home/gillenb/art_runs/runs/
-sim_dirs_shangrila = $(runs_home_shangrila)shangrila/test_mine/run \
-                     $(runs_home_shangrila)shangrila/test_music_hydro/run/outputs/tl \
-                     $(runs_home_shangrila)shangrila/nbody/run/outputs/rj \
-                     $(runs_home_shangrila)shangrila/nbody/run/outputs/tl \
-                     $(runs_home_shangrila)shangrila/nbody/run/outputs/br_no_refine_1 
+sim_dirs_nbody_shangrila = $(runs_home_shangrila)shangrila/nbody/run/outputs/rj \
+                           $(runs_home_shangrila)shangrila/nbody/run/outputs/tl \
+                           $(runs_home_shangrila)shangrila/nbody/run/outputs/br_no_refine_1 
+sim_dirs_hydro_shangrila = $(runs_home_shangrila)shangrila/test_mine/run \
+                           $(runs_home_shangrila)shangrila/test_mine_music/run/outputs 
+sim_dirs_shangrila = $(sim_dirs_nbody_shangrila) $(sim_dirs_hydro_shangrila)
+                     
 runs_home_lou = /u/gbrown12/art_runs/runs/nbody/intel/run/outputs/
-sim_dirs_lou = $(runs_home_lou)br_production \
-               $(runs_home_lou)tl_production \
-               $(runs_home_lou)rj_production \
-               $(runs_home_lou)change_core
+sim_dirs_nbody_lou = $(runs_home_lou)br_production \
+                     $(runs_home_lou)tl_production \
+                     $(runs_home_lou)rj_production \
+                     $(runs_home_lou)change_core
+sim_dirs_hydro_lou = $(runs_home_lou)test
+sim_dirs_lou = $(sim_dirs_nbody_lou) $(sim_dirs_hydro_lou)
 
 runs_home = $(runs_home_lou)
+sim_dirs_nbody = $(sim_dirs_nbody_lou)
+sim_dirs_hydro = $(sim_dirs_hydro_lou)
 sim_dirs = $(sim_dirs_lou)
 
 # ------------------------------------------------------------------------------
@@ -49,6 +56,7 @@ sim_dirs = $(sim_dirs_lou)
 # 
 # ------------------------------------------------------------------------------
 sim_out_dirs = $(foreach dir,$(sim_dirs),$(dir)/out)
+sim_out_dirs_hydro = $(foreach dir,$(sim_dirs_hydro),$(dir)/out)
 sim_rockstar_halos_dirs = $(foreach dir,$(sim_dirs),$(dir)/rockstar_halos)
 sim_human_halos_dirs = $(foreach dir,$(sim_dirs),$(dir)/halos)
 sim_checks_dirs = $(foreach dir,$(sim_dirs),$(dir)/checks)
@@ -61,6 +69,7 @@ all_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halo
 # 
 # ------------------------------------------------------------------------------
 snapshots = $(foreach dir,$(sim_out_dirs),$(wildcard $(dir)/*_a*.art))
+snapshots_hydro = $(foreach dir,$(sim_out_dirs_hydro),$(wildcard $(dir)/*_a*.art))
 # Parse the snapshot names into halo catalogs 
 # replace the directory and suffix
 sim_to_halo = $(subst .art,.0.bin,$(subst out/continuous,halos/halos,$(1)))
@@ -94,13 +103,13 @@ halo_to_sentinel = $(call words_to_path,$(call halo_words_to_sentinel_words,$(ca
 
 # ------------------------------------------------------------------------------
 #
-#  Summary files
+#  Summary files - Nbody
 # 
 # ------------------------------------------------------------------------------
-sim_to_summary = $(subst .art,.txt,$(subst out/continuous,checks/summary, $(1)))
-summary_to_sim = $(subst .txt,.art,$(subst checks/summary,out/continuous, $(1)))
-summary_to_halo = $(subst .txt,.0.bin,$(subst checks/summary,halos/halos, $(1)))
-summaries = $(foreach snapshot,$(snapshots),$(call sim_to_summary,$(snapshot)))
+sim_to_summary_nbody = $(subst .art,.txt,$(subst out/continuous,checks/summary_nbody, $(1)))
+summary_nbody_to_sim = $(subst .txt,.art,$(subst checks/summary_nbody,out/continuous, $(1)))
+summary_nbody_to_halo = $(subst .txt,.0.bin,$(subst checks/summary_nbody,halos/halos, $(1)))
+summaries_nbody = $(foreach snapshot,$(snapshots),$(call sim_to_summary_nbody,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
@@ -129,10 +138,19 @@ merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_
 
 # ------------------------------------------------------------------------------
 #
+#  Summary files - metals
+# 
+# ------------------------------------------------------------------------------
+sim_to_summary_metal = $(subst .art,.txt,$(subst out/continuous,checks/summary_metal, $(1)))
+summary_metal_to_sim = $(subst .txt,.art,$(subst checks/summary_metal,out/continuous, $(1)))
+summaries_metal = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_summary_metal,$(snapshot)))
+
+# ------------------------------------------------------------------------------
+#
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(all_directories) $(halos_catalogs) $(summaries) $(merger_sentinels)
+all: $(all_directories) $(summaries_nbody) $(summaries_metal) $(merger_sentinels)
 
 # Make directories if they don't exist
 $(all_directories):
@@ -155,10 +173,10 @@ $(rockstar_sentinels): %: $$(call sentinel_to_sims, %)
 $(halos_catalogs): %: $(rename_script) $$(call halo_to_sentinel,%)
 	python $(rename_script) $@
 
-# Make the summary files
+# Make the summary files for N-body
 .SECONDEXPANSION:
-$(summaries): %: $$(call summary_to_halo, %) $(summary_script)
-	python $(summary_script) $(call summary_to_sim, $@) $(call summary_to_halo, $@) clobber silent
+$(summaries_nbody): %: $$(call summary_nbody_to_halo, %) $(summary_nbody_script)
+	python $(summary_nbody_script) $(call summary_nbody_to_sim, $@) $(call summary_nbody_to_halo, $@) clobber silent
 
 # Make the consistent trees config files
 .SECONDEXPANSION:
@@ -178,4 +196,9 @@ $(read_tree_exe): $(read_tree_src)
 .SECONDEXPANSION:
 $(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 	$(read_tree_exe) $(call merger_to_tree,$@) && touch $@
+
+# Make the summary files for metals
+$(summaries_metal): %: $(summary_metal_script)
+	python $(summary_metal_script) $(call summary_metal_to_sim, $@) clobber 
+
 
