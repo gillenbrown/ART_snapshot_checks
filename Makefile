@@ -37,12 +37,12 @@ sim_dirs_hydro_shangrila = $(runs_home_shangrila)shangrila/test_mine/run \
                            $(runs_home_shangrila)shangrila/test_mine_music/run/outputs 
 sim_dirs_shangrila = $(sim_dirs_nbody_shangrila) $(sim_dirs_hydro_shangrila)
                      
-runs_home_lou = /u/gbrown12/art_runs/runs/nbody/intel/run/outputs/
-sim_dirs_nbody_lou = $(runs_home_lou)br_production \
-                     $(runs_home_lou)tl_production \
-                     $(runs_home_lou)rj_production \
-                     $(runs_home_lou)change_core
-sim_dirs_hydro_lou = $(runs_home_lou)test
+runs_home_lou = /u/gbrown12/art_runs/runs/
+sim_dirs_nbody_lou = $(runs_home_lou)nbody/intel/run/outputs/br_production \
+                     $(runs_home_lou)nbody/intel/run/outputs/tl_production \
+                     $(runs_home_lou)nbody/intel/run/outputs/rj_production \
+                     $(runs_home_lou)nbody/intel/run/outputs/change_core
+sim_dirs_hydro_lou = $(runs_home_lou)hydro/intel/run/outputs/test
 sim_dirs_lou = $(sim_dirs_nbody_lou) $(sim_dirs_hydro_lou)
 
 runs_home = $(runs_home_lou)
