@@ -31,22 +31,13 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 runs_home_shangrila = /u/home/gillenb/art_runs/runs/
 sim_dirs_shangrila = $(runs_home_shangrila)shangrila/test_mine/run \
                      $(runs_home_shangrila)shangrila/nbody/run/outputs/rj \
-         			 $(runs_home_shangrila)shangrila/nbody/run/outputs/tl \
-       			     $(runs_home_shangrila)shangrila/nbody/run/outputs/br_no_refine_1 \
-         			 $(runs_home_shangrila)pleiades/nbody/intel/br_1.1.28_pleiades_no_refine \
-        		     $(runs_home_shangrila)pleiades/nbody/intel/br_2.1.28_pleiades_no_refine \
-         			 $(runs_home_shangrila)pleiades/nbody/intel/br_4.1.28_pleiades_no_refine \
-         			 $(runs_home_shangrila)pleiades/nbody/intel/br_8.1.28_pleiades_no_refine \
-         			 $(runs_home_shangrila)pleiades/nbody/intel/br_8.1.28_electra_no_refine \
-         			 $(runs_home_shangrila)pleiades/nbody/intel/br_8.2.14_pleiades_no_refine \
-         			 $(runs_home_shangrila)pleiades/nbody/intel/br_production \
-         			 $(runs_home_shangrila)pleiades/nbody/intel/rj_production \
-         			 $(runs_home_shangrila)pleiades/nbody/intel/tl_production 
+                     $(runs_home_shangrila)shangrila/nbody/run/outputs/tl \
+                     $(runs_home_shangrila)shangrila/nbody/run/outputs/br_no_refine_1 
 runs_home_lou = /u/gbrown12/art_runs/runs/nbody/intel/run/outputs/
 sim_dirs_lou = $(runs_home_lou)br_production \
-          	   $(runs_home_lou)tl_production \
-         	   $(runs_home_lou)rj_production \
-		   $(runs_home_lou)change_core
+               $(runs_home_lou)tl_production \
+               $(runs_home_lou)rj_production \
+               $(runs_home_lou)change_core
 
 runs_home = $(runs_home_lou)
 sim_dirs = $(sim_dirs_lou)
