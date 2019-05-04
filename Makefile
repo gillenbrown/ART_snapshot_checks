@@ -30,6 +30,7 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 # ------------------------------------------------------------------------------
 runs_home_shangrila = /u/home/gillenb/art_runs/runs/
 sim_dirs_shangrila = $(runs_home_shangrila)shangrila/test_mine/run \
+                     $(runs_home_shangrila)shangrila/test_music_hydro/run/outputs/tl \
                      $(runs_home_shangrila)shangrila/nbody/run/outputs/rj \
                      $(runs_home_shangrila)shangrila/nbody/run/outputs/tl \
                      $(runs_home_shangrila)shangrila/nbody/run/outputs/br_no_refine_1 
