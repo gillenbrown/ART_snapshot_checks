@@ -8,8 +8,8 @@ tree_config_script_shangrila = /u/home/gillenb/code/not_mine/rockstar/scripts/ge
 tree_dir_lou = /u/gbrown12/code/consistent-trees/
 tree_dir_shangrila = /u/home/gillenb/code/not_mine/consistent-trees/
 
-tree_config_script = $(tree_config_script_shangrila)
-tree_dir = $(tree_dir_shangrila)
+tree_config_script = $(tree_config_script_lou)
+tree_dir = $(tree_dir_lou)
 
 # ------------------------------------------------------------------------------
 #
@@ -45,10 +45,11 @@ sim_dirs_shangrila = $(runs_home_shangrila)shangrila/test_mine/run \
 runs_home_lou = /u/gbrown12/art_runs/runs/nbody/intel/run/outputs/
 sim_dirs_lou = $(runs_home_lou)br_production \
           	   $(runs_home_lou)tl_production \
-         	   $(runs_home_lou)rj_production 
+         	   $(runs_home_lou)rj_production \
+		   $(runs_home_lou)change_core
 
-runs_home = $(runs_home_shangrila)
-sim_dirs = $(sim_dirs_shangrila)
+runs_home = $(runs_home_lou)
+sim_dirs = $(sim_dirs_lou)
 
 # ------------------------------------------------------------------------------
 #
@@ -133,6 +134,7 @@ tree_to_tree_cfg = $(subst trees/tree_0_0_0.dat,outputs/merger_tree.cfg,$(1))
 merger_sentinels = $(foreach dir,$(sim_checks_dirs),$(dir)/merger_sentinel.txt)
 # need to get the trees that the sim should parse
 merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_0_0.dat,$(1))
+
 # ------------------------------------------------------------------------------
 #
 #  Rules
@@ -184,3 +186,4 @@ $(read_tree_exe): $(read_tree_src)
 .SECONDEXPANSION:
 $(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 	$(read_tree_exe) $(call merger_to_tree,$@) && touch $@
+

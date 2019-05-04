@@ -44,9 +44,11 @@ void write_mergers(struct halo satellite, FILE *out_file){
     // before being eaten by a larger halo.
     // The most representative mass of the mergers are the masses of the halos
     // as the satellite is falling in. Therefore we need to trace back to find
-    // the most massive progenitor of our satellite.
-    struct halo satellite_progenitor = *satellite.prog;
-    struct halo central_progenitor = *satellite.desc->prog;
+    // the most massive progenitor of our satellite. I still want to write when
+    // it finally merged for completeness
+    struct halo central = *satellite.desc->prog;
+    struct halo satellite_progenitor = satellite;
+    struct halo central_progenitor = central;
     float central_mass = 0;
     float satellite_mass = 0;
     float scale_factor = 0;
@@ -73,9 +75,10 @@ void write_mergers(struct halo satellite, FILE *out_file){
         }
     }
     // Now we have the information we can write to the file.
-    fprintf(out_file, "%15f %15E %15E %15lu %15lu\n", 
+    fprintf(out_file, "%15f %15E %15E %15lu %15lu %15f %15E %15E %15lu %15lu\n", 
             scale_factor, satellite_mass, central_mass, 
-            satellite_id, central_id);
+            satellite_id, central_id, central.scale, satellite.mvir,
+	    central.mvir, satellite.id, central.id);
 }
 
 void all_accretions(struct halo endpoint, FILE *out_file){
@@ -134,10 +137,12 @@ int main(int argc, char *argv[]) {
     growth_2 = fopen(make_output_files(argv[1], "growth_2.txt"), "w");
 
     // First write the headers
-    fprintf(mergers_1, "# %13s %15s %15s %15s %15s\n", "scale_factor", 
-            "satellite_mass", "central_mass", "satellite_id", "central_id");
-    fprintf(mergers_2, "# %13s %15s %15s %15s %15s\n", "scale_factor", 
-            "satellite_mass", "central_mass", "satellite_id", "central_id");
+    fprintf(mergers_1, "# %13s %15s %15s %15s %15s %15s %15s %15s %15s %15s\n", 
+            "scale_factor", "satellite_mass", "central_mass",   "satellite_id", "central_id",
+            "final_scale",  "final_sat_mass", "final_cen_mass", "final_sat_id", "final_cen_id");
+    fprintf(mergers_2, "# %13s %15s %15s %15s %15s %15s %15s %15s %15s %15s\n",                            
+            "scale_factor", "satellite_mass", "central_mass",   "satellite_id", "central_id",
+            "final_scale",  "final_sat_mass", "final_cen_mass", "final_sat_id", "final_cen_id");
     fprintf(growth_1, "# %13s %15s %15s\n", 
             "scale_factor", "central_mass", "central_id");
     fprintf(growth_2, "# %13s %15s %15s\n", 
@@ -145,15 +150,29 @@ int main(int argc, char *argv[]) {
 
     read_tree(argv[1]);
 
-    // Find all halos at z=0, then get the biggest ones
+    // determine the scale factor of the last output
+    float scale_last = 0;
+    float this_scale;
+    for (int i=0; i < all_halos.num_halos; i++){
+        this_scale = all_halos.halos[i].scale;
+        if (this_scale > scale_last){
+            scale_last = this_scale;
+	}
+    }
+    float comparison_scale = scale_last - 0.000001;
+    printf("Last output: a = %f\nComp output: a = %f\n", scale_last, comparison_scale);
+
+    // Get the biggest and smallest halos at the last output
     struct halo empty = {0};
     empty.mvir = 0;
     struct halo halo_1 = empty;
     struct halo halo_2 = empty;
+    struct halo halo_n = empty;
+    halo_n.mvir = 1E20;
     struct halo this_halo;
     for (int i=0; i < all_halos.num_halos; i++){
         this_halo = all_halos.halos[i];
-        if (this_halo.scale > 1.0){
+        if (this_halo.scale > comparison_scale){
             if (this_halo.mvir > halo_1.mvir){
                 halo_2 = halo_1;
                 halo_1 = this_halo;
@@ -161,11 +180,14 @@ int main(int argc, char *argv[]) {
             else if (this_halo.mvir > halo_2.mvir){
                 halo_2 = this_halo;
             }
+            else if (this_halo.mvir < halo_n.mvir){
+                halo_n = this_halo;
+            }
         }
     }
     // printf("Biggest Mass: %E\n", biggest.mvir);
     // printf("Second Mass: %E\n", second_biggest.mvir);
-
+    printf("Smallest Mass: %E\n", halo_n.mvir);
     // write the accretion history files
     all_accretions(halo_1, mergers_1);
     all_accretions(halo_2, mergers_2);
