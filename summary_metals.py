@@ -1,5 +1,5 @@
 """
-global_properties.py
+summmary_metals.py
 
 Reports some properties related to the metals in the simulation
 
@@ -95,6 +95,86 @@ print_and_write("z = {:.4f}".format(z), out_file)
 # 
 # =============================================================================
 # See some statistics about the metal properties of the gas at various levels
+elements = ["II", "Ia", "AGB", "C", "N", "O", "FE"]
+
+full_grid_levels = ad[('index', 'grid_level')].value
+grid_levels = np.unique(full_grid_levels)
+cell_sizes = np.unique(ad["index", "dx"]).to("pc")[::-1]
+# ^ np.unique returns the unique values in sorted order. We want the
+# largest cells to correspond to the smallest level, so we reverse it
+
+# Get all the cells at various levels
+level_idxs = {level:np.where(full_grid_levels == level)[0] 
+              for level in grid_levels}
+
+# Get the necessary data beforehand to reduce data accessing needs
+densities = ad[('gas', 'density')]
+volumes = ad[('gas', 'cell_volume')]
+metal_densities = {elt:ad[('artio', 'HVAR_METAL_DENSITY_{}'.format(elt))]
+                   for elt in elements}
+
+# yt doesn't know about the units for my new fields
+code_density = ds.mass_unit / (ds.length_unit)**3
+for elt in metal_densities:
+    if elt not in ["II", "Ia"]:
+        metal_densities[elt] *= code_density
+    metal_densities[elt] = metal_densities[elt].to("g/cm**3")
+
+# Then go level by level to get the properties of the gas at that level
+header_str = "{:<10s}\t{:>10s}\t{:>10s}\t{:>10s}\t{:>10s}"
+row_str = "{:<10s}\t{:>10.3E}\t{:>10.3E}\t{:>10.3E}\t{:>10.3E}"
+for level, cell_size in zip(level_idxs, cell_sizes):
+    print_and_write("level={:.0f}, cell size={:.2f}".format(level, cell_size), 
+                    out_file)
+    print_and_write(header_str.format("Element", "Minimum Z", "Median Z", 
+                                      "Mean Z", "Maximum Z"), out_file)
+    
+    # get the info at this level
+    idxs = level_idxs[level]  # indices of cells at this level
+    density_level = densities[idxs]  # densities of cell on this level
+    volume_level = volumes[idxs]  # volumes of cell on this level
+    total_mass_level = np.sum(density_level * volume_level) 
+    # ^ The total gas mass in cells on this level
+    
+    # then go element by element
+    for element in elements:
+        densities_elt_level = metal_densities[element][idxs]
+        z_elt = (densities_elt_level / density_level).value
+        total_elt_mass_level = np.sum(densities_elt_level * volume_level)
+        true_mean = (total_elt_mass_level / total_mass_level).value
+
+        print_and_write(row_str.format(element, np.min(z_elt), 
+                                       np.median(z_elt), true_mean, 
+                                       np.max(z_elt)), out_file)
+    print_and_write("", out_file)  # for spacing
+# =============================================================================
+#         
+# Stars
+# 
+# =============================================================================
+# We do the equivalent thing here, although it's different because stars have
+# metallicity and mass, not densities
+# We also have to modify the elements
+star_elements = [elt.replace("II", "SNII").replace("Ia", "SNIa")
+                 for elt in elements]
+
+stellar_masses = ad[("STAR", "MASS")]
+total_mass = np.sum(stellar_masses)
+
+if len(stellar_masses) == 0:
+    print_and_write("No stars at this redshift", out_file)
+else:
+    print_and_write("Stars", out_file)
+    print_and_write(header_str.format("Element", "Minimum Z", "Median Z", 
+                                    "Mean Z", "Maximum Z"), out_file)
+    for element in star_elements:
+        z_elt = ad[("STAR", "METALLICITY_{}".format(element))].value
+        total_elt_mass = np.sum(z_elt * stellar_masses)
+        true_mean = (total_elt_mass / total_mass).value
+
+        print_and_write(row_str.format(element, np.min(z_elt), 
+                                       np.median(z_elt), true_mean, 
+                                       np.max(z_elt)), out_file)
 
 
 # =========================================================================
@@ -102,7 +182,11 @@ print_and_write("z = {:.4f}".format(z), out_file)
 # Plots
 # 
 # =========================================================================
+gas_plot_name = plots_dir + "gas_density_{}.png".format(scale_factor)
 
+gas_plot = yt.ProjectionPlot(ds, "x", fields=("gas", "density"), 
+                             width=(10, "Mpccm"), method="mip")
+gas_plot.save(gas_plot_name)
 
 print_and_write("\nPlots will be saved to:", out_file)
 print_and_write("Replace with name of plot", out_file)

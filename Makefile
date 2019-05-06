@@ -33,8 +33,8 @@ runs_home_shangrila = /u/home/gillenb/art_runs/runs/
 sim_dirs_nbody_shangrila = $(runs_home_shangrila)shangrila/nbody/run/outputs/rj \
                            $(runs_home_shangrila)shangrila/nbody/run/outputs/tl \
                            $(runs_home_shangrila)shangrila/nbody/run/outputs/br_no_refine_1 
-sim_dirs_hydro_shangrila = $(runs_home_shangrila)shangrila/test_mine/run \
-                           $(runs_home_shangrila)shangrila/test_mine_music/run/outputs 
+sim_dirs_hydro_shangrila = $(runs_home_shangrila)shangrila/test_mine_music/run/outputs \
+                           $(runs_home_shangrila)shangrila/test_mine/run
 sim_dirs_shangrila = $(sim_dirs_nbody_shangrila) $(sim_dirs_hydro_shangrila)
                      
 runs_home_lou = /u/gbrown12/art_runs/runs/
@@ -199,6 +199,6 @@ $(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 
 # Make the summary files for metals
 $(summaries_metal): %: $(summary_metal_script)
-	python $(summary_metal_script) $(call summary_metal_to_sim, $@) clobber 
+	python $(summary_metal_script) $(call summary_metal_to_sim, $@) clobber silent
 
 
