@@ -141,9 +141,9 @@ merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_
 #  Summary files - metals
 # 
 # ------------------------------------------------------------------------------
-sim_to_summary_metal = $(subst .art,.txt,$(subst out/continuous,checks/summary_metal, $(1)))
-summary_metal_to_sim = $(subst .txt,.art,$(subst checks/summary_metal,out/continuous, $(1)))
-summaries_metal = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_summary_metal,$(snapshot)))
+sim_to_summary_metal = $(subst .art,.txt,$(subst out/continuous,checks/summary_metals, $(1)))
+summary_metal_to_sim = $(subst .txt,.art,$(subst checks/summary_metals,out/continuous, $(1)))
+summaries_metal = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_summary_metals,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
