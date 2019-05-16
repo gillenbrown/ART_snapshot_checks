@@ -143,7 +143,7 @@ merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_
 # ------------------------------------------------------------------------------
 sim_to_summary_metal = $(subst .art,.txt,$(subst out/continuous,checks/summary_metals, $(1)))
 summary_metal_to_sim = $(subst .txt,.art,$(subst checks/summary_metals,out/continuous, $(1)))
-summaries_metal = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_summary_metals,$(snapshot)))
+summaries_metal = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_summary_metal,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
@@ -198,7 +198,9 @@ $(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 	$(read_tree_exe) $(call merger_to_tree,$@) && touch $@
 
 # Make the summary files for metals
-$(summaries_metal): %: $(summary_metal_script)
+$(info $(summaries_metal))
+.SECONDEXPANSION:
+$(summaries_metal): %: $$(call summary_metal_to_sim,%) $(summary_metal_script)
 	python $(summary_metal_script) $(call summary_metal_to_sim, $@) clobber silent
 
 
