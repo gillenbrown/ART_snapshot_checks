@@ -182,13 +182,18 @@ else:
 # Plots
 # 
 # =========================================================================
-gas_plot_name = plots_dir + "gas_density_{}.png".format(scale_factor)
+normals = {"x": [1, 0, 0], 
+           "y": [0, 1, 0], 
+           "z": [0, 0, 1]}
+for direction in normals:
+    gas_plot_name = plots_dir + "gas_density_{}_{}.png".format(direction,
+                                                               scale_factor)
 
-gas_plot = yt.ProjectionPlot(ds, "x", fields=("gas", "density"), 
-                             width=(10, "Mpccm"), method="mip")
-gas_plot.save(gas_plot_name)
+    gas_plot = yt.SlicePlot(ds, normal=normals[direction], 
+                            fields=("gas", "density"), width=(15, "Mpccm"))
+    gas_plot.save(gas_plot_name)
 
 print_and_write("\nPlots will be saved to:", out_file)
-print_and_write("Replace with name of plot", out_file)
+print_and_write(gas_plot_name, out_file)
 
 out_file.close()

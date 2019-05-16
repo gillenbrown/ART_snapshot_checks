@@ -164,22 +164,28 @@ for level in range(len(masses)):
 # Plots
 # 
 # =========================================================================
-grid_plot_name = plots_dir + "grid_idxs_{}.png".format(scale_factor)
-n_body_plot_name = plots_dir + "n_body_{}.png".format(scale_factor)
+normals = {"x": [1, 0, 0], 
+           "y": [0, 1, 0], 
+           "z": [0, 0, 1]}
+for direction in normals:
+    grid_plot_name = plots_dir + "grid_idxs_{}_{}.png".format(direction,
+                                                              scale_factor)
+    n_body_plot_name = plots_dir + "n_body_{}_{}.png".format(direction,
+                                                             scale_factor)
 
-n_body_field = ("deposit", "N-BODY_density")
-grid_level_field = ('index', 'grid_level')
+    n_body_field = ("deposit", "N-BODY_density")
+    grid_level_field = ('index', 'grid_level')
 
-grid_plot = yt.SlicePlot(ds, normal=[1, 0, 0], fields=grid_level_field, 
-                         width=(15, "Mpccm"))
-grid_plot.set_log(grid_level_field, False)
-grid_plot.set_cmap(grid_level_field, "Pastel1")
-grid_plot.set_zlim(grid_level_field, -0.5, 8.5)
-grid_plot.save(grid_plot_name)
+    grid_plot = yt.SlicePlot(ds, normal=normals[direction], 
+                             fields=grid_level_field, width=(15, "Mpccm"))
+    grid_plot.set_log(grid_level_field, False)
+    grid_plot.set_cmap(grid_level_field, "Pastel1")
+    grid_plot.set_zlim(grid_level_field, -0.5, 8.5)
+    grid_plot.save(grid_plot_name)
 
-n_body_plot = yt.SlicePlot(ds, normal=[1, 0, 0], fields=n_body_field, 
-                           width=(15, "Mpccm"))
-n_body_plot.save(n_body_plot_name)
+    n_body_plot = yt.SlicePlot(ds, normal=normals[direction], 
+                               fields=n_body_field, width=(15, "Mpccm"))
+    n_body_plot.save(n_body_plot_name)
 
 # =========================================================================
 #         
