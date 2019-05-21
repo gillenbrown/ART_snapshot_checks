@@ -4,4 +4,4 @@
 #     halo catalogs. If not provided, none will be deleted. This is just a check 
 #     to make sure you really want to do this.
 # Lou analysis machines have Skylake nodes with 20 cores
-mpiexec -np 20 python ./halo_finding_rockstar.py $1 $2 $3 $4
+mpiexec -np 20 python ./halo_finding_rockstar.py $1 $2 $3

@@ -18,11 +18,11 @@ yt.enable_parallelism()
 if yt.is_root():
     if len(sys.argv) < 3:
         raise ValueError("Please provide the proper command line argument.")
-    elif len(sys.argv) == 3:
+    elif len(sys.argv) == 4:
         if sys.argv[3] != "silent":
             raise ValueError("If present, the third command line "
                              "argument can only be `silent`")
-    elif len(sys.argv) > 3:
+    elif len(sys.argv) > 4:
         raise ValueError("Extra command line arguments not recognized.")
 
 # turn the directories the user passes into the absolute path
