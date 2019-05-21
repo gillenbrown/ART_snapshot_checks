@@ -8,8 +8,8 @@ tree_config_script_shangrila = /u/home/gillenb/code/not_mine/rockstar/scripts/ge
 tree_dir_lou = /u/gbrown12/code/consistent-trees/
 tree_dir_shangrila = /u/home/gillenb/code/not_mine/consistent-trees/
 
-tree_config_script = $(tree_config_script_shangrila)
-tree_dir = $(tree_dir_shangrila)
+tree_config_script = $(tree_config_script_lou)
+tree_dir = $(tree_dir_lou)
 
 # ------------------------------------------------------------------------------
 #
@@ -45,10 +45,10 @@ sim_dirs_nbody_lou = $(runs_home_lou)nbody/intel/run/outputs/br_production \
 sim_dirs_hydro_lou = $(runs_home_lou)hydro/intel/run/outputs/test
 sim_dirs_lou = $(sim_dirs_nbody_lou) $(sim_dirs_hydro_lou)
 
-runs_home = $(runs_home_shangrila)
-sim_dirs_nbody = $(sim_dirs_nbody_shangrila)
-sim_dirs_hydro = $(sim_dirs_hydro_shangrila)
-sim_dirs = $(sim_dirs_shangrila)
+runs_home = $(runs_home_lou)
+sim_dirs_nbody = $(sim_dirs_nbody_lou)
+sim_dirs_hydro = $(sim_dirs_hydro_lou)
+sim_dirs = $(sim_dirs_lou)
 
 # ------------------------------------------------------------------------------
 #
