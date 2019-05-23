@@ -33,7 +33,8 @@ runs_home_shangrila = /u/home/gillenb/art_runs/runs/
 sim_dirs_nbody_shangrila = $(runs_home_shangrila)shangrila/nbody/run/outputs/rj \
                            $(runs_home_shangrila)shangrila/nbody/run/outputs/tl \
                            $(runs_home_shangrila)shangrila/nbody/run/outputs/br_no_refine_1 
-sim_dirs_hydro_shangrila = $(runs_home_shangrila)shangrila/test_mine_music/run/outputs \
+sim_dirs_hydro_shangrila = $(runs_home_shangrila)shangrila/test_all_elts/run \
+                           $(runs_home_shangrila)shangrila/test_mine_music/run/outputs \
                            $(runs_home_shangrila)shangrila/test_mine/run
 sim_dirs_shangrila = $(sim_dirs_nbody_shangrila) $(sim_dirs_hydro_shangrila)
                      
