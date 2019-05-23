@@ -95,7 +95,7 @@ print_and_write("z = {:.4f}".format(z), out_file)
 # 
 # =============================================================================
 # See some statistics about the metal properties of the gas at various levels
-elements = ["II", "Ia", "AGB", "C", "N", "O", "FE"]
+elements = ["II", "Ia", "AGB", "C", "N", "O", "Mg", "S", "Ca", "Fe"]
 
 full_grid_levels = ad[('index', 'grid_level')].value
 grid_levels = np.unique(full_grid_levels)
