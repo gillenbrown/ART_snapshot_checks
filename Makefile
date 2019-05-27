@@ -43,7 +43,7 @@ sim_dirs_nbody_lou = $(runs_home_lou)nbody/intel/run/outputs/br_production \
                      $(runs_home_lou)nbody/intel/run/outputs/tl_production \
                      $(runs_home_lou)nbody/intel/run/outputs/rj_production \
                      $(runs_home_lou)nbody/intel/run/outputs/change_core
-sim_dirs_hydro_lou = $(runs_home_lou)hydro/intel/run/outputs/test
+sim_dirs_hydro_lou = $(runs_home_lou)hydro/intel_broadwell/run/outputs/tl_first
 sim_dirs_lou = $(sim_dirs_nbody_lou) $(sim_dirs_hydro_lou)
 
 runs_home = $(runs_home_lou)
@@ -167,7 +167,7 @@ halos: $(rockstar_sentinels)
 # directory, plus the remove keyword to replace previous halo catalogs
 .SECONDEXPANSION:
 $(rockstar_sentinels): %: $$(call sentinel_to_sims, %) 
-	$(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@) remove
+	$(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@)
 
 # Rule to rename the halo catalogs into something more user-friendly
 .SECONDEXPANSION:
