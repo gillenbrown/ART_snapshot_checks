@@ -12,9 +12,11 @@
 source ~/.bashrc
 
 module purge
+module load mpi-sgi/mpt
 
 cd $PBS_O_WORKDIR
 
 export MPI_LAUNCH_TIMEOUT=120
 
-make -j20 &> $PBS_JOBNAME.stdout.$PBS_JOBID
+make halos &>> $PBS_JOBNAME.stdout.$PBS_JOBID
+make -j20 &>> $PBS_JOBNAME.stdout.$PBS_JOBID

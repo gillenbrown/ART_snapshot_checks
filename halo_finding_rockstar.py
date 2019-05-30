@@ -33,8 +33,6 @@ if not sim_dir.endswith(os.sep):
 if not out_dir.endswith(os.sep):
     out_dir += os.sep
 
-print(out_dir)
-print(type(out_dir))
 # check to see if there is a currently existing halo catalog already here
 # to restart from. Again, do this only on the root.
 if os.path.exists(out_dir + "datasets.txt"):
