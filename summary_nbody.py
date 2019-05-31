@@ -134,29 +134,35 @@ for level in grid_levels:
 # =============================================================================
 all_masses = ad[('N-BODY', 'MASS')].to("Msun")
 masses, num_particles = np.unique(all_masses, return_counts=True)
-# we reverse for the same reason we reversed cell sizes
-masses = masses[::-1] 
-num_particles = num_particles[::-1]
+# Do not reverse, since in ART species 0 is the lightest
+# masses = masses[::-1] 
+# num_particles = num_particles[::-1]
 total_particles = np.sum(num_particles)
 
 print_and_write("\nParticles\n=========", out_file)
 print_and_write("total particles: {:,}".format(total_particles), out_file)
-part_out_str = "{:<5d}    {:>15,}    {:<.2e}    {:<.8f}"
-part_out_str_top = "{:<5d}    {:>15,}    {:<.2e}    ----------"
-part_header_str = "{:<5}    {:>15}    {:<13}    {:<25}"
-print_and_write(part_header_str.format("Level", "Num Particles", "Mass", 
-                                        "Mass Ratio to Previous"), out_file)
-for level in range(len(masses)):
-    level = int(level)
-    dm_mass = masses[level]
-    dm_num = num_particles[level]
+part_out_str = "{:<8d}    {:>15,}    {:<.2e}    {:<.8f}"
+part_out_str_top = "{:<8d}    {:>15,}    {:<.2e}    ----------"
+part_header_str = "{:<8}    {:>15}    {:<13}    {:<25}"
+print_and_write(part_header_str.format("Species", "Num Particles", "Mass", 
+                                        "Mass Ratio to Next"), out_file)
+
+# print info about the species, but also add a dictionary that can convert
+# from a particle's mass to its species
+mass_to_species = dict()
+for species in range(len(masses)):
+    species = int(species)
+    dm_mass = masses[species]
+    dm_num = num_particles[species]
+
+    mass_to_species["{:.0f}".format(dm_mass)] = species
     
-    if level == 0:
-        print_and_write(part_out_str_top.format(level, dm_num, dm_mass),
+    if species == len(masses) - 1:
+        print_and_write(part_out_str_top.format(species, dm_num, dm_mass),
                         out_file)
     else:
-        ratio = (masses[level - 1] / dm_mass).value
-        print_and_write(part_out_str.format(level, dm_num, dm_mass, ratio),
+        ratio = (masses[species + 1] / dm_mass).value
+        print_and_write(part_out_str.format(species, dm_num, dm_mass, ratio),
                         out_file)
 
 # =========================================================================
@@ -197,6 +203,8 @@ ds_halos = yt.load(halo_file)
 
 # Then create the halo catalogs
 hc = HaloCatalog(halos_ds=ds_halos, data_ds=ds, output_dir="./")
+# Restrict to things about LMC mass and above
+hc.add_filter('quantity_value', 'particle_mass', '>', 3E10, 'Msun')
 hc.create(save_catalog=False)
 
 # make better names for the quantities in the halo catalog
@@ -205,26 +213,96 @@ quantity_names = {"virial_radius": "Virial Radius",
                   "particle_position_y": "Position Y", 
                   "particle_position_z": "Position Z",
                   "particle_mass": "Virial Mass"}
+# and decide what order we want to print them in
+ordered_quantities = ["particle_mass", "virial_radius", "particle_position_x",
+                      "particle_position_y", "particle_position_z"]
 
-# then print the information for the top 5 halos in the catalog
-# First we have to find these top 5 halos. 
-halo_masses = yt.YTArray([item["particle_mass"] for item in hc.catalog])
 # check that we have any halos at all. If not, we can exit. This can happen
 # for early outputs where nothing has collapsed yet.
+halo_masses = yt.YTArray([item["particle_mass"] for item in hc.catalog])
 if len(halo_masses) == 0:
     print_and_write("No halos at this redshift", out_file)
     out_file.close()
     exit()
+
 # We get the indices that sort it. The reversing there makes the biggest halos
 # first, like we want.
 rank_idxs = np.argsort(halo_masses)[::-1]
-for rank in range(1, min([len(halo_masses), 6])):
-    print_and_write("\nRank {} halo:".format(rank), out_file)
-    idx = rank_idxs[rank - 1]  # since rank starts at 1, but indexing at zero
+
+# Add this info to each halo object, and put the halos into a new sorted list,
+# with the highest mass (lowest rank) halos first)
+halos = []
+for rank, idx in enumerate(rank_idxs, start=1):
     halo = hc.catalog[idx]
-    for quantity in halo:   
-        if quantity not in quantity_names:  
-            continue  # skip this quantity
+    halo["rank"] = rank
+    halos.append(halo)
+
+# get the N-body particle locations. These are different in the old and new
+# simulations, so we have to check 
+try:
+    species_0_x = ad[('N-BODY_0', 'POSITION_X')].to("Mpc").value
+    species_0_y = ad[('N-BODY_0', 'POSITION_Y')].to("Mpc").value
+    species_0_z = ad[('N-BODY_0', 'POSITION_Z')].to("Mpc").value
+
+    species_1_x = ad[('N-BODY_1', 'POSITION_X')].to("Mpc").value
+    species_1_y = ad[('N-BODY_1', 'POSITION_Y')].to("Mpc").value
+    species_1_z = ad[('N-BODY_1', 'POSITION_Z')].to("Mpc").value
+
+    species_2_x = ad[('N-BODY_2', 'POSITION_X')].to("Mpc").value
+    species_2_y = ad[('N-BODY_2', 'POSITION_Y')].to("Mpc").value
+    species_2_z = ad[('N-BODY_2', 'POSITION_Z')].to("Mpc").value
+
+    species_3_x = ad[('N-BODY_3', 'POSITION_X')].to("Mpc").value
+    species_3_y = ad[('N-BODY_3', 'POSITION_Y')].to("Mpc").value
+    species_3_z = ad[('N-BODY_3', 'POSITION_Z')].to("Mpc").value
+
+    species_4_x = ad[('N-BODY_4', 'POSITION_X')].to("Mpc").value
+    species_4_y = ad[('N-BODY_4', 'POSITION_Y')].to("Mpc").value
+    species_4_z = ad[('N-BODY_4', 'POSITION_Z')].to("Mpc").value
+
+    species_5_x = ad[('N-BODY_5', 'POSITION_X')].to("Mpc").value
+    species_5_y = ad[('N-BODY_5', 'POSITION_Y')].to("Mpc").value
+    species_5_z = ad[('N-BODY_5', 'POSITION_Z')].to("Mpc").value
+
+    check_contamination = True
+except yt.utilities.exceptions.YTFieldNotFound:  # old sims
+    check_contamination = False
+    species_0_x = ad[('N-BODY', 'POSITION_X')].to("Mpc").value
+    species_0_y = ad[('N-BODY', 'POSITION_Y')].to("Mpc").value
+    species_0_z = ad[('N-BODY', 'POSITION_Z')].to("Mpc").value
+
+# define some helper functions that will be used for contamination calculations
+def get_center(halo, with_units):
+    x = halo["particle_position_x"]
+    y = halo["particle_position_y"]
+    z = halo["particle_position_z"]
+    if not with_units:
+        x = x.to("Mpc").value
+        y = y.to("Mpc").value
+        z = z.to("Mpc").value
+    return (x, y, z)
+
+def distance(x_0, y_0, z_0, x_1, y_1, z_1):
+    return np.sqrt((x_1 - x_0)**2 + (y_1 - y_0)**2 + (z_1 - z_0)**2)
+
+def mass_fractions(sphere):
+    # Prints the fraction of mass inside a sphere that comes from different
+    # species of N-body particles. This is useful for checking contamination
+    masses = sphere[('N-BODY', 'MASS')]
+    unique_masses, num_particles = np.unique(masses, return_counts=True)
+    total_mass = masses.sum()
+    for m, n_m in zip(unique_masses, num_particles):
+        this_m_tot = m * n_m  # total mass in this species of particle
+        frac = (this_m_tot / total_mass).value
+        s = mass_to_species["{:.0f}".format(m.to("Msun"))]
+        print("{}: N = {:>10,} {:>6.2f}%".format(s, n_m, frac*100))
+
+# Print information about all the halos present
+for halo in halos:
+    print("\n==================================\n")
+    print_and_write("Rank {} halo:".format(halo["rank"]), out_file)
+    # First print the important quantities
+    for quantity in ordered_quantities:   
         q_name = quantity_names[quantity]
         if q_name == "Virial Radius" or "Position" in q_name:
             value = halo[quantity].to("kpc")
@@ -232,8 +310,37 @@ for rank in range(1, min([len(halo_masses), 6])):
                             out_file)
         elif "Mass" in q_name:
             value = halo[quantity].to("Msun")
-            print_and_write("{}: {:<2.7e}".format(q_name, value), 
+            print_and_write("{}: {:<2.3e}".format(q_name, value), 
                             out_file)
+
+    # then print information about contamination, if we need to
+    if check_contamination:
+         # First we calculate the closest particle of each unrefined DM species
+        x, y, z = get_center(halo, with_units=False)
+        distances_1 = distance(x, y, z, species_1_x, species_1_y, species_1_z)
+        distances_2 = distance(x, y, z, species_2_x, species_2_y, species_2_z)
+        distances_3 = distance(x, y, z, species_3_x, species_3_y, species_3_z)
+        distances_4 = distance(x, y, z, species_4_x, species_4_y, species_4_z)
+        distances_5 = distance(x, y, z, species_5_x, species_5_y, species_5_z)
+        
+        print("\nClosest particle of each low-res DM species")
+        print("1: {:.0f} kpc".format(np.min(distances_1)*1000))
+        print("2: {:.0f} kpc".format(np.min(distances_2)*1000))
+        print("3: {:.0f} kpc".format(np.min(distances_3)*1000))
+        print("4: {:.0f} kpc".format(np.min(distances_4)*1000))
+        print("5: {:.0f} kpc".format(np.min(distances_5)*1000))
+
+        virial_radius = halo["virial_radius"]
+        center = get_center(halo, with_units=True)
+        virial_sphere = ds.sphere(center=center, radius=virial_radius)
+        mpc_sphere = ds.sphere(center=center, radius=1*yt.units.Mpc)
+        print("\nFraction of the DM mass from different species")
+        print("Within the virial radius")
+        mass_fractions(virial_sphere)
+        
+        print("\nWithin 1 Mpc")
+        mass_fractions(mpc_sphere)
+print("\n==================================\n")
         
 # Then print the separation of the two biggest halos
 halo_1 = hc.catalog[rank_idxs[0]]
@@ -248,40 +355,33 @@ print_and_write("\nSeparation of two largest halos: {:.2f}".format(dist),
 # Then do a plot of the halos
 halos_plot_name = plots_dir + "halos_{}.png".format(scale_factor)
 def add_virial_radii(hc, axis_1, axis_2, ax):
-    for halo in hc.catalog:
-        if halo["particle_mass"].to("Msun").value > 10**10:
-            coord_1 = halo["particle_position_{}".format(axis_1)].to("Mpc").value
-            coord_2 = halo["particle_position_{}".format(axis_2)].to("Mpc").value
-            radius = halo["virial_radius"].to("Mpc").value
-            c = Circle((coord_1, coord_2), radius, 
-                       fill=False, clip_on=True, ls="--")
-            ax.add_artist(c)
+    for halo in halos:
+        coord_1 = halo["particle_position_{}".format(axis_1)].to("Mpc").value
+        coord_2 = halo["particle_position_{}".format(axis_2)].to("Mpc").value
+        radius = halo["virial_radius"].to("Mpc").value
+        rank = halo["rank"]
+        c = Circle((coord_1, coord_2), radius, 
+                   fill=False, clip_on=True, ls="--")
+        ax.add_artist(c)
+        ax.add_text(coord_1, coord_2, rank, ha="center", va="center", 
+                    fontsize=10, color="w")
+        ax.scatter([coord_1], [coord_2], s=20, c=bpl.color_cycle[1])
 
-# get the N-body particle locations. These are different in the old and new
-# simulations, so we have to check 
-try:
-    x = ad[('N-BODY_0', 'POSITION_X')].to("Mpc").value
-    y = ad[('N-BODY_0', 'POSITION_Y')].to("Mpc").value
-    z = ad[('N-BODY_0', 'POSITION_Z')].to("Mpc").value
-except yt.utilities.exceptions.YTFieldNotFound:  
-    x = ad[('N-BODY', 'POSITION_X')].to("Mpc").value
-    y = ad[('N-BODY', 'POSITION_Y')].to("Mpc").value
-    z = ad[('N-BODY', 'POSITION_Z')].to("Mpc").value
 
 fig, axs = bpl.subplots(ncols=3, figsize=[15, 5])
 ax_xy, ax_xz, ax_yz = axs.flatten()
 
-ax_xy.scatter(x[::10000], y[::10000], s=10)
+ax_xy.scatter(species_0_x[::10000], species_0_y[::10000], s=10)
 add_virial_radii(hc, "x", "y", ax_xy)
 ax_xy.add_labels("X [Mpc]", "Y [Mpc]")
 ax_xy.equal_scale()
 
-ax_xz.scatter(x[::10000], z[::10000], s=10)
+ax_xz.scatter(species_0_x[::10000], species_0_z[::10000], s=10)
 add_virial_radii(hc, "x", "z", ax_xz)
 ax_xz.add_labels("X [Mpc]", "Z [Mpc]")
 ax_xz.equal_scale()
 
-ax_yz.scatter(y[::10000], z[::10000], s=10)
+ax_yz.scatter(species_0_y[::10000], species_0_z[::10000], s=10)
 add_virial_radii(hc, "y", "z", ax_yz)
 ax_yz.add_labels("Y [Mpc]", "Z [Mpc]")
 ax_yz.equal_scale()
