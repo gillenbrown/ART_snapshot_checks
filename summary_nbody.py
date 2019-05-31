@@ -295,11 +295,11 @@ def mass_fractions(sphere):
         this_m_tot = m * n_m  # total mass in this species of particle
         frac = (this_m_tot / total_mass).value
         s = mass_to_species["{:.0f}".format(m.to("Msun"))]
-        print("{}: N = {:>10,} {:>6.2f}%".format(s, n_m, frac*100))
+        print_and_write("{}: N = {:>10,} {:>6.2f}%".format(s, n_m, frac*100), out_file)
 
 # Print information about all the halos present
 for halo in halos:
-    print("\n==================================\n")
+    print_and_write("\n==================================\n", out_file)
     print_and_write("Rank {} halo:".format(halo["rank"]), out_file)
     # First print the important quantities
     for quantity in ordered_quantities:   
@@ -323,24 +323,24 @@ for halo in halos:
         distances_4 = distance(x, y, z, species_4_x, species_4_y, species_4_z)
         distances_5 = distance(x, y, z, species_5_x, species_5_y, species_5_z)
         
-        print("\nClosest particle of each low-res DM species")
-        print("1: {:.0f} kpc".format(np.min(distances_1)*1000))
-        print("2: {:.0f} kpc".format(np.min(distances_2)*1000))
-        print("3: {:.0f} kpc".format(np.min(distances_3)*1000))
-        print("4: {:.0f} kpc".format(np.min(distances_4)*1000))
-        print("5: {:.0f} kpc".format(np.min(distances_5)*1000))
+        print_and_write("\nClosest particle of each low-res DM species", out_file)
+        print_and_write("1: {:.0f} kpc".format(np.min(distances_1)*1000), out_file)
+        print_and_write("2: {:.0f} kpc".format(np.min(distances_2)*1000), out_file)
+        print_and_write("3: {:.0f} kpc".format(np.min(distances_3)*1000), out_file)
+        print_and_write("4: {:.0f} kpc".format(np.min(distances_4)*1000), out_file)
+        print_and_write("5: {:.0f} kpc".format(np.min(distances_5)*1000), out_file)
 
         virial_radius = halo["virial_radius"]
         center = get_center(halo, with_units=True)
         virial_sphere = ds.sphere(center=center, radius=virial_radius)
         mpc_sphere = ds.sphere(center=center, radius=1*yt.units.Mpc)
-        print("\nFraction of the DM mass from different species")
-        print("Within the virial radius")
+        print_and_write("\nFraction of the DM mass from different species", out_file)
+        print_and_write("Within the virial radius", out_file)
         mass_fractions(virial_sphere)
         
-        print("\nWithin 1 Mpc")
+        print_and_write("\nWithin 1 Mpc", out_file)
         mass_fractions(mpc_sphere)
-print("\n==================================\n")
+print_and_write("\n==================================\n", out_file)
         
 # Then print the separation of the two biggest halos
 halo_1 = hc.catalog[rank_idxs[0]]
