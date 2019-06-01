@@ -343,14 +343,15 @@ for halo in halos:
 print_and_write("\n==================================\n", out_file)
         
 # Then print the separation of the two biggest halos
-halo_1 = hc.catalog[rank_idxs[0]]
-halo_2 = hc.catalog[rank_idxs[1]]
-dx = halo_1["particle_position_x"] - halo_2["particle_position_x"]
-dy = halo_1["particle_position_y"] - halo_2["particle_position_y"]
-dz = halo_1["particle_position_z"] - halo_2["particle_position_z"]
-dist = np.sqrt(dx**2 + dy**2 + dz**2).to("kpc")
-print_and_write("\nSeparation of two largest halos: {:.2f}".format(dist), 
-                out_file)
+if len(halos) >= 2:
+    halo_1 = halos[0]
+    halo_2 = halos[1]
+    dx = halo_1["particle_position_x"] - halo_2["particle_position_x"]
+    dy = halo_1["particle_position_y"] - halo_2["particle_position_y"]
+    dz = halo_1["particle_position_z"] - halo_2["particle_position_z"]
+    dist = np.sqrt(dx**2 + dy**2 + dz**2).to("kpc")
+    print_and_write("\nSeparation of two largest halos: {:.2f}".format(dist), 
+                    out_file)
 
 # Then do a plot of the halos
 halos_plot_name = plots_dir + "halos_{}.png".format(scale_factor)
