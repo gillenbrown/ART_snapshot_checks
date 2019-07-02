@@ -175,7 +175,33 @@ else:
         print_and_write(row_str.format(element, np.min(z_elt), 
                                        np.median(z_elt), true_mean, 
                                        np.max(z_elt)), out_file)
+print_and_write("", out_file)  # for spacing
 
+# =========================================================================
+#         
+# Cell Masses
+# 
+# =========================================================================
+# Checking the mass of cells can help debug refinement, so make sure that 
+# the Lagrangian refinement is actually working correctly
+refine_top_header = "Percentiles of cell gas mass distribution, units of {}"
+refine_header_str = "{:<10s}\t{:>10d}\t{:>10d}\t{:>10d}\t{:>10d}\t{:>10d}"
+refine_row_str = "{:<10.0f}" + 5 * "\t{:>10.3E}"
+
+percentiles = [0, 25, 50, 75, 100]
+
+for unit in ["code_mass", "Msun"]:
+    # write header info
+    print_and_write(refine_top_header.format(unit), out_file)
+    print_and_write(refine_header_str.format("Level", *percentiles), out_file)
+
+    gas_mass = ad[('gas', 'cell_mass')].to(unit).value
+    for level in level_idxs:
+        idxs = level_idxs[level]  # indices of cells at this level
+        mass_percentiles = np.percentile(gas_mass[idxs], percentiles)
+        print_and_write(refine_row_str.format(level, *mass_percentiles), 
+                        out_file)
+    print_and_write("", out_file)  # for spacing
 
 # =========================================================================
 #         
