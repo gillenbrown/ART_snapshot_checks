@@ -43,7 +43,11 @@ sim_dirs_nbody_lou = $(runs_home_lou)nbody/intel/run/outputs/br_production \
                      $(runs_home_lou)nbody/intel/run/outputs/tl_production \
                      $(runs_home_lou)nbody/intel/run/outputs/rj_production \
                      $(runs_home_lou)nbody/intel/run/outputs/change_core
-sim_dirs_hydro_lou = $(runs_home_lou)hydro/intel_broadwell/run/outputs/tl_first
+sim_dirs_hydro_lou = $(runs_home_lou)hydro/intel_broadwell/run/outputs/tl_first \
+                     $(runs_home_lou)hydro/intel_broadwell/run/outputs/tl_first_restart \
+                     $(runs_home_lou)hydro/intel_broadwell/run/outputs/tl_second \
+                     $(runs_home_lou)hydro/intel_broadwell/run/outputs/detail \
+                     $(runs_home_lou)hydro/pgi_broadwell/run/outputs/detail
 sim_dirs_lou = $(sim_dirs_nbody_lou) $(sim_dirs_hydro_lou)
 
 runs_home = $(runs_home_lou)
