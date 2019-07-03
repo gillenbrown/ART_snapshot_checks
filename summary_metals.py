@@ -95,7 +95,13 @@ print_and_write("z = {:.4f}".format(z), out_file)
 # 
 # =============================================================================
 # See some statistics about the metal properties of the gas at various levels
-elements = ["II", "Ia", "AGB", "C", "N", "O", "Mg", "S", "Ca", "Fe"]
+
+if ('artio', 'HVAR_METAL_DENSITY_Mg') in ds.field_list:
+    elements = ["II", "Ia", "AGB", "C", "N", "O", "Mg", "S", "Ca", "Fe"]
+elif ('artio', 'HVAR_METAL_DENSITY_C') in ds.field_list:
+    elements = ["II", "Ia", "AGB", "C", "N", "O", "Fe"]
+else:
+    elements = ["II", "Ia"]
 
 full_grid_levels = ad[('index', 'grid_level')].value
 grid_levels = np.unique(full_grid_levels)
