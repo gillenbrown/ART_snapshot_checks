@@ -98,8 +98,10 @@ print_and_write("z = {:.4f}".format(z), out_file)
 
 if ('artio', 'HVAR_METAL_DENSITY_Mg') in ds.field_list:
     elements = ["II", "Ia", "AGB", "C", "N", "O", "Mg", "S", "Ca", "Fe"]
-elif ('artio', 'HVAR_METAL_DENSITY_C') in ds.field_list:
+elif ('artio', 'HVAR_METAL_DENSITY_Fe') in ds.field_list:
     elements = ["II", "Ia", "AGB", "C", "N", "O", "Fe"]
+elif ('artio', 'HVAR_METAL_DENSITY_FE') in ds.field_list:
+    elements = ["II", "Ia", "AGB", "C", "N", "O", "FE"]
 else:
     elements = ["II", "Ia"]
 
