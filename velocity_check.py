@@ -79,6 +79,9 @@ ds = yt.load(sys.argv[1])
 ad = ds.all_data()
 levels_gas = ad[('index', 'grid_level')].value
 grid_levels, num_in_grid = np.unique(levels_gas, return_counts=True)
+cell_sizes = np.unique(ad["index", "dx"]).to("pc").value[::-1]
+# ^ np.unique returns the unique values in sorted order. We want the
+# largest cells to correspond to the smallest level, so we reverse it
 
 # get the gas velocity
 velocity_gas = ad[('gas', 'velocity_magnitude')].to("km/s").value
@@ -111,20 +114,21 @@ levels_dm   = ds.find_field_values_at_points([('index', 'grid_level')],
 # print the max velocities in each level
 # We have to have this ugly code to handle what happens when there are no stars
 # or DM on a given level. This is all for the string that gets printed
-header_str = "{:<10s}" + 3 * "{:>10s}"
+header_str = "{:<10s}" + 5 * "{:>10s}"
 level_str = "{:<10.0f}"
 not_empty = "{:>10.2f}"
+time = "{:>10.2E}"
 empty = "{:>10s}".format("---")
-row_str = level_str + 3 * not_empty
-row_str_no_star = level_str + 2 * not_empty + empty
-row_str_no_dm = level_str + empty + 2 * not_empty
-row_str_no_both = level_str + empty + not_empty + empty
+row_str = level_str + 4 * not_empty + time
+row_str_no_star = level_str + 2 * not_empty + empty + not_empty + time
+row_str_no_dm = level_str + empty + 3 * not_empty + time
+row_str_no_both = level_str + empty + not_empty + empty + not_empty + time
 
 out("\nThis shows the highest velocity present in the following components at " 
-    "each level.\nAll velocities are in km/s.")
-out(header_str.format("Level", "DM", "Gas", "Stars"))
+    "each level.\nAll velocities are in km/s, cell size in pc, dt in years.")
+out(header_str.format("Level", "DM", "Gas", "Stars", "Cell Size", "dt"))
 
-for level in grid_levels:
+for level, cell_size in zip(grid_levels, cell_sizes):
     idx_gas = np.where(levels_gas == level)
     idx_star = np.where(levels_star == level)
     idx_dm = np.where(levels_dm == level)
@@ -139,14 +143,26 @@ for level in grid_levels:
     # then decide what to print
     if len(idx_star[0]) > 0:  # stars 
         if len(idx_dm[0]) > 0:  # stars and DM 
-            out_str = row_str.format(level, vel_max_dm, vel_max_gas, vel_max_star)
+            vel_max_all = max([vel_max_gas, vel_max_dm, vel_max_star])
+            dt = cell_size * yt.units.pc / (vel_max_all * yt.units.km / yt.units.s)
+            dt = dt.to("yr").value
+
+            out_str = row_str.format(level, vel_max_dm, vel_max_gas, vel_max_star, cell_size, dt)
         else:  # stars, no DM
-            out_str = row_str_no_dm.format(level, vel_max_gas, vel_max_star)
+            vel_max_all = max([vel_max_gas, vel_max_star])
+            dt = cell_size * yt.units.pc / (vel_max_all * yt.units.km / yt.units.s)
+            dt = dt.to("yr").value
+            out_str = row_str_no_dm.format(level, vel_max_gas, vel_max_star, cell_size, dt)
     else:  # no stars
         if len(idx_dm[0]) > 0:  # no stars, but DM 
-            out_str = row_str_no_star.format(level, vel_max_dm, vel_max_gas)
+            vel_max_all = max([vel_max_gas, vel_max_dm])
+            dt = cell_size * yt.units.pc / (vel_max_all * yt.units.km / yt.units.s)
+            dt = dt.to("yr").value
+            out_str = row_str_no_star.format(level, vel_max_dm, vel_max_gas, cell_size, dt)
         else:  # no stars, no dm
-            out_str = row_str_no_both.format(level, vel_max_gas)
+            dt = cell_size * yt.units.pc / (vel_max_gas * yt.units.km / yt.units.s)
+            dt = dt.to("yr").value
+            out_str = row_str_no_both.format(level, vel_max_gas, cell_size, dt)
         
     out(out_str)
 
@@ -162,8 +178,8 @@ idx_sort_gas  = np.argsort(velocity_gas)[:-n_each-1:-1]
 idx_sort_dm   = np.argsort(velocity_dm)[:-n_each-1:-1]
 idx_sort_star = np.argsort(velocity_star)[:-n_each-1:-1]
 
-header_str = "{:>20s}\t" + "{:<10s}" + 3 * "{:>20s}"
-row_str = "{:>20.10f}\t" + "{:<10.0f}" + 3 * "{:>20.10f}"
+header_str = "{:>20s}\t" + 2 * "{:<10s}" +3 * "{:>20s}"
+row_str = "{:>20.10f}\t" + "{:<10.0f}" + "{:<10.3E}" + 3 * "{:>20.10f}"
 
 for name in ["DM", "Gas", "Stars"]:
     # get the info for each of the components
@@ -171,6 +187,7 @@ for name in ["DM", "Gas", "Stars"]:
         idxs = idx_sort_gas
         velocities = velocity_gas
         levels = levels_gas
+        mass = ad[('gas', 'cell_mass')].to("Msun").value
         # haven't gotten the positions for the gas yet, so do that now. This 
         # is a bit ugly, but is useful to make the later code easier
         pos_gas_x = ad[('gas', 'x')].to("code_length").value
@@ -182,19 +199,21 @@ for name in ["DM", "Gas", "Stars"]:
         idxs = idx_sort_dm
         velocities = velocity_dm
         levels = levels_dm
+        masses = ad[('N-BODY', 'particle_mass')][idx_fast_dm].to("Msun").value
         positions = position_dm
     elif name == "Stars":
         idxs = idx_sort_star
         velocities = velocity_star
         levels = levels_star
+        masses = ad[('STAR', 'MASS')][idx_fast_star].to("Msun").value
         positions = position_star
 
     out("\n{} Highest Velocities".format(name))
-    out(header_str.format("Velocity [km/s]", "Level", "Location X [code]", 
+    out(header_str.format("Velocity [km/s]", "Level", "Mass", "Location X [code]", 
                           "Location Y [code]", "Location Z [code]"))
     # go through each of the highest velocity cells and print their information
     for idx in idxs:
         x, y, z = positions[idx].to("code_length").value
-        out(row_str.format(velocities[idx], levels[idx], x, y, z))
+        out(row_str.format(velocities[idx], levels[idx], 0, x, y, z))
 
 
