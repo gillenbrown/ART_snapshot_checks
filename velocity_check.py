@@ -187,7 +187,7 @@ for name in ["DM", "Gas", "Stars"]:
         idxs = idx_sort_gas
         velocities = velocity_gas
         levels = levels_gas
-        mass = ad[('gas', 'cell_mass')].to("Msun").value
+        masses = ad[('gas', 'cell_mass')].to("Msun").value
         # haven't gotten the positions for the gas yet, so do that now. This 
         # is a bit ugly, but is useful to make the later code easier
         pos_gas_x = ad[('gas', 'x')].to("code_length").value
@@ -214,6 +214,6 @@ for name in ["DM", "Gas", "Stars"]:
     # go through each of the highest velocity cells and print their information
     for idx in idxs:
         x, y, z = positions[idx].to("code_length").value
-        out(row_str.format(velocities[idx], levels[idx], 0, x, y, z))
+        out(row_str.format(velocities[idx], levels[idx], masses[idx], x, y, z))
 
 
