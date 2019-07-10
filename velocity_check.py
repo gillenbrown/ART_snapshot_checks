@@ -104,9 +104,9 @@ position_star = ad[('STAR', 'particle_position')][idx_fast_star]
 position_dm   = ad[('N-BODY', 'particle_position')][idx_fast_dm]
 
 levels_star = ds.find_field_values_at_points([('index', 'grid_level')], 
-                                             position_star)
+                                             position_star).value
 levels_dm   = ds.find_field_values_at_points([('index', 'grid_level')], 
-                                             position_dm)
+                                             position_dm).value
 
 # print the max velocities in each level
 # We have to have this ugly code to handle what happens when there are no stars
@@ -120,7 +120,7 @@ row_str_no_star = level_str + 2 * not_empty + empty
 row_str_no_dm = level_str + empty + 2 * not_empty
 row_str_no_both = level_str + empty + not_empty + empty
 
-out("This shows the highest velocity present in the following components at " 
+out("\nThis shows the highest velocity present in the following components at " 
     "each level.\nAll velocities are in km/s.")
 out(header_str.format("Level", "DM", "Gas", "Stars"))
 
@@ -151,7 +151,7 @@ for level in grid_levels:
     out(out_str)
 
 # print the information of the highest-velocity cells/particles
-out("Here are the cells/particles with the highest velocities.")
+out("\nHere are the cells/particles with the highest velocities.")
 n_each = 10  # how many cells/DM particles/star particles to print
 # Sort the velocities, then get the biggest ones (that will be at the end).
 # The indexing is weird. We want to go backwards, (biggest first), so the step
