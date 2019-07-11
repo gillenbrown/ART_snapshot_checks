@@ -84,7 +84,12 @@ cell_sizes = np.unique(ad["index", "dx"]).to("pc").value[::-1]
 # largest cells to correspond to the smallest level, so we reverse it
 
 # get the gas velocity
-velocity_gas = ad[('gas', 'velocity_magnitude')].to("km/s").value
+velocity_bulk_gas = ad[('gas', 'velocity_magnitude')].to("km/s").value
+# and sound speed
+gamma = ad[('gas', 'gamma')] 
+sound_speed_gas = np.sqrt(gamma * (gamma - 1.0) * ad[('artio', 'HVAR_INTERNAL_ENERGY')] /
+                          ad[('gas', 'density')]).to("km/s").value
+v_tot_gas = np.sqrt(velocity_bulk_gas**2 + sound_speed_gas**2) 
 
 # do this for stars and DM too
 velocity_star = ad[('STAR', 'particle_velocity_magnitude')].to("km/s").value
@@ -114,19 +119,20 @@ levels_dm   = ds.find_field_values_at_points([('index', 'grid_level')],
 # print the max velocities in each level
 # We have to have this ugly code to handle what happens when there are no stars
 # or DM on a given level. This is all for the string that gets printed
-header_str = "{:<10s}" + 5 * "{:>10s}"
+header_str = "{:<10s}" + 7 * "{:>10s}"
 level_str = "{:<10.0f}"
 not_empty = "{:>10.2f}"
 time = "{:>10.2E}"
 empty = "{:>10s}".format("---")
-row_str = level_str + 4 * not_empty + time
-row_str_no_star = level_str + 2 * not_empty + empty + not_empty + time
-row_str_no_dm = level_str + empty + 3 * not_empty + time
-row_str_no_both = level_str + empty + not_empty + empty + not_empty + time
+row_str = level_str + 6 * not_empty + time
+row_str_no_star = level_str + 4 * not_empty + empty + not_empty + time
+row_str_no_dm = level_str + empty + 5 * not_empty + time
+row_str_no_both = level_str + empty + 3 * not_empty + empty + not_empty + time
 
 out("\nThis shows the highest velocity present in the following components at " 
     "each level.\nAll velocities are in km/s, cell size in pc, dt in years.")
-out(header_str.format("Level", "DM", "Gas", "Stars", "Cell Size", "dt"))
+out(header_str.format("Level", "DM", "Gas bulk", "Gas c_s", "Gas v_tot", 
+                      "Stars", "Cell Size", "dt"))
 
 for level, cell_size in zip(grid_levels, cell_sizes):
     idx_gas = np.where(levels_gas == level)
@@ -134,7 +140,9 @@ for level, cell_size in zip(grid_levels, cell_sizes):
     idx_dm = np.where(levels_dm == level)
 
     # get the maximum velocity at this level, if we have particles here
-    vel_max_gas = np.max(velocity_gas[idx_gas])
+    vel_max_gas_bulk = np.max(velocity_bulk_gas[idx_gas])
+    vel_max_gas_cs   = np.max(sound_speed_gas[idx_gas])
+    vel_max_gas_tot  = np.max(v_tot_gas[idx_gas])
     if len(idx_star[0]) > 0:  # we do have stars at this level
         vel_max_star = np.max(velocity_star[idx_star])
     if len(idx_dm[0]) > 0:  # DM at this level
@@ -143,26 +151,34 @@ for level, cell_size in zip(grid_levels, cell_sizes):
     # then decide what to print
     if len(idx_star[0]) > 0:  # stars 
         if len(idx_dm[0]) > 0:  # stars and DM 
-            vel_max_all = max([vel_max_gas, vel_max_dm, vel_max_star])
+            vel_max_all = max([vel_max_gas_tot, vel_max_dm, vel_max_star])
             dt = cell_size * yt.units.pc / (vel_max_all * yt.units.km / yt.units.s)
             dt = dt.to("yr").value
 
-            out_str = row_str.format(level, vel_max_dm, vel_max_gas, vel_max_star, cell_size, dt)
+            out_str = row_str.format(level, vel_max_dm, vel_max_gas_bulk, 
+                                     vel_max_gas_cs, vel_max_gas_tot, 
+                                     vel_max_star, cell_size, dt)
         else:  # stars, no DM
-            vel_max_all = max([vel_max_gas, vel_max_star])
+            vel_max_all = max([vel_max_gas_tot, vel_max_star])
             dt = cell_size * yt.units.pc / (vel_max_all * yt.units.km / yt.units.s)
             dt = dt.to("yr").value
-            out_str = row_str_no_dm.format(level, vel_max_gas, vel_max_star, cell_size, dt)
+            out_str = row_str_no_dm.format(level, vel_max_gas_bulk, 
+                                           vel_max_gas_cs, vel_max_gas_tot, 
+                                           vel_max_star, cell_size, dt)
     else:  # no stars
         if len(idx_dm[0]) > 0:  # no stars, but DM 
-            vel_max_all = max([vel_max_gas, vel_max_dm])
+            vel_max_all = max([vel_max_gas_tot, vel_max_dm])
             dt = cell_size * yt.units.pc / (vel_max_all * yt.units.km / yt.units.s)
             dt = dt.to("yr").value
-            out_str = row_str_no_star.format(level, vel_max_dm, vel_max_gas, cell_size, dt)
+            out_str = row_str_no_star.format(level, vel_max_dm, 
+                                             vel_max_gas_bulk, vel_max_gas_cs, 
+                                             vel_max_gas_tot, cell_size, dt)
         else:  # no stars, no dm
-            dt = cell_size * yt.units.pc / (vel_max_gas * yt.units.km / yt.units.s)
+            dt = cell_size * yt.units.pc / (vel_max_gas_tot * yt.units.km / yt.units.s)
             dt = dt.to("yr").value
-            out_str = row_str_no_both.format(level, vel_max_gas, cell_size, dt)
+            out_str = row_str_no_both.format(level, vel_max_gas_bulk, 
+                                             vel_max_gas_cs, vel_max_gas_tot, 
+                                             cell_size, dt)
         
     out(out_str)
 
@@ -174,18 +190,18 @@ n_each = 10  # how many cells/DM particles/star particles to print
 # must be -1. Since we're going backwards, we end once we count back n_each, so 
 # that goes in the end part of the slice. We have to subtract one, since the 
 # final value isn't included in the slice
-idx_sort_gas  = np.argsort(velocity_gas)[:-n_each-1:-1]
-idx_sort_dm   = np.argsort(velocity_dm)[:-n_each-1:-1]
-idx_sort_star = np.argsort(velocity_star)[:-n_each-1:-1]
+idx_sort_gas_bulk = np.argsort(velocity_bulk_gas)[:-n_each-1:-1]
+idx_sort_gas_c_s  = np.argsort(sound_speed_gas)[:-n_each-1:-1]
+idx_sort_gas_tot  = np.argsort(v_tot_gas)[:-n_each-1:-1]
+idx_sort_dm       = np.argsort(velocity_dm)[:-n_each-1:-1]
+idx_sort_star     = np.argsort(velocity_star)[:-n_each-1:-1]
 
 header_str = "{:>20s}\t" + 2 * "{:<10s}" +3 * "{:>20s}"
 row_str = "{:>20.10f}\t" + "{:<10.0f}" + "{:<10.3E}" + 3 * "{:>20.10f}"
 
-for name in ["DM", "Gas", "Stars"]:
+for name in ["DM", "Gas bulk", "Gas c_s", "Gas total", "Stars"]:
     # get the info for each of the components
-    if name == "Gas":
-        idxs = idx_sort_gas
-        velocities = velocity_gas
+    if "Gas" in name:
         levels = levels_gas
         masses = ad[('gas', 'cell_mass')].to("Msun").value
         # haven't gotten the positions for the gas yet, so do that now. This 
@@ -195,6 +211,15 @@ for name in ["DM", "Gas", "Stars"]:
         pos_gas_z = ad[('gas', 'z')].to("code_length").value
         positions = np.stack([pos_gas_x, pos_gas_y, pos_gas_z], axis=1)
         positions = ds.arr(positions, "code_length")
+    if name == "Gas bulk":
+        idxs = idx_sort_gas_bulk
+        velocities = velocity_bulk_gas
+    elif name == "Gas c_s":
+        idxs = idx_sort_gas_c_s
+        velocities = sound_speed_gas
+    elif name == "Gas total":
+        idxs = idx_sort_gas_tot
+        velocities = v_tot_gas
     elif name == "DM":
         idxs = idx_sort_dm
         velocities = velocity_dm
