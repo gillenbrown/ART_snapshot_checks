@@ -41,7 +41,7 @@ ad = ds.all_data()
 # get the location of where to write the file.
 sim_dir = os.path.dirname(ds_loc) + os.sep
 file_dir = sim_dir.replace("/out/", "/checks/")
-file_path = file_dir + "velocities_a" + scale_factor + ".txt"
+file_path = file_dir + "summary_velocity_a" + scale_factor + ".txt"
 plots_dir = sim_dir.replace("/out/", "/plots/")
 
 # inform the user of where the output is going

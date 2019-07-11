@@ -20,6 +20,7 @@ halo_finding_script = ./run_rockstar.sh
 rename_script = ./rename_halos.py
 summary_nbody_script = ./summary_nbody.py
 summary_metal_script = ./summary_metals.py
+summary_vel_script = ./summary_velocity.py
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
 read_tree_src = $(read_tree_dir)/halo_history.c
@@ -153,10 +154,19 @@ summaries_metal = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_summary_me
 
 # ------------------------------------------------------------------------------
 #
+#  Summary files - velocity
+# 
+# ------------------------------------------------------------------------------
+sim_to_summary_vel = $(subst .art,.txt,$(subst out/continuous,checks/summary_velocity, $(1)))
+summary_vel_to_sim = $(subst .txt,.art,$(subst checks/summary_velocity,out/continuous, $(1)))
+summaries_vel = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_summary_vel,$(snapshot)))
+
+# ------------------------------------------------------------------------------
+#
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(all_directories) $(summaries_nbody) $(summaries_metal) $(merger_sentinels)
+all: $(all_directories) $(summaries_nbody) $(summaries_metal) $(summaries_vel) $(merger_sentinels)
 
 # Make directories if they don't exist
 $(all_directories):
@@ -208,4 +218,8 @@ $(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 $(summaries_metal): %: $$(call summary_metal_to_sim,%) $(summary_metal_script)
 	python $(summary_metal_script) $(call summary_metal_to_sim, $@) clobber silent
 
+# Make the summary files for velocities
+.SECONDEXPANSION:
+$(summaries_vel): %: $$(call summary_vel_to_sim,%) $(summary_vel_script)
+	python $(summary_vel_script) $(call summary_vel_to_sim, $@) clobber silent
 
