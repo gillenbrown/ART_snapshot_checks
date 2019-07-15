@@ -106,7 +106,7 @@ else:
     elements = ["II", "Ia"]
 
 full_grid_levels = ad[('index', 'grid_level')].value
-grid_levels = np.unique(full_grid_levels)
+grid_levels, num_in_grid = np.unique(full_grid_levels, return_counts=True)
 cell_sizes = np.unique(ad["index", "dx"]).to("pc")[::-1]
 # ^ np.unique returns the unique values in sorted order. We want the
 # largest cells to correspond to the smallest level, so we reverse it
@@ -129,10 +129,11 @@ for elt in metal_densities:
     metal_densities[elt] = metal_densities[elt].to("g/cm**3")
 
 # Then go level by level to get the properties of the gas at that level
-header_str = "{:<10s}\t{:>10s}\t{:>10s}\t{:>10s}\t{:>10s}"
-row_str = "{:<10s}\t{:>10.3E}\t{:>10.3E}\t{:>10.3E}\t{:>10.3E}"
-for level, cell_size in zip(level_idxs, cell_sizes):
-    print_and_write("level={:.0f}, cell size={:.2f}".format(level, cell_size), 
+header_str = "{:<10s}{:>12s}{:>12s}{:>12s}{:>12s}"
+row_str = "{:<10s}{:>12.3E}{:>12.3E}{:>12.3E}{:>12.3E}"
+for level, cell_size, n_cells in zip(level_idxs, cell_sizes, num_in_grid):
+    print_and_write("level={:.0f}, cell size={:.2f}, "
+                    "number of cells={:,.0f}".format(level, cell_size, n_cells), 
                     out_file)
     print_and_write(header_str.format("Element", "Minimum Z", "Median Z", 
                                       "Mean Z", "Maximum Z"), out_file)
@@ -193,21 +194,22 @@ print_and_write("", out_file)  # for spacing
 # Checking the mass of cells can help debug refinement, so make sure that 
 # the Lagrangian refinement is actually working correctly
 refine_top_header = "Percentiles of cell gas mass distribution, units of {}"
-refine_header_str = "{:<10s}\t{:>10d}\t{:>10d}\t{:>10d}\t{:>10d}\t{:>10d}"
-refine_row_str = "{:<10.0f}" + 5 * "\t{:>10.3E}"
-
-percentiles = [0, 25, 50, 75, 100]
+percentiles = [0, 0.1, 1, 25, 50, 75, 99, 99.9, 100]
+refine_header_str = "{:<10s}" + "{:>10s}" + len(percentiles) * "{:>12.1f}"
+refine_row_str = "{:<10.0f}" + "{:>10,.0f}" + len(percentiles) * "{:>12.3E}"
 
 for unit in ["code_mass", "Msun"]:
     # write header info
     print_and_write(refine_top_header.format(unit), out_file)
-    print_and_write(refine_header_str.format("Level", *percentiles), out_file)
+    print_and_write(refine_header_str.format("Level", "Number",
+                                             *percentiles), out_file)
 
     gas_mass = ad[('gas', 'cell_mass')].to(unit).value
     for level in level_idxs:
         idxs = level_idxs[level]  # indices of cells at this level
+        n_cell = len(level_idxs[level])
         mass_percentiles = np.percentile(gas_mass[idxs], percentiles)
-        print_and_write(refine_row_str.format(level, *mass_percentiles), 
+        print_and_write(refine_row_str.format(level, n_cell, *mass_percentiles), 
                         out_file)
     print_and_write("", out_file)  # for spacing
 

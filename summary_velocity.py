@@ -119,11 +119,11 @@ levels_dm   = ds.find_field_values_at_points([('index', 'grid_level')],
 # print the max velocities in each level
 # We have to have this ugly code to handle what happens when there are no stars
 # or DM on a given level. This is all for the string that gets printed
-header_str = "{:<10s}" + 7 * "{:>10s}"
-level_str = "{:<10.0f}"
+header_str = "{:<10s} {:>10s}" + 7 * "{:>10s}"
+level_str = "{:<10.0f} {:>10,.0f}"
 not_empty = "{:>10.2f}"
-time = "{:>10.2E}"
 empty = "{:>10s}".format("---")
+time = "{:>10.2E}"
 row_str = level_str + 6 * not_empty + time
 row_str_no_star = level_str + 4 * not_empty + empty + not_empty + time
 row_str_no_dm = level_str + empty + 5 * not_empty + time
@@ -131,10 +131,10 @@ row_str_no_both = level_str + empty + 3 * not_empty + empty + not_empty + time
 
 out("\nThis shows the highest velocity present in the following components at " 
     "each level.\nAll velocities are in km/s, cell size in pc, dt in years.")
-out(header_str.format("Level", "DM", "Gas bulk", "Gas c_s", "Gas v_tot", 
+out(header_str.format("Level", "num_cells", "DM", "Gas bulk", "Gas c_s", "Gas v_tot", 
                       "Stars", "Cell Size", "dt"))
 
-for level, cell_size in zip(grid_levels, cell_sizes):
+for level, cell_size, n_cells in zip(grid_levels, cell_sizes, num_in_grid):
     idx_gas = np.where(levels_gas == level)
     idx_star = np.where(levels_star == level)
     idx_dm = np.where(levels_dm == level)
@@ -155,14 +155,14 @@ for level, cell_size in zip(grid_levels, cell_sizes):
             dt = cell_size * yt.units.pc / (vel_max_all * yt.units.km / yt.units.s)
             dt = dt.to("yr").value
 
-            out_str = row_str.format(level, vel_max_dm, vel_max_gas_bulk, 
+            out_str = row_str.format(level, n_cells, vel_max_dm, vel_max_gas_bulk, 
                                      vel_max_gas_cs, vel_max_gas_tot, 
                                      vel_max_star, cell_size, dt)
         else:  # stars, no DM
             vel_max_all = max([vel_max_gas_tot, vel_max_star])
             dt = cell_size * yt.units.pc / (vel_max_all * yt.units.km / yt.units.s)
             dt = dt.to("yr").value
-            out_str = row_str_no_dm.format(level, vel_max_gas_bulk, 
+            out_str = row_str_no_dm.format(level, n_cells, vel_max_gas_bulk, 
                                            vel_max_gas_cs, vel_max_gas_tot, 
                                            vel_max_star, cell_size, dt)
     else:  # no stars
@@ -170,13 +170,13 @@ for level, cell_size in zip(grid_levels, cell_sizes):
             vel_max_all = max([vel_max_gas_tot, vel_max_dm])
             dt = cell_size * yt.units.pc / (vel_max_all * yt.units.km / yt.units.s)
             dt = dt.to("yr").value
-            out_str = row_str_no_star.format(level, vel_max_dm, 
+            out_str = row_str_no_star.format(level, n_cells, vel_max_dm, 
                                              vel_max_gas_bulk, vel_max_gas_cs, 
                                              vel_max_gas_tot, cell_size, dt)
         else:  # no stars, no dm
             dt = cell_size * yt.units.pc / (vel_max_gas_tot * yt.units.km / yt.units.s)
             dt = dt.to("yr").value
-            out_str = row_str_no_both.format(level, vel_max_gas_bulk, 
+            out_str = row_str_no_both.format(level, n_cells, vel_max_gas_bulk, 
                                              vel_max_gas_cs, vel_max_gas_tot, 
                                              cell_size, dt)
         
