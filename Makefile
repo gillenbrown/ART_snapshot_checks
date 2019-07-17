@@ -17,6 +17,7 @@ tree_dir = $(tree_dir_lou)
 # 
 # ------------------------------------------------------------------------------
 halo_finding_script = ./run_rockstar.sh
+halo_finding_py_file = ./halo_finding_rockstar.py
 rename_script = ./rename_halos.py
 summary_nbody_script = ./summary_nbody.py
 summary_metal_script = ./summary_metals.py
@@ -183,7 +184,7 @@ halos: $(rockstar_sentinels)
 # We run the script with parameters to the output directory and rockstar halo 
 # directory, plus the remove keyword to replace previous halo catalogs
 .SECONDEXPANSION:
-$(rockstar_sentinels): %: $$(call sentinel_to_sims, %) 
+$(rockstar_sentinels): %: $$(call sentinel_to_sims, %) $(halo_finding_script) $(halo_finding_py_file) 
 	$(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@)
 
 # Rule to rename the halo catalogs into something more user-friendly
