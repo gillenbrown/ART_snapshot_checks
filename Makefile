@@ -71,7 +71,7 @@ sim_rockstar_halos_dirs = $(foreach dir,$(sim_dirs),$(dir)/rockstar_halos)
 sim_human_halos_dirs = $(foreach dir,$(sim_dirs),$(dir)/halos)
 sim_checks_dirs = $(foreach dir,$(sim_dirs),$(dir)/checks)
 sim_plots_dirs = $(foreach dir,$(sim_dirs),$(dir)/plots)
-all_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos_dirs) $(sim_plots_dirs)
+my_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos_dirs) $(sim_plots_dirs)
 
 # ------------------------------------------------------------------------------
 #
@@ -169,10 +169,14 @@ summaries_vel = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_summary_vel,
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(all_directories) $(summaries_nbody) $(summaries_metal) $(summaries_vel) $(merger_sentinels)
+all: $(my_directories) $(summaries_nbody) $(summaries_metal) $(summaries_vel) $(merger_sentinels)
+
+.PHONY: clean
+clean:
+	rm -r $(my_directories)
 
 # Make directories if they don't exist
-$(all_directories):
+$(my_directories):
 	mkdir $@
 
 # Rule to make the rockstar sentinel files
