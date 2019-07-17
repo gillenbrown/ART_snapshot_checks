@@ -40,6 +40,15 @@ if os.path.exists(out_dir + "datasets.txt"):
 else:
     restart = False
 
+# rockstar has a bug. When restarting, it overwrites the existing datasets.txt 
+# file, but doesn't include the original datasets that were in that file. This 
+# is only a bug with the datasets.txt file. The outputs are correctly numbered,
+# but the datasets.txt file doesn't reflect that. To fix this, we will copy the
+# datasets.txt file to a new location so that we can save the info until the 
+# end of this script, when we'll parse the two datasets.txt
+if restart:
+    shutil.copyfile(out_dir + "datasets.txt", out_dir + "old_datasets.txt")
+
 
 if yt.is_root():
     print("Reading simulations from: {}".format(sim_dir))
@@ -58,6 +67,48 @@ else:
 rh = RockstarHaloFinder(ts, num_readers=2, num_writers=17, outbase=out_dir,
                         particle_type=particle_type)
 rh.run(restart=restart)
+
+# then we can fix the dataset.txt nonsense
+if restart:
+    # first move the new datasets.txt to a place where we won't overwrite it
+    shutil.move(out_dir + "datasets.txt", out_dir + "new_datasets.txt")
+
+    # the original file's numbering is fine. We don't need to mess with that.
+    # But we do need to get the number of the last file there, so we'll read 
+    # that file in.
+    with open(out_dir + "datasets.txt", "w") as final_datasets:
+        with open(out_dir + "old_datasets.txt", "r") as old_datasets:
+            for line in old_datasets:
+                # put all the lines in the new file, including the header
+                final_datasets.write(line)
+                if not line.startswith("#"):
+                    # get the index of this line. They are in order, so the
+                    # last one processed will be the highest index
+                    last_index = int(line.split()[-1])
+                
+        # then we can go through the new file and replace the indices properly
+        with open(out_dir + "new_datasets.txt", "r") as new_datasets:
+            for line in new_datasets:
+                # we don't need to copy the header for the second file
+                if line.startswith("#"):
+                    continue  
+
+                new_idx = int(line.split()[-1])
+                # make the proper index. The first in this file will currently 
+                # have index 0, but needs last_index + 1.
+                correct_idx = new_idx + last_index + 1 
+                # then we can replace that in the string. Tabs are used to 
+                # separate the index from the sim location, so we can use
+                # that to avoid accidentally replacing part of the scale
+                # factor in the sim name
+                line = line.replace("\t{}".format(str(new_idx)), 
+                                    "\t{}".format(str(correct_idx)))
+                # put the line with the updated index in the new file
+                final_datasets.write(line)
+
+    # and finally delete the temporary files
+    os.remove(out_dir + "old_datasets.txt")
+    os.remove(out_dir + "new_datasets.txt")
 
 # update the sentinel file
 pathlib.Path(out_dir + "sentinel.txt").touch()
