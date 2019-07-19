@@ -1,15 +1,25 @@
 # ------------------------------------------------------------------------------
 #
+#  Flag to let the user tell us which machine we're on
+# 
+# ------------------------------------------------------------------------------
+# This tells us which directories to look for simulations in, which will 
+# be used later
+machine = shangrila
+
+# ------------------------------------------------------------------------------
+#
 #  Code locations - depend on the machine
 # 
 # ------------------------------------------------------------------------------
-tree_config_script_lou = /u/gbrown12/yt-conda/src/rockstar/scripts/gen_merger_cfg.pl
-tree_config_script_shangrila = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
-tree_dir_lou = /u/gbrown12/code/consistent-trees/
-tree_dir_shangrila = /u/home/gillenb/code/not_mine/consistent-trees/
-
-tree_config_script = $(tree_config_script_lou)
-tree_dir = $(tree_dir_lou)
+ifeq ($(machine),shangrila)
+   tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
+   tree_dir = /u/home/gillenb/code/not_mine/consistent-trees/
+endif
+ifeq ($(machine),lou)
+   tree_config_script = /u/gbrown12/yt-conda/src/rockstar/scripts/gen_merger_cfg.pl
+   tree_dir = /u/gbrown12/code/consistent-trees/
+endif
 
 # ------------------------------------------------------------------------------
 #
@@ -31,35 +41,34 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 #  Simulation outputs to run this on - depend on the machine
 # 
 # ------------------------------------------------------------------------------
-runs_home_shangrila = /u/home/gillenb/art_runs/runs/
-sim_dirs_nbody_shangrila = $(runs_home_shangrila)shangrila/nbody/run/outputs/rj \
-                           $(runs_home_shangrila)shangrila/nbody/run/outputs/tl \
-                           $(runs_home_shangrila)shangrila/nbody/run/outputs/br_no_refine_1 
-sim_dirs_hydro_shangrila = $(runs_home_shangrila)shangrila/test_all_elts/run \
-                           $(runs_home_shangrila)shangrila/test_mine_music/run/outputs \
-                           $(runs_home_shangrila)shangrila/test_mine/run
-sim_dirs_shangrila = $(sim_dirs_nbody_shangrila) $(sim_dirs_hydro_shangrila)
-                     
-runs_home_lou = /u/gbrown12/art_runs/runs/
-sim_dirs_nbody_lou = $(runs_home_lou)nbody/intel/run/outputs/br_production \
-                     $(runs_home_lou)nbody/intel/run/outputs/tl_production \
-                     $(runs_home_lou)nbody/intel/run/outputs/rj_production \
-                     $(runs_home_lou)nbody/intel/run/outputs/change_core
-sim_dirs_hydro_lou = $(runs_home_lou)hydro/intel_broadwell/run/outputs/tl_first \
-                     $(runs_home_lou)hydro/intel_broadwell/run/outputs/tl_first_restart \
-                     $(runs_home_lou)hydro/intel_broadwell/run/outputs/tl_second \
-                     $(runs_home_lou)hydro/intel_broadwell/run/outputs/detail \
-                     $(runs_home_lou)hydro/intel_broadwell/run/outputs/detail_cfl_restart \
-                     $(runs_home_lou)hydro/intel_broadwell/run/outputs/detail_low_res \
-                     $(runs_home_lou)hydro/intel_broadwell_debug_timestep/run/outputs/detail_dt \
-                     $(runs_home_lou)hydro/pgi_broadwell/run/outputs/detail
-sim_dirs_lou = $(sim_dirs_nbody_lou) $(sim_dirs_hydro_lou)
+ifeq ($(machine),shangrila)
+   runs_home = /u/home/gillenb/art_runs/runs/
+   sim_dirs_nbody = $(runs_home)shangrila/nbody/run/outputs/rj \
+                    $(runs_home)shangrila/nbody/run/outputs/tl \
+                    $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 
+   sim_dirs_hydro = $(runs_home)shangrila/test_all_elts/run \
+                    $(runs_home)shangrila/test_mine_music/run/outputs \
+                    $(runs_home)shangrila/test_mine/run
+endif
 
-runs_home = $(runs_home_lou)
-sim_dirs_nbody = $(sim_dirs_nbody_lou)
-sim_dirs_hydro = $(sim_dirs_hydro_lou)
-sim_dirs = $(sim_dirs_lou)
+ifeq ($(machine),lou)                
+   runs_home = /u/gbrown12/art_runs/runs/
+   sim_dirs_nbody = $(runs_home)nbody/intel/run/outputs/br_production \
+                    $(runs_home)nbody/intel/run/outputs/tl_production \
+                    $(runs_home)nbody/intel/run/outputs/rj_production \
+                    $(runs_home)nbody/intel/run/outputs/change_core
+   sim_dirs_hydro = $(runs_home)hydro/intel_broadwell/run/outputs/tl_first \
+                    $(runs_home)hydro/intel_broadwell/run/outputs/tl_first_restart \
+                    $(runs_home)hydro/intel_broadwell/run/outputs/tl_second \
+                    $(runs_home)hydro/intel_broadwell/run/outputs/detail \
+                    $(runs_home)hydro/intel_broadwell/run/outputs/detail_cfl_restart \
+                    $(runs_home)hydro/intel_broadwell/run/outputs/detail_low_res \
+                    $(runs_home)hydro/intel_broadwell_debug_timestep/run/outputs/detail_dt \
+                    $(runs_home)hydro/pgi_broadwell/run/outputs/detail
+endif
 
+# combine the N-Body and Hydro into one big list
+sim_dirs = $(sim_dirs_nbody) $(sim_dirs_hydro)
 # ------------------------------------------------------------------------------
 #
 #  Directories for each simulation, where outputs will be stored
