@@ -1,11 +1,23 @@
 # ------------------------------------------------------------------------------
 #
-#  Flag to let the user tell us which machine we're on
+#  Flag to figure out what machine we're on
 # 
 # ------------------------------------------------------------------------------
 # This tells us which directories to look for simulations in, which will 
-# be used later
-machine = shangrila
+# be used later. We'll use the path of the current directory to figure this out.
+# My username is different on the two machines, so that part of the path will
+# be unique
+username_shangrila = gillenb
+username_lou = gbrown12
+current_dir = $(shell pwd)
+# findstring returns the matching part of the string. If it's not empty when
+# we try to find the shangrila username, we know we're on shangrila
+ifneq (,$(findstring $(username_shangrila),$(current_dir)))
+    machine = shangrila
+endif
+ifneq (,$(findstring $(username_lou),$(current_dir)))
+    machine = lou
+endif
 
 # ------------------------------------------------------------------------------
 #
