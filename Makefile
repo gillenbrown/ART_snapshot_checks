@@ -57,10 +57,12 @@ ifeq ($(machine),shangrila)
    runs_home = /u/home/gillenb/art_runs/runs/
    sim_dirs_nbody = $(runs_home)shangrila/nbody/run/outputs/rj \
                     $(runs_home)shangrila/nbody/run/outputs/tl \
-                    $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 
+                    $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 \
+                    $(runs_home)shangrila/nbody/run/outputs/br_no_refine_2
    sim_dirs_hydro = $(runs_home)shangrila/test_all_elts/run \
                     $(runs_home)shangrila/test_mine_music/run/outputs \
-                    $(runs_home)shangrila/test_mine/run
+                    $(runs_home)shangrila/test_mine/run \
+                    $(runs_home)shangrila/NBm_10SFE_tidal_writeout/run
 endif
 
 ifeq ($(machine),lou)                
@@ -68,15 +70,27 @@ ifeq ($(machine),lou)
    sim_dirs_nbody = $(runs_home)nbody/intel/run/outputs/br_production \
                     $(runs_home)nbody/intel/run/outputs/tl_production \
                     $(runs_home)nbody/intel/run/outputs/rj_production \
-                    $(runs_home)nbody/intel/run/outputs/change_core
+                    $(runs_home)nbody/intel/run/outputs/change_core \
+                    $(runs_home)nbody/intel/run/outputs/br_1.1.28_pleiades_no_refine \
+                    $(runs_home)nbody/intel/run/outputs/br_2.1.28_pleiades_no_refine \
+                    $(runs_home)nbody/intel/run/outputs/br_4.1.28_pleiades_no_refine \
+                    $(runs_home)nbody/intel/run/outputs/br_8.1.28_electra_no_refine \
+                    $(runs_home)nbody/intel/run/outputs/br_8.1.28_pleiades_no_refine \
+                    $(runs_home)nbody/intel/run/outputs/br_8.2.14_pleiades_no_refine 
    sim_dirs_hydro = $(runs_home)hydro/intel_broadwell/run/outputs/tl_first \
                     $(runs_home)hydro/intel_broadwell/run/outputs/tl_first_restart \
                     $(runs_home)hydro/intel_broadwell/run/outputs/tl_second \
+                    $(runs_home)hydro/intel_broadwell/run/outputs/tl_debug \
                     $(runs_home)hydro/intel_broadwell/run/outputs/detail \
                     $(runs_home)hydro/intel_broadwell/run/outputs/detail_cfl_restart \
                     $(runs_home)hydro/intel_broadwell/run/outputs/detail_low_res \
+                    $(runs_home)hydro/intel_broadwell/run/outputs/refinement_delete \
                     $(runs_home)hydro/intel_broadwell_debug_timestep/run/outputs/detail_dt \
-                    $(runs_home)hydro/pgi_broadwell/run/outputs/detail
+                    $(runs_home)hydro/intel_broadwell_no_elts/run/outputs/no_elts \
+                    $(runs_home)hydro/pgi_broadwell/run/outputs/detail \
+                    $(runs_home)hydro/pgi_broadwell/run/outputs/tl_first \
+                    $(runs_home)hydro/pgi_broadwell/run/outputs/tl_second \
+                    $(runs_home)hydro/intel_skylake/tl_first 
 endif
 
 # combine the N-Body and Hydro into one big list
