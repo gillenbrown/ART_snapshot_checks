@@ -55,7 +55,7 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
    runs_home = /u/home/gillenb/art_runs/runs/
-   sim_dirs_nbody = # $(runs_home)shangrila/nbody/run/outputs/tl \
+   sim_dirs_nbody = # $(runs_home)shangrila/nbody/run/outputs/tl 
 #                     $(runs_home)shangrila/nbody/run/outputs/rj 
 #                     $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 
 #                     $(runs_home)shangrila/nbody/run/outputs/br_no_refine_2
@@ -77,7 +77,9 @@ ifeq ($(machine),lou)
 #                     $(runs_home)nbody/intel/run/outputs/br_8.1.28_electra_no_refine 
 #                     $(runs_home)nbody/intel/run/outputs/br_8.1.28_pleiades_no_refine 
 #                     $(runs_home)nbody/intel/run/outputs/br_8.2.14_pleiades_no_refine 
-   sim_dirs_hydro = $(runs_home)hydro/intel_broadwell_debug_timestep/run/outputs/detail_dt 
+   sim_dirs_hydro = $(runs_home)hydro/intel_broadwell_debug_timestep/run/outputs/detail_dt \
+                    $(runs_home)hydro/intel_broadwell/run/outputs/alpha_restrict \
+                    $(runs_home)hydro/intel_broadwell_discrete/run/outputs/first
 #                     $(runs_home)hydro/intel_broadwell/run/outputs/tl_first 
 #                     $(runs_home)hydro/intel_broadwell/run/outputs/tl_first_restart 
 #                     $(runs_home)hydro/intel_broadwell/run/outputs/tl_second 
@@ -223,7 +225,7 @@ halos: $(rockstar_sentinels)
 # We run the script with parameters to the output directory and rockstar halo 
 # directory, plus the remove keyword to replace previous halo catalogs
 .SECONDEXPANSION:
-$(rockstar_sentinels): %: $$(call sentinel_to_sims, %) $(halo_finding_script) $(halo_finding_py_file) 
+$(rockstar_sentinels): %: $$(call sentinel_to_sims, %) 
 	$(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@)
 
 # Rule to rename the halo catalogs into something more user-friendly
