@@ -13,10 +13,10 @@ current_dir = $(shell pwd)
 # findstring returns the matching part of the string. If it's not empty when
 # we try to find the shangrila username, we know we're on shangrila
 ifneq (,$(findstring $(username_shangrila),$(current_dir)))
-    machine = shangrila
+		machine = shangrila
 endif
 ifneq (,$(findstring $(username_lou),$(current_dir)))
-    machine = lou
+		machine = lou
 endif
 
 # ------------------------------------------------------------------------------
@@ -25,12 +25,12 @@ endif
 # 
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
-   tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
-   tree_dir = /u/home/gillenb/code/not_mine/consistent-trees/
+	 tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
+	 tree_dir = /u/home/gillenb/code/not_mine/consistent-trees/
 endif
 ifeq ($(machine),lou)
-   tree_config_script = /u/gbrown12/yt-conda/src/rockstar/scripts/gen_merger_cfg.pl
-   tree_dir = /u/gbrown12/code/consistent-trees/
+	 tree_config_script = /u/gbrown12/yt-conda/src/rockstar/scripts/gen_merger_cfg.pl
+	 tree_dir = /u/gbrown12/code/consistent-trees/
 endif
 
 # ------------------------------------------------------------------------------
@@ -44,6 +44,7 @@ rename_script = ./rename_halos.py
 summary_nbody_script = ./summary_nbody.py
 summary_metal_script = ./summary_metals.py
 summary_vel_script = ./summary_velocity.py
+sfh_plots_script = ./plots_sfh.py
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
 read_tree_src = $(read_tree_dir)/halo_history.c
@@ -54,20 +55,20 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 # 
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
-   runs_home = /u/home/gillenb/art_runs/runs/
-   sim_dirs_nbody = # $(runs_home)shangrila/nbody/run/outputs/tl 
+	 runs_home = /u/home/gillenb/art_runs/runs/
+	 sim_dirs_nbody = # $(runs_home)shangrila/nbody/run/outputs/tl 
 #                     $(runs_home)shangrila/nbody/run/outputs/rj 
 #                     $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 
 #                     $(runs_home)shangrila/nbody/run/outputs/br_no_refine_2
-   sim_dirs_hydro = $(runs_home)shangrila/test_all_elts/run \
-                    $(runs_home)shangrila/test_mine/run 
+	 sim_dirs_hydro = $(runs_home)shangrila/test_all_elts/run \
+										$(runs_home)shangrila/test_mine/run 
 #                     $(runs_home)shangrila/NBm_10SFE_tidal_writeout/run
 #                     $(runs_home)shangrila/test_mine_music/run/outputs 
 endif
 
 ifeq ($(machine),lou)                
-   runs_home = /u/gbrown12/art_runs/runs/
-   sim_dirs_nbody = $(runs_home)nbody/intel/run/outputs/tl_production 
+	 runs_home = /u/gbrown12/art_runs/runs/
+	 sim_dirs_nbody = $(runs_home)nbody/intel/run/outputs/tl_production 
 #                     $(runs_home)nbody/intel/run/outputs/br_production 
 #                     $(runs_home)nbody/intel/run/outputs/rj_production 
 #                     $(runs_home)nbody/intel/run/outputs/change_core 
@@ -77,9 +78,9 @@ ifeq ($(machine),lou)
 #                     $(runs_home)nbody/intel/run/outputs/br_8.1.28_electra_no_refine 
 #                     $(runs_home)nbody/intel/run/outputs/br_8.1.28_pleiades_no_refine 
 #                     $(runs_home)nbody/intel/run/outputs/br_8.2.14_pleiades_no_refine 
-   sim_dirs_hydro = $(runs_home)hydro/intel_broadwell_debug_timestep/run/outputs/detail_dt \
-                    $(runs_home)hydro/intel_broadwell/run/outputs/alpha_restrict \
-                    $(runs_home)hydro/intel_broadwell_discrete/run/outputs/first
+	 sim_dirs_hydro = $(runs_home)hydro/intel_broadwell_debug_timestep/run/outputs/detail_dt \
+										$(runs_home)hydro/intel_broadwell/run/outputs/alpha_restrict \
+										$(runs_home)hydro/intel_broadwell_discrete/run/outputs/first
 #                     $(runs_home)hydro/intel_broadwell/run/outputs/tl_first 
 #                     $(runs_home)hydro/intel_broadwell/run/outputs/tl_first_restart 
 #                     $(runs_home)hydro/intel_broadwell/run/outputs/tl_second 
@@ -203,10 +204,20 @@ summaries_vel = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_summary_vel,
 
 # ------------------------------------------------------------------------------
 #
+#  Plots - SFH
+# 
+# ------------------------------------------------------------------------------
+# Here the SMHM relation plot is used as the sentinel
+sim_to_smhm = $(subst .art,.png,$(subst out/continuous,plots/smhm, $(1)))
+smhm_to_sim = $(subst .png,.art,$(subst plots/smhm,out/continuous, $(1)))
+smhm_plots = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_smhm,$(snapshot)))
+
+# ------------------------------------------------------------------------------
+#
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(my_directories) $(summaries_nbody) $(summaries_metal) $(summaries_vel) $(merger_sentinels)
+all: $(my_directories) $(summaries_nbody) $(summaries_metal) $(summaries_vel) $(merger_sentinels) $(smhm_plots)
 
 .PHONY: clean
 clean:
@@ -266,4 +277,9 @@ $(summaries_metal): %: $$(call summary_metal_to_sim,%) $(summary_metal_script)
 .SECONDEXPANSION:
 $(summaries_vel): %: $$(call summary_vel_to_sim,%) $(summary_vel_script)
 	python $(summary_vel_script) $(call summary_vel_to_sim, $@) clobber silent
+
+# SFH plots
+.SECONDEXPANSION:
+$(smhm_plots): %: $$(call smhm_to_sim,%) $(sfh_plots_script)
+	python $(sfh_plots_script) $(call smhm_to_sim, $@) $(call sim_to_halo, $(call smhm_to_sim, $@))
 
