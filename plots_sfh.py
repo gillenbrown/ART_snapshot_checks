@@ -68,9 +68,9 @@ def age_to_z(age):
         return cosmology.z_at_value(cosmo.age, age)
     except cosmology.funcs.CosmologyError:  # happens at very high z
         return 1000
-def age_to_z_Gyr(age):
+def z_to_age_Gyr(z):
     # this is needed since the twin axis function always works with a scalar
-    return age_to_z(age * u.Gyr)
+    return z_to_age(z).to("Gyr").value
 def z_to_age(z):
     return cosmo.age(z).to("Gyr")
 
@@ -143,8 +143,8 @@ for ax, halo in zip(axs, halos):
     plot_sfh = sfh_values.to("msun/yr").value
     dt = plot_times[1] - plot_times[0]
     ax.errorbar(plot_times, plot_sfh, xerr=0.5 * dt, markersize=8,
-                c=bpl.color_cycle[4])
-    ax.plot(plot_times, plot_sfh, lw=1.0, c=bpl.color_cycle[4])
+                c=bpl.almost_black)
+    ax.plot(plot_times, plot_sfh, lw=1.0, c=bpl.almost_black)
     
     halo_mass = halo.quantities["particle_mass"].to("msun").value
     stellar_mass = halo.quantities["stellar mass"].to("msun").value
@@ -186,7 +186,8 @@ for ax, halo in zip(axs, halos):
     # warnings, so we can ignore that
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', UserWarning)
-        ax.twin_axis(age_to_z_Gyr, "x", label_redshifts, label="Redshift")
+        ax.twin_axis("x", label_redshifts, "Redshift", 
+                     new_to_old_func=z_to_age_Gyr)
 
 # turn off any unused axes
 for idx in range(len(halos), len(axs)):
@@ -228,7 +229,8 @@ ax.add_labels("Time [Gyr]", "Stellar Mass [$M_\odot$]")
 # warnings, so we can ignore that
 with warnings.catch_warnings():
     warnings.simplefilter('ignore', UserWarning)
-    ax.twin_axis(age_to_z_Gyr, "x", label_redshifts, label="Redshift")
+    ax.twin_axis("x", label_redshifts, "Redshift", 
+                 new_to_old_func=z_to_age_Gyr)
 # cb = fig.colorbar(scalar_map)
 # cb.set_label("Halo Mass [$M_\odot$] at z={:.1f}".format(ds.current_redshift))
 # only save the plot if there are actually galaxies.
@@ -260,7 +262,7 @@ s_mass = masses * smhm
 sm_up = masses * hi_lim
 sm_down = masses * lo_lim
 
-um_color = bpl.color_cycle[1]
+um_color = bpl.color_cycle[3]
 line = ax.plot(masses, s_mass, c=um_color)[0]
 ax.fill_between(x=masses, y1=sm_down, y2=sm_up, color=um_color, lw=0, alpha=0.1)
 # two ways of having the shading in the legend. Either create a patch and put
