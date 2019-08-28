@@ -52,7 +52,6 @@ halos_ds = yt.load(hc_loc)
 hc = HaloCatalog(halos_ds=halos_ds, data_ds=ds)
 hc.add_callback("sphere", factor=0.5)
 hc.create(save_halos=True, save_catalog=False)
-ad = ds.all_data()
 
 # get the location of where to put the plots
 sim_dir = os.path.dirname(ds_loc) + os.sep

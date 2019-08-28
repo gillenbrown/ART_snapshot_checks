@@ -25,7 +25,7 @@ with open(datasets_txt) as datasets:
             break
     
     if not found:
-        raise ValueError("File not found")
+        raise ValueError("Dataset {} not found in {}".format(scale_factor_str, datasets_txt))
 # now we have the right index
 old_prefix = "halos_{}.".format(idx)
 new_prefix = "halos_a{}.".format(scale_factor_str)

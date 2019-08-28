@@ -1,7 +1,7 @@
 #PBS -S /bin/bash
 #PBS -N snapshot_checks
 #PBS -l select=1:ncpus=20
-#PBS -l walltime=48:00:00
+#PBS -l walltime=72:00:00
 #PBS -q ldan
 #PBS -r n
 #PBS -M gillenb@umich.edu
@@ -15,8 +15,6 @@ module purge
 module load mpi-sgi/mpt
 
 cd $PBS_O_WORKDIR
-
-export MPI_LAUNCH_TIMEOUT=120
 
 make halos &>> $PBS_JOBNAME.stdout.$PBS_JOBID
 make -j20 &>> $PBS_JOBNAME.stdout.$PBS_JOBID

@@ -13,10 +13,10 @@ current_dir = $(shell pwd)
 # findstring returns the matching part of the string. If it's not empty when
 # we try to find the shangrila username, we know we're on shangrila
 ifneq (,$(findstring $(username_shangrila),$(current_dir)))
-		machine = shangrila
+	machine = shangrila
 endif
 ifneq (,$(findstring $(username_lou),$(current_dir)))
-		machine = lou
+	machine = lou
 endif
 
 # ------------------------------------------------------------------------------
@@ -25,12 +25,14 @@ endif
 # 
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
-	 tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
-	 tree_dir = /u/home/gillenb/code/not_mine/consistent-trees/
+	tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
+	tree_dir = /u/home/gillenb/code/not_mine/consistent-trees/
+	halo_finding_script = ./run_rockstar.sh
 endif
 ifeq ($(machine),lou)
-	 tree_config_script = /u/gbrown12/yt-conda/src/rockstar/scripts/gen_merger_cfg.pl
-	 tree_dir = /u/gbrown12/code/consistent-trees/
+	tree_config_script = /u/gbrown12/yt-conda/src/rockstar/scripts/gen_merger_cfg.pl
+	tree_dir = /u/gbrown12/code/consistent-trees/
+	halo_finding_script = ./run_rockstar_ldan.sh
 endif
 
 # ------------------------------------------------------------------------------
@@ -38,7 +40,6 @@ endif
 #  Code locations that are relative to this file
 # 
 # ------------------------------------------------------------------------------
-halo_finding_script = ./run_rockstar.sh
 halo_finding_py_file = ./halo_finding_rockstar.py
 rename_script = ./rename_halos.py
 summary_nbody_script = ./summary_nbody.py
@@ -55,45 +56,47 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 # 
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
-	 runs_home = /u/home/gillenb/art_runs/runs/
-	 sim_dirs_nbody = # $(runs_home)shangrila/nbody/run/outputs/tl 
-#                     $(runs_home)shangrila/nbody/run/outputs/rj 
-#                     $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 
-#                     $(runs_home)shangrila/nbody/run/outputs/br_no_refine_2
-	 sim_dirs_hydro = $(runs_home)shangrila/test_all_elts/run \
-										$(runs_home)shangrila/test_mine/run 
-#                     $(runs_home)shangrila/NBm_10SFE_tidal_writeout/run
-#                     $(runs_home)shangrila/test_mine_music/run/outputs 
+	runs_home = /u/home/gillenb/art_runs/runs/
+	sim_dirs_nbody = $(runs_home)shangrila/nbody/run/outputs/tl 
+#                   $(runs_home)shangrila/nbody/run/outputs/rj 
+#                   $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 
+#                   $(runs_home)shangrila/nbody/run/outputs/br_no_refine_2
+	sim_dirs_hydro = $(runs_home)shangrila/test_all_elts/run \
+                   $(runs_home)shangrila/test_mine/run 
+# 								  $(runs_home)shangrila/test_discrete/run/outputs
+#                   $(runs_home)shangrila/NBm_10SFE_tidal_writeout/run
+#                   $(runs_home)shangrila/test_mine_music/run/outputs 
 endif
 
 ifeq ($(machine),lou)                
-	 runs_home = /u/gbrown12/art_runs/runs/
-	 sim_dirs_nbody = $(runs_home)nbody/intel/run/outputs/tl_production 
-#                     $(runs_home)nbody/intel/run/outputs/br_production 
-#                     $(runs_home)nbody/intel/run/outputs/rj_production 
-#                     $(runs_home)nbody/intel/run/outputs/change_core 
-#                     $(runs_home)nbody/intel/run/outputs/br_1.1.28_pleiades_no_refine 
-#                     $(runs_home)nbody/intel/run/outputs/br_2.1.28_pleiades_no_refine 
-#                     $(runs_home)nbody/intel/run/outputs/br_4.1.28_pleiades_no_refine 
-#                     $(runs_home)nbody/intel/run/outputs/br_8.1.28_electra_no_refine 
-#                     $(runs_home)nbody/intel/run/outputs/br_8.1.28_pleiades_no_refine 
-#                     $(runs_home)nbody/intel/run/outputs/br_8.2.14_pleiades_no_refine 
-	 sim_dirs_hydro = $(runs_home)hydro/intel_broadwell_debug_timestep/run/outputs/detail_dt \
-										$(runs_home)hydro/intel_broadwell/run/outputs/alpha_restrict \
-										$(runs_home)hydro/intel_broadwell_discrete/run/outputs/first
-#                     $(runs_home)hydro/intel_broadwell/run/outputs/tl_first 
-#                     $(runs_home)hydro/intel_broadwell/run/outputs/tl_first_restart 
-#                     $(runs_home)hydro/intel_broadwell/run/outputs/tl_second 
-#                     $(runs_home)hydro/intel_broadwell/run/outputs/tl_debug 
-#                     $(runs_home)hydro/intel_broadwell/run/outputs/detail 
-#                     $(runs_home)hydro/intel_broadwell/run/outputs/detail_cfl_restart 
-#                     $(runs_home)hydro/intel_broadwell/run/outputs/refinement_delete 
-#                     $(runs_home)hydro/intel_broadwell_no_elts/run/outputs/no_elts 
-#                     $(runs_home)hydro/pgi_broadwell/run/outputs/detail 
-#                     $(runs_home)hydro/pgi_broadwell/run/outputs/tl_first 
-#                     $(runs_home)hydro/pgi_broadwell/run/outputs/tl_second 
-#                     $(runs_home)hydro/intel_skylake/tl_first 
-#                     $(runs_home)hydro/intel_broadwell/run/outputs/detail_low_res 
+	runs_home = /u/gbrown12/art_runs/runs/
+	sim_dirs_nbody = $(runs_home)nbody/intel/run/outputs/tl_production 
+#                   $(runs_home)nbody/intel/run/outputs/br_production 
+#                   $(runs_home)nbody/intel/run/outputs/rj_production 
+#                   $(runs_home)nbody/intel/run/outputs/change_core 
+#                   $(runs_home)nbody/intel/run/outputs/br_1.1.28_pleiades_no_refine 
+#                   $(runs_home)nbody/intel/run/outputs/br_2.1.28_pleiades_no_refine 
+#                   $(runs_home)nbody/intel/run/outputs/br_4.1.28_pleiades_no_refine 
+#                   $(runs_home)nbody/intel/run/outputs/br_8.1.28_electra_no_refine 
+#                   $(runs_home)nbody/intel/run/outputs/br_8.1.28_pleiades_no_refine 
+#                   $(runs_home)nbody/intel/run/outputs/br_8.2.14_pleiades_no_refine 
+	sim_dirs_hydro = $(runs_home)hydro/intel_broadwell/run/outputs/no_virial \
+                   $(runs_home)hydro/intel_broadwell/run/outputs/alpha_restrict \
+                   $(runs_home)hydro/intel_broadwell_discrete/run/outputs/second
+#                   $(runs_home)hydro/intel_broadwell_debug_timestep/run/outputs/detail_dt
+#                   $(runs_home)hydro/intel_broadwell/run/outputs/tl_first 
+#                   $(runs_home)hydro/intel_broadwell/run/outputs/tl_first_restart 
+#                   $(runs_home)hydro/intel_broadwell/run/outputs/tl_second 
+#                   $(runs_home)hydro/intel_broadwell/run/outputs/tl_debug 
+#                   $(runs_home)hydro/intel_broadwell/run/outputs/detail 
+#                   $(runs_home)hydro/intel_broadwell/run/outputs/detail_cfl_restart 
+#                   $(runs_home)hydro/intel_broadwell/run/outputs/refinement_delete 
+#                   $(runs_home)hydro/intel_broadwell_no_elts/run/outputs/no_elts 
+#                   $(runs_home)hydro/pgi_broadwell/run/outputs/detail 
+#                   $(runs_home)hydro/pgi_broadwell/run/outputs/tl_first 
+#                   $(runs_home)hydro/pgi_broadwell/run/outputs/tl_second 
+#                   $(runs_home)hydro/intel_skylake/tl_first 
+#                   $(runs_home)hydro/intel_broadwell/run/outputs/detail_low_res 
 endif
 
 # combine the N-Body and Hydro into one big list

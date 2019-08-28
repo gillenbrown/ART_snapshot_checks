@@ -2,10 +2,11 @@ import sys
 import os
 import pathlib
 import shutil
+import time
 import yt
 from yt.extensions.astro_analysis.halo_finding.rockstar.api import RockstarHaloFinder
 from yt.data_objects.particle_filters import add_particle_filter
-yt.funcs.mylog.setLevel(50)  # ignore yt's output
+yt.funcs.mylog.setLevel(0)  # ignore yt's output
 yt.enable_parallelism()
 
 # format of sys.argv:
@@ -13,6 +14,10 @@ yt.enable_parallelism()
 # ids 1: directory of simulation outputs to run halos on
 # idx 2: directory to store halo finding outputs in
 # idx 3: must be `silent` or not present
+
+# print function that always flushes
+import functools
+print = functools.partial(print, flush=True)
 
 # do error checking on root only.
 if yt.is_root():
@@ -34,7 +39,7 @@ if not out_dir.endswith(os.sep):
     out_dir += os.sep
 
 # check to see if there is a currently existing halo catalog already here
-# to restart from. Again, do this only on the root.
+# to restart from. 
 if os.path.exists(out_dir + "datasets.txt"):
     restart = True
 else:
@@ -46,13 +51,15 @@ else:
 # but the datasets.txt file doesn't reflect that. To fix this, we will copy the
 # datasets.txt file to a new location so that we can save the info until the 
 # end of this script, when we'll parse the two datasets.txt
-if restart:
+if restart and yt.is_root():
     shutil.copyfile(out_dir + "datasets.txt", out_dir + "old_datasets.txt")
 
 
 if yt.is_root():
     print("Reading simulations from: {}".format(sim_dir))
     print("Writing halo catalogs to: {}".format(out_dir))
+
+time.sleep(20)# wait to make sure things are done
 
 ts = yt.load(sim_dir + 'continuous_a?.????.art')
 
@@ -68,8 +75,10 @@ rh = RockstarHaloFinder(ts, num_readers=9, num_writers=10, outbase=out_dir,
                         particle_type=particle_type)
 rh.run(restart=restart)
 
+time.sleep(20)  # wait for all to be done
+
 # then we can fix the dataset.txt nonsense
-if restart:
+if restart and yt.is_root():
     # first move the new datasets.txt to a place where we won't overwrite it
     shutil.move(out_dir + "datasets.txt", out_dir + "new_datasets.txt")
 
@@ -111,4 +120,5 @@ if restart:
     os.remove(out_dir + "new_datasets.txt")
 
 # update the sentinel file
-pathlib.Path(out_dir + "sentinel.txt").touch()
+if yt.is_root():
+    pathlib.Path(out_dir + "sentinel.txt").touch()
