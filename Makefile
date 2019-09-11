@@ -61,9 +61,12 @@ ifeq ($(machine),shangrila)
 #                   $(runs_home)shangrila/nbody/run/outputs/rj 
 #                   $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 
 #                   $(runs_home)shangrila/nbody/run/outputs/br_no_refine_2
-	sim_dirs_hydro = $(runs_home)shangrila/test_all_elts/run \
-                   $(runs_home)shangrila/test_mine/run 
-# 								  $(runs_home)shangrila/test_discrete/run/outputs
+	sim_dirs_hydro = $(runs_home)shangrila/test_discrete/run/outputs \
+                   $(runs_home)pleiades/hydro/intel_broadwell_discrete/run/outputs/second \
+                   $(runs_home)pleiades/hydro/intel_broadwell/run/outputs/alpha_restrict \
+                   $(runs_home)pleiades/hydro/intel_broadwell/run/outputs/no_virial
+#                   $(runs_home)shangrila/test_all_elts/run
+#                   $(runs_home)shangrila/test_mine/run
 #                   $(runs_home)shangrila/NBm_10SFE_tidal_writeout/run
 #                   $(runs_home)shangrila/test_mine_music/run/outputs 
 endif
