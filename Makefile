@@ -85,7 +85,14 @@ ifeq ($(machine),lou)
 #                   $(runs_home)nbody/intel/run/outputs/br_8.2.14_pleiades_no_refine 
 	sim_dirs_hydro = $(runs_home)hydro/intel_broadwell/run/outputs/no_virial \
                    $(runs_home)hydro/intel_broadwell/run/outputs/alpha_restrict \
-                   $(runs_home)hydro/intel_broadwell_discrete/run/outputs/second
+                   $(runs_home)hydro/intel_broadwell_discrete/run/outputs/second \
+                   $(runs_home)hydro/intel_broadwell_discrete/run/outputs/third \
+                   $(runs_home)hydro/intel_broadwell_discrete/run/outputs/third \
+                   $(runs_home)hydro/timing_test/current_code_no_elts/run/outputs/first \
+                   $(runs_home)hydro/timing_test/current_code_with_elts/run/outputs/first \
+                   $(runs_home)hydro/timing_test/current_code_with_elts_continuous/run/outputs/first \
+                   $(runs_home)hydro/timing_test/old_code/run/outputs/first \
+                   $(runs_home)hydro/no_feedback/run/outputs/first
 #                   $(runs_home)hydro/intel_broadwell_debug_timestep/run/outputs/detail_dt
 #                   $(runs_home)hydro/intel_broadwell/run/outputs/tl_first 
 #                   $(runs_home)hydro/intel_broadwell/run/outputs/tl_first_restart 
