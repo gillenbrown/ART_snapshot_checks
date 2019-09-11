@@ -87,7 +87,6 @@ ifeq ($(machine),lou)
                    $(runs_home)hydro/intel_broadwell/run/outputs/alpha_restrict \
                    $(runs_home)hydro/intel_broadwell_discrete/run/outputs/second \
                    $(runs_home)hydro/intel_broadwell_discrete/run/outputs/third \
-                   $(runs_home)hydro/intel_broadwell_discrete/run/outputs/third \
                    $(runs_home)hydro/timing_test/current_code_no_elts/run/outputs/first \
                    $(runs_home)hydro/timing_test/current_code_with_elts/run/outputs/first \
                    $(runs_home)hydro/timing_test/current_code_with_elts_continuous/run/outputs/first \
