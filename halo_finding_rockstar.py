@@ -61,4 +61,6 @@ rh = RockstarHaloFinder(ts, num_readers=9, num_writers=10, outbase=out_dir,
                         particle_type=particle_type)
 rh.run(restart=restart)
 
-
+# update the sentinel file
+if yt.is_root():
+    pathlib.Path(out_dir + "sentinel.txt").touch()
