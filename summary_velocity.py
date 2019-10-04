@@ -84,16 +84,28 @@ cell_sizes = np.unique(ad["index", "dx"]).to("pc").value[::-1]
 # largest cells to correspond to the smallest level, so we reverse it
 
 # get the gas velocity
-velocity_bulk_gas = ad[('gas', 'velocity_magnitude')].to("km/s").value
+vx_gas = ad[('gas', 'velocity_x')].to("km/s").value
+vy_gas = ad[('gas', 'velocity_y')].to("km/s").value
+vz_gas = ad[('gas', 'velocity_z')].to("km/s").value
+# the velocity ART uses for the bulk gas velocith is the maximum of the x, y, 
+# and z components. The next function call does this for each cell.
+velocity_bulk_gas = np.amax([vx_gas, vy_gas, vz_gas], axis=0)
 # and sound speed
 gamma = ad[('gas', 'gamma')] 
 sound_speed_gas = np.sqrt(gamma * (gamma - 1.0) * ad[('artio', 'HVAR_INTERNAL_ENERGY')] /
                           ad[('gas', 'density')]).to("km/s").value
-v_tot_gas = np.sqrt(velocity_bulk_gas**2 + sound_speed_gas**2) 
+v_tot_gas = velocity_bulk_gas + sound_speed_gas
 
 # do this for stars and DM too
-velocity_star = ad[('STAR', 'particle_velocity_magnitude')].to("km/s").value
-velocity_dm   = ad[('N-BODY', 'particle_velocity_magnitude')].to("km/s").value
+vx_star = ad[('STAR', 'particle_velocity_x')].to("km/s").value
+vy_star = ad[('STAR', 'particle_velocity_y')].to("km/s").value
+vz_star = ad[('STAR', 'particle_velocity_z')].to("km/s").value
+velocity_star = np.amax([vx_star, vy_star, vz_star], axis=0)
+
+vx_dm = ad[('N-BODY', 'particle_velocity_x')].to("km/s").value
+vy_dm = ad[('N-BODY', 'particle_velocity_y')].to("km/s").value
+vz_dm = ad[('N-BODY', 'particle_velocity_z')].to("km/s").value
+velocity_dm = np.amax([vx_dm, vy_dm, vz_dm], axis=0)
 
 # We'll need to restrict this to a few particles. We wnat to find the cell a 
 # given particle is in, which is computationally expensive, so we'll restrict
@@ -129,8 +141,21 @@ row_str_no_star = level_str + 4 * not_empty + empty + not_empty + time
 row_str_no_dm = level_str + empty + 5 * not_empty + time
 row_str_no_both = level_str + empty + 3 * not_empty + empty + not_empty + time
 
-out("\nThis shows the highest velocity present in the following components at " 
-    "each level.\nAll velocities are in km/s, cell size in pc, dt in years.")
+out("\n"
+    "- This shows the highest velocity present in the following components \n" 
+    "  at each level.\n"
+    "- Velocities reported (other than sound speed) are the maximum of the \n"
+    "  x, y, and z component of the velocity for the star, gas, or DM. \n"
+    "  This is because ART does it this way and I want to be consistent.\n"
+    "- All velocities are in km/s, cell size in pc, dt in years.\n"
+    "- The gas cell with the highest v_tot = bulk + c_s is selected, then the\n"
+    "  bulk motion and sound speed for that cell are reported.\n"
+    "- dt is simply cell size divided by the maximum of velocity among \n"
+    "  Gas v_tot, DM, and Stars. The real timestep in ART has the extra \n"
+    "  of CFL_run, but it only considers the gas.\n"
+    "- Only the fastest {} DM and star particles in the entire simulation box\n"
+    "  are selected, so some levels may have no DM or stars listed.\n"
+    "".format(n_vels))
 out(header_str.format("Level", "num_cells", "DM", "Gas bulk", "Gas c_s", "Gas v_tot", 
                       "Stars", "Cell Size", "dt"))
 
@@ -139,10 +164,14 @@ for level, cell_size, n_cells in zip(grid_levels, cell_sizes, num_in_grid):
     idx_star = np.where(levels_star == level)
     idx_dm = np.where(levels_dm == level)
 
+    # get the maximum total gas velocity, then report the components of that
+    # that contribute to the total
+    vel_max_gas_tot_idx = np.argmax(v_tot_gas[idx_gas])
+    vel_max_gas_tot = v_tot_gas[idx_gas][vel_max_gas_tot_idx]
+    vel_max_gas_bulk = velocity_bulk_gas[idx_gas][vel_max_gas_tot_idx]
+    vel_max_gas_cs   = sound_speed_gas[idx_gas][vel_max_gas_tot_idx]
+
     # get the maximum velocity at this level, if we have particles here
-    vel_max_gas_bulk = np.max(velocity_bulk_gas[idx_gas])
-    vel_max_gas_cs   = np.max(sound_speed_gas[idx_gas])
-    vel_max_gas_tot  = np.max(v_tot_gas[idx_gas])
     if len(idx_star[0]) > 0:  # we do have stars at this level
         vel_max_star = np.max(velocity_star[idx_star])
     if len(idx_dm[0]) > 0:  # DM at this level
