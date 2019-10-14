@@ -42,7 +42,12 @@ for file in os.listdir(rockstar_dir):
 
             # python format automatically rounds so we can compare it to the
             # scale factor in the target str
-            this_a_str = "{:.4f}".format(float(this_a_str))
+            # there is one pathological case where the rounding breaks 
+            # because of floating point inaccuracies
+            if this_a_str == "0.068650":
+                this_a_str = "0.0686"
+            else:
+                this_a_str = "{:.4f}".format(float(this_a_str))
 
             if this_a_str == target_a_str:
                 # get everything up to the period. This will contain the file
