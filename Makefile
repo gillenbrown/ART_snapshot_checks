@@ -4,19 +4,18 @@
 # 
 # ------------------------------------------------------------------------------
 # This tells us which directories to look for simulations in, which will 
-# be used later. We'll use the path of the current directory to figure this out.
-# My username is different on the two machines, so that part of the path will
-# be unique
-username_shangrila = gillenb
-username_lou = gbrown12
-current_dir = $(shell pwd)
+# be used later. We'll use the hostname of the machine
+hostname = $(shell hostname)
 # findstring returns the matching part of the string. If it's not empty when
-# we try to find the shangrila username, we know we're on shangrila
-ifneq (,$(findstring $(username_shangrila),$(current_dir)))
+# we try to find the shangrila hostname, we know we're on shangrila
+ifneq (,$(findstring shangrila,$(hostname)))
 	machine = shangrila
 endif
-ifneq (,$(findstring $(username_lou),$(current_dir)))
+ifneq (,$(findstring ldan,$(hostname)))
 	machine = lou
+endif
+ifneq (,$(findstring gl-login,$(hostname)))
+	machine = great_lakes
 endif
 
 # ------------------------------------------------------------------------------
@@ -30,9 +29,14 @@ ifeq ($(machine),shangrila)
 	halo_finding_script = ./run_rockstar.sh
 endif
 ifeq ($(machine),lou)
-	tree_config_script = /u/gbrown12/yt-conda/src/rockstar/scripts/gen_merger_cfg.pl
+	tree_config_script = /u/gbrown12/code/rockstar/scripts/gen_merger_cfg.pl
 	tree_dir = /u/gbrown12/code/consistent-trees/
 	halo_finding_script = ./run_rockstar_ldan.sh
+endif
+ifeq ($(machine),great_lakes)
+	tree_config_script = /home/gillenb/code/rockstar/scripts/gen_merger_cfg.pl
+	tree_dir = /home/gillenb/code/consistent-trees/
+	halo_finding_script = ./run_rockstar_gl.sh
 endif
 
 # ------------------------------------------------------------------------------
@@ -62,13 +66,16 @@ ifeq ($(machine),shangrila)
 #                   $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 
 #                   $(runs_home)shangrila/nbody/run/outputs/br_no_refine_2
 	sim_dirs_hydro = $(runs_home)shangrila/test_discrete/run/outputs \
-                   $(runs_home)pleiades/hydro/intel_broadwell_discrete/run/outputs/second \
-                   $(runs_home)pleiades/hydro/intel_broadwell/run/outputs/alpha_restrict \
-                   $(runs_home)pleiades/hydro/intel_broadwell/run/outputs/no_virial
+	                 $(runs_home)shangrila/test_music_256/run/outputs \
+	                 $(runs_home)shangrila/test_mine_music/run/outputs \
+	                 $(runs_home)great_lakes/hydro_test/discrete_128/run/outputs/first \
+	                 $(runs_home)great_lakes/hydro_test/discrete_256/run/outputs/first 
+#                   $(runs_home)pleiades/hydro/intel_broadwell_discrete/run/outputs/third \
+#                   $(runs_home)pleiades/hydro/intel_broadwell/run/outputs/alpha_restrict 
+#                   $(runs_home)pleiades/hydro/intel_broadwell/run/outputs/no_virial
 #                   $(runs_home)shangrila/test_all_elts/run
 #                   $(runs_home)shangrila/test_mine/run
 #                   $(runs_home)shangrila/NBm_10SFE_tidal_writeout/run
-#                   $(runs_home)shangrila/test_mine_music/run/outputs 
 endif
 
 ifeq ($(machine),lou)                
@@ -90,8 +97,8 @@ ifeq ($(machine),lou)
                    $(runs_home)hydro/timing_test/current_code_no_elts/run/outputs/first \
                    $(runs_home)hydro/timing_test/current_code_with_elts/run/outputs/first \
                    $(runs_home)hydro/timing_test/current_code_with_elts_continuous/run/outputs/first \
-                   $(runs_home)hydro/timing_test/old_code/run/outputs/first \
-                   $(runs_home)hydro/no_feedback/run/outputs/first
+                   $(runs_home)hydro/timing_test/old_code/run/outputs/first
+#                   $(runs_home)hydro/no_feedback/run/outputs/first
 #                   $(runs_home)hydro/intel_broadwell_debug_timestep/run/outputs/detail_dt
 #                   $(runs_home)hydro/intel_broadwell/run/outputs/tl_first 
 #                   $(runs_home)hydro/intel_broadwell/run/outputs/tl_first_restart 
@@ -106,6 +113,18 @@ ifeq ($(machine),lou)
 #                   $(runs_home)hydro/pgi_broadwell/run/outputs/tl_second 
 #                   $(runs_home)hydro/intel_skylake/tl_first 
 #                   $(runs_home)hydro/intel_broadwell/run/outputs/detail_low_res 
+endif
+
+ifeq ($(machine),great_lakes)                
+	runs_home = /home/gillenb/art_runs/runs/
+	sim_dirs_nbody = 
+	sim_dirs_hydro = $(runs_home)hydro_test/discrete_128/run/outputs/first \
+	                 $(runs_home)hydro_test/discrete_256/run/outputs/first \
+	                 $(runs_home)hydro_test/scaling_discrete_256/run/outputs/1_cores \
+	                 $(runs_home)hydro_test/scaling_discrete_256/run/outputs/2_cores \
+	                 $(runs_home)hydro_test/scaling_discrete_256/run/outputs/4_cores \
+	                 $(runs_home)hydro_test/scaling_discrete_256/run/outputs/6_cores \
+	                 $(runs_home)hydro_test/scaling_discrete_256/run/outputs/8_cores 
 endif
 
 # combine the N-Body and Hydro into one big list
