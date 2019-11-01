@@ -56,8 +56,12 @@ else:
     particle_type = "N-BODY"
 
 # Lou analysis machines have Skylake nodes with 20 cores. We have one master
-# process too.
-rh = RockstarHaloFinder(ts, num_readers=9, num_writers=10, outbase=out_dir,
+# process too. I use 2 readers since snapshots are typically spread over 4 
+# files, since I used 4 nodes, so each reader can read two files. 
+# I want to minimize the number of writers since there is one output file per 
+# writer, and Lou has a cap on file number. Using 2 gives 5 total cores per
+# process, which means we can run 4 at once on the LDANs
+rh = RockstarHaloFinder(ts, num_readers=2, num_writers=2, outbase=out_dir,
                         particle_type=particle_type)
 rh.run(restart=restart)
 
