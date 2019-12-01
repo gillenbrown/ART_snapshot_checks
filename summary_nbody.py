@@ -239,37 +239,24 @@ for rank, idx in enumerate(rank_idxs, start=1):
 
 # get the N-body particle locations. These are different in the old and new
 # simulations, so we have to check 
-try:
-    species_0_x = ad[('N-BODY_0', 'POSITION_X')].to("Mpc").value
-    species_0_y = ad[('N-BODY_0', 'POSITION_Y')].to("Mpc").value
-    species_0_z = ad[('N-BODY_0', 'POSITION_Z')].to("Mpc").value
-
-    species_1_x = ad[('N-BODY_1', 'POSITION_X')].to("Mpc").value
-    species_1_y = ad[('N-BODY_1', 'POSITION_Y')].to("Mpc").value
-    species_1_z = ad[('N-BODY_1', 'POSITION_Z')].to("Mpc").value
-
-    species_2_x = ad[('N-BODY_2', 'POSITION_X')].to("Mpc").value
-    species_2_y = ad[('N-BODY_2', 'POSITION_Y')].to("Mpc").value
-    species_2_z = ad[('N-BODY_2', 'POSITION_Z')].to("Mpc").value
-
-    species_3_x = ad[('N-BODY_3', 'POSITION_X')].to("Mpc").value
-    species_3_y = ad[('N-BODY_3', 'POSITION_Y')].to("Mpc").value
-    species_3_z = ad[('N-BODY_3', 'POSITION_Z')].to("Mpc").value
-
-    species_4_x = ad[('N-BODY_4', 'POSITION_X')].to("Mpc").value
-    species_4_y = ad[('N-BODY_4', 'POSITION_Y')].to("Mpc").value
-    species_4_z = ad[('N-BODY_4', 'POSITION_Z')].to("Mpc").value
-
-    species_5_x = ad[('N-BODY_5', 'POSITION_X')].to("Mpc").value
-    species_5_y = ad[('N-BODY_5', 'POSITION_Y')].to("Mpc").value
-    species_5_z = ad[('N-BODY_5', 'POSITION_Z')].to("Mpc").value
-
+species_x = dict()
+species_y = dict()
+species_z = dict()
+if ('N-BODY_0', 'POSITION_X') in ds.field_list:
     check_contamination = True
-except yt.utilities.exceptions.YTFieldNotFound:  # old sims
+    idx = 0
+    while True:
+        try:
+            species_x[idx] = ad[('N-BODY_'.format(idx), 'POSITION_X')].to("Mpc").value
+            species_y[idx] = ad[('N-BODY_'.format(idx), 'POSITION_Y')].to("Mpc").value
+            species_z[idx] = ad[('N-BODY_'.format(idx), 'POSITION_Z')].to("Mpc").value
+        except yt.utilities.exceptions.YTFieldNotFound:
+            break
+else:  # old sims
     check_contamination = False
-    species_0_x = ad[('N-BODY', 'POSITION_X')].to("Mpc").value
-    species_0_y = ad[('N-BODY', 'POSITION_Y')].to("Mpc").value
-    species_0_z = ad[('N-BODY', 'POSITION_Z')].to("Mpc").value
+    species_x[0] = ad[('N-BODY', 'POSITION_X')].to("Mpc").value
+    species_y[0] = ad[('N-BODY', 'POSITION_Y')].to("Mpc").value
+    species_z[0] = ad[('N-BODY', 'POSITION_Z')].to("Mpc").value
 
 # define some helper functions that will be used for contamination calculations
 def get_center(halo, with_units):
@@ -315,20 +302,12 @@ for halo in halos:
 
     # then print information about contamination, if we need to
     if check_contamination:
+        print_and_write("\nClosest particle of each low-res DM species", out_file)
          # First we calculate the closest particle of each unrefined DM species
         x, y, z = get_center(halo, with_units=False)
-        distances_1 = distance(x, y, z, species_1_x, species_1_y, species_1_z)
-        distances_2 = distance(x, y, z, species_2_x, species_2_y, species_2_z)
-        distances_3 = distance(x, y, z, species_3_x, species_3_y, species_3_z)
-        distances_4 = distance(x, y, z, species_4_x, species_4_y, species_4_z)
-        distances_5 = distance(x, y, z, species_5_x, species_5_y, species_5_z)
-        
-        print_and_write("\nClosest particle of each low-res DM species", out_file)
-        print_and_write("1: {:.0f} kpc".format(np.min(distances_1)*1000), out_file)
-        print_and_write("2: {:.0f} kpc".format(np.min(distances_2)*1000), out_file)
-        print_and_write("3: {:.0f} kpc".format(np.min(distances_3)*1000), out_file)
-        print_and_write("4: {:.0f} kpc".format(np.min(distances_4)*1000), out_file)
-        print_and_write("5: {:.0f} kpc".format(np.min(distances_5)*1000), out_file)
+        for idx in species_x:
+            distances = distance(x, y, z, species_x[idx], species_y[idx], species_z[idx])
+            print_and_write("{}: {:.0f} kpc".format(idx, np.min(distances_1)*1000), out_file)
 
         virial_radius = halo["virial_radius"]
         center = get_center(halo, with_units=True)

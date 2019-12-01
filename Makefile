@@ -61,16 +61,17 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs/
-	sim_dirs_nbody = $(runs_home)shangrila/nbody/run/outputs/tl 
+	sim_dirs_nbody = $(runs_home)shangrila/test_new_ic/outputs/ 
+#                   $(runs_home)shangrila/nbody/run/outputs/tl 
 #                   $(runs_home)shangrila/nbody/run/outputs/rj 
 #                   $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 
 #                   $(runs_home)shangrila/nbody/run/outputs/br_no_refine_2
-	sim_dirs_hydro = $(runs_home)shangrila/test_discrete/run/outputs \
+	sim_dirs_hydro = $(runs_home)shangrila/discrete_old/run/outputs \
 	                 $(runs_home)shangrila/test_music_256/run/outputs \
-	                 $(runs_home)shangrila/test_mine_music/run/outputs \
+	                 $(runs_home)shangrila/test_music_128/run/outputs \
 	                 $(runs_home)great_lakes/hydro_test/discrete_128/run/outputs/first \
 	                 $(runs_home)great_lakes/hydro_test/discrete_256/run/outputs/first 
-#                   $(runs_home)pleiades/hydro/intel_broadwell_discrete/run/outputs/third \
+#                   $(runs_home)pleiades/hydro/intel_broadwell_discrete/run/outputs/third 
 #                   $(runs_home)pleiades/hydro/intel_broadwell/run/outputs/alpha_restrict 
 #                   $(runs_home)pleiades/hydro/intel_broadwell/run/outputs/no_virial
 #                   $(runs_home)shangrila/test_all_elts/run
@@ -80,7 +81,9 @@ endif
 
 ifeq ($(machine),lou)                
 	runs_home = /u/gbrown12/art_runs/runs/
-	sim_dirs_nbody = $(runs_home)nbody/intel/run/outputs/tl_production 
+	sim_dirs_nbody = $(runs_home)nbody/intel/run/outputs/tl_production \
+	                 $(runs_home)nbody/trim_ic/run/outputs/first/ \
+	                 $(runs_home)nbody/trim_ic/run/outputs/second/
 #                   $(runs_home)nbody/intel/run/outputs/br_production 
 #                   $(runs_home)nbody/intel/run/outputs/rj_production 
 #                   $(runs_home)nbody/intel/run/outputs/change_core 
@@ -90,9 +93,9 @@ ifeq ($(machine),lou)
 #                   $(runs_home)nbody/intel/run/outputs/br_8.1.28_electra_no_refine 
 #                   $(runs_home)nbody/intel/run/outputs/br_8.1.28_pleiades_no_refine 
 #                   $(runs_home)nbody/intel/run/outputs/br_8.2.14_pleiades_no_refine 
-	sim_dirs_hydro = $(runs_home)hydro/intel_broadwell/run/outputs/no_virial \
-                   $(runs_home)hydro/intel_broadwell/run/outputs/alpha_restrict \
-                   $(runs_home)hydro/intel_broadwell_discrete/run/outputs/third \
+	sim_dirs_hydro = #$(runs_home)hydro/intel_broadwell/run/outputs/no_virial \
+                   #$(runs_home)hydro/intel_broadwell/run/outputs/alpha_restrict \
+                   #$(runs_home)hydro/intel_broadwell_discrete/run/outputs/third \
 #                   $(runs_home)hydro/timing_test/current_code_no_elts/run/outputs/first \
 #                   $(runs_home)hydro/timing_test/current_code_with_elts/run/outputs/first \
 #                   $(runs_home)hydro/timing_test/current_code_with_elts_continuous/run/outputs/first \
