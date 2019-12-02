@@ -22,6 +22,7 @@ import os
 
 import yt
 from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
+from yt.fields.api import ValidateParameter
 import numpy as np
 
 import betterplotlib as bpl
