@@ -247,9 +247,10 @@ if ('N-BODY_0', 'POSITION_X') in ds.field_list:
     idx = 0
     while True:
         try:
-            species_x[idx] = ad[('N-BODY_'.format(idx), 'POSITION_X')].to("Mpc").value
-            species_y[idx] = ad[('N-BODY_'.format(idx), 'POSITION_Y')].to("Mpc").value
-            species_z[idx] = ad[('N-BODY_'.format(idx), 'POSITION_Z')].to("Mpc").value
+            species_x[idx] = ad[('N-BODY_{}'.format(idx), 'POSITION_X')].to("Mpc").value
+            species_y[idx] = ad[('N-BODY_{}'.format(idx), 'POSITION_Y')].to("Mpc").value
+            species_z[idx] = ad[('N-BODY_{}'.format(idx), 'POSITION_Z')].to("Mpc").value
+            idx += 1
         except yt.utilities.exceptions.YTFieldNotFound:
             break
 else:  # old sims
