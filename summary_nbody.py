@@ -351,17 +351,17 @@ def add_virial_radii(hc, axis_1, axis_2, ax):
 fig, axs = bpl.subplots(ncols=3, figsize=[15, 5])
 ax_xy, ax_xz, ax_yz = axs.flatten()
 
-ax_xy.scatter(species_0_x[::10000], species_0_y[::10000], s=10)
+ax_xy.scatter(species_x[0][::10000], species_y[0][::10000], s=10)
 add_virial_radii(hc, "x", "y", ax_xy)
 ax_xy.add_labels("X [Mpc]", "Y [Mpc]")
 ax_xy.equal_scale()
 
-ax_xz.scatter(species_0_x[::10000], species_0_z[::10000], s=10)
+ax_xz.scatter(species_x[0][::10000], species_z[0][::10000], s=10)
 add_virial_radii(hc, "x", "z", ax_xz)
 ax_xz.add_labels("X [Mpc]", "Z [Mpc]")
 ax_xz.equal_scale()
 
-ax_yz.scatter(species_0_y[::10000], species_0_z[::10000], s=10)
+ax_yz.scatter(species_y[0][::10000], species_z[0][::10000], s=10)
 add_virial_radii(hc, "y", "z", ax_yz)
 ax_yz.add_labels("Y [Mpc]", "Z [Mpc]")
 ax_yz.equal_scale()
