@@ -47,8 +47,10 @@ def print_and_write(info, file_obj):
 
 # Set up the high-res N-body deposit field
 n_body_density_field = ("deposit", "N-BODY_012_density")
-@yt.derived_field(name=n_body_density_field, units="g/cm**3")
+@yt.derived_field(name=n_body_density_field, units="g/cm**3", sampling_type="cell",
+                  validators=[ValidateParameter(["deposit", "N-BODY_density"])])
 def _n_density_high_res(field, data):
+    # We need to check for sims without the high res particles
     try:
         return data[("deposit", "N-BODY_0_density")] + \
                data[("deposit", "N-BODY_1_density")] + \
