@@ -22,7 +22,6 @@ import os
 
 import yt
 from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
-from yt.fields.api import ValidateParameter
 import numpy as np
 
 import betterplotlib as bpl
@@ -45,19 +44,6 @@ def print_and_write(info, file_obj):
         file_obj.write(info + "\n")
     if not silent:
         print(info)
-
-# Set up the high-res N-body deposit field
-n_body_density_field = ("deposit", "N-BODY_012_density")
-@yt.derived_field(name=n_body_density_field, units="g/cm**3", sampling_type="cell",
-                  validators=[ValidateParameter(["deposit", "N-BODY_density"])])
-def _n_density_high_res(field, data):
-    # We need to check for sims without the high res particles
-    try:
-        return data[("deposit", "N-BODY_0_density")] + \
-               data[("deposit", "N-BODY_1_density")] + \
-               data[("deposit", "N-BODY_2_density")]
-    except yt.utilities.exceptions.YTFieldNotFound:
-        return data[("deposit", "N-BODY_density")]
 
 ds_loc = os.path.abspath(sys.argv[1])
 scale_factor = ds_loc[-10:-4]
@@ -188,6 +174,19 @@ grid_plot_name = plots_dir + "grid_idxs_{}.png".format(scale_factor)
 n_body_plot_name = plots_dir + "n_body_{}.png".format(scale_factor)
 
 grid_level_field = ('index', 'grid_level')
+n_body_density_field = ("deposit", "N-BODY_012_density")
+# We want to set up a deposit N-body density field that has only the high res
+# particles. 
+def _n_density_high_res(field, data):
+    # We need to check for sims without the high res particles
+    try:
+        return data[("deposit", "N-BODY_0_density")] + \
+               data[("deposit", "N-BODY_1_density")] + \
+               data[("deposit", "N-BODY_2_density")]
+    except yt.utilities.exceptions.YTFieldNotFound:
+        return data[("deposit", "N-BODY_density")]
+ds.add_field(n_body_density_field, function=_n_density_high_res, 
+             units="g/cm**3", sampling_type="cell")
 
 # determine how big to make the plot window
 box_length = ds.domain_width[0]
