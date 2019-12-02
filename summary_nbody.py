@@ -45,6 +45,17 @@ def print_and_write(info, file_obj):
     if not silent:
         print(info)
 
+# Set up the high-res N-body deposit field
+n_body_density_field = ("deposit", "N-BODY_012_density")
+@yt.derived_field(name=n_body_density_field, units="g/cm**3")
+def _n_density_high_res(field, data):
+    try:
+        return data[("deposit", "N-BODY_0_density")] + \
+               data[("deposit", "N-BODY_1_density")] + \
+               data[("deposit", "N-BODY_2_density")]
+    except yt.utilities.exceptions.YTFieldNotFound:
+        return data[("deposit", "N-BODY_density")]
+
 ds_loc = os.path.abspath(sys.argv[1])
 scale_factor = ds_loc[-10:-4]
 ds = yt.load(ds_loc)
@@ -170,28 +181,26 @@ for species in range(len(masses)):
 # Plots
 # 
 # =========================================================================
-normals = {"x": [1, 0, 0], 
-           "y": [0, 1, 0], 
-           "z": [0, 0, 1]}
-for direction in normals:
-    grid_plot_name = plots_dir + "grid_idxs_{}_{}.png".format(direction,
-                                                              scale_factor)
-    n_body_plot_name = plots_dir + "n_body_{}_{}.png".format(direction,
-                                                             scale_factor)
+grid_plot_name = plots_dir + "grid_idxs_{}.png".format(scale_factor)
+n_body_plot_name = plots_dir + "n_body_{}.png".format(scale_factor)
 
-    n_body_field = ("deposit", "N-BODY_density")
-    grid_level_field = ('index', 'grid_level')
+grid_level_field = ('index', 'grid_level')
 
-    grid_plot = yt.SlicePlot(ds, normal=normals[direction], 
-                             fields=grid_level_field, width=(15, "Mpccm"))
-    grid_plot.set_log(grid_level_field, False)
-    grid_plot.set_cmap(grid_level_field, "Pastel1")
-    grid_plot.set_zlim(grid_level_field, -0.5, 8.5)
-    grid_plot.save(grid_plot_name)
+# determine how big to make the plot window
+box_length = ds.domain_width[0]
+max_length = ds.quan(15.0, "Mpccm")
+plot_size = min(max_length, box_length).to("Mpc")
 
-    n_body_plot = yt.SlicePlot(ds, normal=normals[direction], 
-                               fields=n_body_field, width=(15, "Mpccm"))
-    n_body_plot.save(n_body_plot_name)
+grid_plot = yt.ProjectionPlot(ds, "x", grid_level_field, method="mip", 
+                              center=ds.domain_center, width=plot_size)
+grid_plot.set_log(grid_level_field, False)
+grid_plot.set_cmap(grid_level_field, "Pastel1")
+grid_plot.set_zlim(grid_level_field, -0.5, 8.5)
+grid_plot.save(grid_plot_name)
+
+n_body_plot = yt.ProjectionPlot(ds, "x", n_body_density_field, 
+                                center=ds.domain_center, width=plot_size)
+n_body_plot.save(n_body_plot_name)
 
 # =========================================================================
 #         
