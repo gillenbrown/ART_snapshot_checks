@@ -308,7 +308,7 @@ for halo in halos:
         x, y, z = get_center(halo, with_units=False)
         for idx in species_x:
             distances = distance(x, y, z, species_x[idx], species_y[idx], species_z[idx])
-            print_and_write("{}: {:.0f} kpc".format(idx, np.min(distances_1)*1000), out_file)
+            print_and_write("{}: {:.0f} kpc".format(idx, np.min(distances)*1000), out_file)
 
         virial_radius = halo["virial_radius"]
         center = get_center(halo, with_units=True)
