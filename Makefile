@@ -14,6 +14,9 @@ endif
 ifneq (,$(findstring ldan,$(hostname)))
 	machine = lou
 endif
+ifneq (,$(findstring lfe,$(hostname)))
+	machine = lou
+endif
 ifneq (,$(findstring gl-login,$(hostname)))
 	machine = great_lakes
 endif
@@ -81,9 +84,14 @@ endif
 
 ifeq ($(machine),lou)                
 	runs_home = /u/gbrown12/art_runs/runs/
-	sim_dirs_nbody = $(runs_home)nbody/intel/run/outputs/tl_production \
-	                 $(runs_home)nbody/trim_ic/run/outputs/first/ \
-	                 $(runs_home)nbody/trim_ic/run/outputs/second/
+	sim_dirs_nbody = $(runs_home)nbody/no_trim/run/outputs/first/ \
+                         $(runs_home)nbody/trim_ic_05/run/outputs/first/ \
+                         $(runs_home)nbody/trim_ic_06/run/outputs/first/ \
+                         $(runs_home)nbody/trim_ic_07/run/outputs/first/ \
+                         $(runs_home)nbody/trim_ic_08/run/outputs/first/
+#                   $(runs_home)nbody/trim_ic/run/outputs/first/ 
+#                   $(runs_home)nbody/trim_ic/run/outputs/second/ 
+#                   $(runs_home)nbody/intel/run/outputs/tl_production 
 #                   $(runs_home)nbody/intel/run/outputs/br_production 
 #                   $(runs_home)nbody/intel/run/outputs/rj_production 
 #                   $(runs_home)nbody/intel/run/outputs/change_core 
@@ -250,6 +258,7 @@ clean:
 	rm -r $(my_directories)
 
 # Make directories if they don't exist
+.PHONY: dirs
 $(my_directories):
 	mkdir $@
 

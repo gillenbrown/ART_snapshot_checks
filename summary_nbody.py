@@ -25,6 +25,7 @@ from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
 import numpy as np
 
 import betterplotlib as bpl
+import cmocean
 from matplotlib.patches import Circle
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -94,6 +95,8 @@ a = ds.scale_factor
 z = 1.0 / a - 1.0
 print_and_write("\na = {:.4f}".format(a), out_file)
 print_and_write("z = {:.4f}".format(z), out_file)
+
+is_zoom = ('N-BODY_0', 'POSITION_X') in ds.field_list
 
 # =============================================================================
 #         
@@ -167,45 +170,6 @@ for species in range(len(masses)):
 
 # =========================================================================
 #         
-# Plots
-# 
-# =========================================================================
-grid_plot_name = plots_dir + "grid_idxs_{}.png".format(scale_factor)
-n_body_plot_name = plots_dir + "n_body_{}.png".format(scale_factor)
-
-grid_level_field = ('index', 'grid_level')
-n_body_density_field = ("deposit", "N-BODY_012_density")
-# We want to set up a deposit N-body density field that has only the high res
-# particles. 
-def _n_density_high_res(field, data):
-    # We need to check for sims without the high res particles
-    try:
-        return data[("deposit", "N-BODY_0_density")] + \
-               data[("deposit", "N-BODY_1_density")] + \
-               data[("deposit", "N-BODY_2_density")]
-    except yt.utilities.exceptions.YTFieldNotFound:
-        return data[("deposit", "N-BODY_density")]
-ds.add_field(n_body_density_field, function=_n_density_high_res, 
-             units="g/cm**3", sampling_type="cell")
-
-# determine how big to make the plot window
-box_length = ds.domain_width[0]
-max_length = ds.quan(15.0, "Mpccm")
-plot_size = min(max_length, box_length).to("Mpc")
-
-grid_plot = yt.ProjectionPlot(ds, "x", grid_level_field, method="mip", 
-                              center=ds.domain_center, width=plot_size)
-grid_plot.set_log(grid_level_field, False)
-grid_plot.set_cmap(grid_level_field, "Pastel1")
-grid_plot.set_zlim(grid_level_field, -0.5, 8.5)
-grid_plot.save(grid_plot_name)
-
-n_body_plot = yt.ProjectionPlot(ds, "x", n_body_density_field, 
-                                center=ds.domain_center, width=plot_size)
-n_body_plot.save(n_body_plot_name)
-
-# =========================================================================
-#         
 # Halo analysis - printing app
 # 
 # =========================================================================
@@ -253,8 +217,7 @@ for rank, idx in enumerate(rank_idxs, start=1):
 species_x = dict()
 species_y = dict()
 species_z = dict()
-if ('N-BODY_0', 'POSITION_X') in ds.field_list:
-    check_contamination = True
+if is_zoom:
     idx = 0
     while True:
         try:
@@ -265,21 +228,20 @@ if ('N-BODY_0', 'POSITION_X') in ds.field_list:
         except yt.utilities.exceptions.YTFieldNotFound:
             break
 else:  # old sims
-    check_contamination = False
     species_x[0] = ad[('N-BODY', 'POSITION_X')].to("Mpc").value
     species_y[0] = ad[('N-BODY', 'POSITION_Y')].to("Mpc").value
     species_z[0] = ad[('N-BODY', 'POSITION_Z')].to("Mpc").value
 
 # define some helper functions that will be used for contamination calculations
 def get_center(halo, with_units):
-    x = halo["particle_position_x"]
-    y = halo["particle_position_y"]
-    z = halo["particle_position_z"]
+    x_cen = halo["particle_position_x"]
+    y_cen = halo["particle_position_y"]
+    z_cen = halo["particle_position_z"]
     if not with_units:
-        x = x.to("Mpc").value
-        y = y.to("Mpc").value
-        z = z.to("Mpc").value
-    return (x, y, z)
+        x_cen = x_cen.to("Mpc").value
+        y_cen = y_cen.to("Mpc").value
+        z_cen = z_cen.to("Mpc").value
+    return (x_cen, y_cen, z_cen)
 
 def distance(x_0, y_0, z_0, x_1, y_1, z_1):
     return np.sqrt((x_1 - x_0)**2 + (y_1 - y_0)**2 + (z_1 - z_0)**2)
@@ -313,12 +275,13 @@ for halo in halos:
                             out_file)
 
     # then print information about contamination, if we need to
-    if check_contamination:
+    if is_zoom:
         print_and_write("\nClosest particle of each low-res DM species", out_file)
          # First we calculate the closest particle of each unrefined DM species
-        x, y, z = get_center(halo, with_units=False)
+        x_cen, y_cen, z_cen = get_center(halo, with_units=False)
         for idx in species_x:
-            distances = distance(x, y, z, species_x[idx], species_y[idx], species_z[idx])
+            distances = distance(x_cen, y_cen, z_cen, 
+                                 species_x[idx], species_y[idx], species_z[idx])
             print_and_write("{}: {:.0f} kpc".format(idx, np.min(distances)*1000), out_file)
 
         virial_radius = halo["virial_radius"]
@@ -344,8 +307,80 @@ if len(halos) >= 2:
     print_and_write("\nSeparation of two largest halos: {:.2f}".format(dist), 
                     out_file)
 
+# =========================================================================
+#         
+# Plots
+# 
+# =========================================================================
+grid_plot_name = plots_dir + "grid_idxs_{}.png".format(scale_factor)
+n_body_plot_name = plots_dir + "n_body_{}.png".format(scale_factor)
+
+grid_level_field = ('index', 'grid_level')
+n_body_density_field = ("deposit", "High-Res_Dark_Matter_Density")
+# We want to set up a deposit N-body density field that has only the high res
+# particles. 
+def _n_density_high_res(field, data):
+    # We need to check for sims without the high res particles
+    try:
+        return data[("deposit", "N-BODY_0_density")] + \
+               data[("deposit", "N-BODY_1_density")]
+    except yt.utilities.exceptions.YTFieldNotFound:
+        return data[("deposit", "N-BODY_density")]
+ds.add_field(n_body_density_field, function=_n_density_high_res, 
+             units="g/cm**3", sampling_type="cell")
+
+# then find the center, which will be the median of the high res particles, or
+# the domain center, if there are no high res particles
+if is_zoom:
+    center = [np.median(ad[('N-BODY_0', 'POSITION_X')]),
+              np.median(ad[('N-BODY_0', 'POSITION_Y')]),
+              np.median(ad[('N-BODY_0', 'POSITION_Z')])]
+else:
+    center = ds.domain_center
+
+# determine how big to make the plot window
+box_length = ds.domain_width[0]
+max_length = ds.quan(10.0, "Mpccm")
+plot_size = min(max_length, box_length).to("Mpc")
+
+grid_plot = yt.ProjectionPlot(ds, "x", grid_level_field, method="mip", 
+                              center=center, width=plot_size)
+grid_plot.set_log(grid_level_field, False)
+grid_plot.set_cmap(grid_level_field, "Pastel1")
+grid_plot.set_zlim(grid_level_field, -0.5, 8.5)
+grid_plot.annotate_timestamp(redshift=True, corner='upper_left', time_unit="Gyr",
+                             time_format='t = {time:.2f} {units}', 
+                             redshift_format='z = {redshift:.2f}')
+grid_plot.set_axes_unit("Mpc")
+# will be saved below after we annotate both
+
+n_body_cmap = cmocean.cm.deep_r
+n_body_plot = yt.ProjectionPlot(ds, "x", n_body_density_field, 
+                                center=center, width=plot_size)
+n_body_plot.annotate_timestamp(redshift=True, corner='upper_left', time_unit="Gyr",
+                               time_format='t = {time:.2f} {units}', 
+                               redshift_format='z = {redshift:.2f}')
+n_body_plot.set_background_color(n_body_density_field, n_body_cmap(0))
+n_body_plot.set_axes_unit("Mpc")
+n_body_plot.set_cmap(n_body_density_field, n_body_cmap)
+
+# annotate the halos in both plots
+text_args={"color":"k", "va":"center", "ha":"center"}
+for halo in halos:
+    coord = [halo["particle_position_x"], 
+             halo["particle_position_y"], 
+             halo["particle_position_z"]]
+    rank = halo["rank"]
+    if rank < 6:
+        n_body_plot.annotate_text(text=rank, pos=coord, text_args=text_args)
+        grid_plot.annotate_text(text=rank, pos=coord, text_args=text_args)
+
+n_body_plot.save(n_body_plot_name)
+grid_plot.save(grid_plot_name)
+
 # Then do a plot of the halos
 halos_plot_name = plots_dir + "halos_{}.png".format(scale_factor)
+
 def add_virial_radii(hc, axis_1, axis_2, ax):
     for halo in halos:
         coord_1 = halo["particle_position_{}".format(axis_1)].to("Mpc").value
@@ -370,7 +405,7 @@ ax_xy.equal_scale()
 
 ax_xz.scatter(species_x[0][::10000], species_z[0][::10000], s=10)
 add_virial_radii(hc, "x", "z", ax_xz)
-ax_xz.add_labels("X [Mpc]", "Z [Mpc]")
+ax_xz.add_labels("X [Mpc]", "Z [Mpc]", z="{:.2f}".format(z))
 ax_xz.equal_scale()
 
 ax_yz.scatter(species_y[0][::10000], species_z[0][::10000], s=10)
