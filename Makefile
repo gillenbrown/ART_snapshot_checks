@@ -30,16 +30,19 @@ ifeq ($(machine),shangrila)
 	tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
 	tree_dir = /u/home/gillenb/code/not_mine/consistent-trees/
 	halo_finding_script = ./run_rockstar.sh
+	timing_script = /u/home/gillenb/code/mine/art_cluster/utils/scripts/parse_timing2.pl
 endif
 ifeq ($(machine),lou)
 	tree_config_script = /u/gbrown12/code/rockstar/scripts/gen_merger_cfg.pl
 	tree_dir = /u/gbrown12/code/consistent-trees/
 	halo_finding_script = ./run_rockstar_ldan.sh
+	timing_script = /u/gbrown12/code/parse_timing2.pl
 endif
 ifeq ($(machine),great_lakes)
 	tree_config_script = /home/gillenb/code/rockstar/scripts/gen_merger_cfg.pl
 	tree_dir = /home/gillenb/code/consistent-trees/
 	halo_finding_script = ./run_rockstar_gl.sh
+	timing_script = /home/gillenb/code/art_cluster/utils/scripts/parse_timing2.pl
 endif
 
 # ------------------------------------------------------------------------------
@@ -150,7 +153,8 @@ my_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos
 #  List of all simulation outputs and their corresponding halo catalogs
 # 
 # ------------------------------------------------------------------------------
-snapshots = $(foreach dir,$(sim_out_dirs),$(wildcard $(dir)/*_a*.art))
+dir_to_sims = $(wildcard $(1)/*_a*.art)
+snapshots = $(foreach dir,$(sim_out_dirs),$(call dir_to_sims,$(dir)))
 snapshots_hydro = $(foreach dir,$(sim_out_dirs_hydro),$(wildcard $(dir)/*_a*.art))
 # Parse the snapshot names into halo catalogs 
 # replace the directory and suffix
@@ -192,6 +196,19 @@ sim_to_summary_nbody = $(subst .art,.txt,$(subst out/continuous,checks/summary_n
 summary_nbody_to_sim = $(subst .txt,.art,$(subst checks/summary_nbody,out/continuous, $(1)))
 summary_nbody_to_halo = $(subst .txt,.0.bin,$(subst checks/summary_nbody,halos/halos, $(1)))
 summaries_nbody = $(foreach snapshot,$(snapshots),$(call sim_to_summary_nbody,$(snapshot)))
+
+# ------------------------------------------------------------------------------
+#
+#  Nbody movies
+# 
+# ------------------------------------------------------------------------------
+movies_nbody = $(foreach dir,$(sim_dirs),$(dir)plots/n_body.mp4)
+movie_nbody_to_summary_nbody = $(call sim_to_summary_nbody,$(call dir_to_sims,$(subst plots/n_body.mp4,out,$(1))))
+movie_nbody_to_plot_dir = $(subst /n_body.mp4,,$(1))
+
+movies_grid = $(foreach dir,$(sim_dirs),$(dir)plots/grid.mp4)
+movie_grid_to_summary_nbody = $(call sim_to_summary_nbody,$(call dir_to_sims,$(subst plots/grid.mp4,out,$(1))))
+movie_grid_to_plot_dir = $(subst /grid.mp4,,$(1))
 
 # ------------------------------------------------------------------------------
 #
@@ -248,10 +265,19 @@ smhm_plots = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_smhm,$(snapshot
 
 # ------------------------------------------------------------------------------
 #
+#  timing output
+# 
+# ------------------------------------------------------------------------------
+timings = $(foreach dir,$(sim_dirs),$(dir)checks/timing_debug.txt)
+timing_to_sims = $(call dir_to_sims,$(subst checks/timing_debug.txt,out,$(1)))
+timing_to_dir = $(subst checks/timing_debug.txt,log,$(1))
+
+# ------------------------------------------------------------------------------
+#
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(my_directories) $(summaries_nbody) $(summaries_metal) $(summaries_vel) $(merger_sentinels) $(smhm_plots)
+all: $(my_directories) $(summaries_nbody) $(movies_nbody) $(movies_grid) $(summaries_metal) $(summaries_vel) $(merger_sentinels) $(smhm_plots) $(timings)
 
 .PHONY: clean
 clean:
@@ -283,6 +309,15 @@ $(halos_catalogs): %: $(rename_script) $$(call halo_to_sentinel,%)
 .SECONDEXPANSION:
 $(summaries_nbody): %: $$(call summary_nbody_to_halo, %) $(summary_nbody_script)
 	python $(summary_nbody_script) $(call summary_nbody_to_sim, $@) $(call summary_nbody_to_halo, $@) clobber silent
+
+# Make the moves from the N-body plots
+.SECONDEXPANSION:
+$(movies_nbody): %: $$(call movie_nbody_to_summary_nbody, %)
+	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_nbody_to_plot_dir,$@)/n_body_*.png' -c:v h264 -pix_fmt yuv420p -y $@
+
+.SECONDEXPANSION:
+$(movies_grid): %: $$(call movie_grid_to_summary_nbody, %)
+	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_grid_to_plot_dir,$@)/grid_idxs_*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
 # Make the consistent trees config files
 .SECONDEXPANSION:
@@ -317,4 +352,9 @@ $(summaries_vel): %: $$(call summary_vel_to_sim,%) $(summary_vel_script)
 .SECONDEXPANSION:
 $(smhm_plots): %: $$(call smhm_to_sim,%) $(sfh_plots_script)
 	python $(sfh_plots_script) $(call smhm_to_sim, $@) $(call sim_to_halo, $(call smhm_to_sim, $@))
+
+# timing output
+.SECONDEXPANSION:
+$(timings): %: $$(call timing_to_sims, %)
+	$(timing_script) $(call timing_to_dir, $@) > $@
 

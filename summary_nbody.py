@@ -197,7 +197,6 @@ ordered_quantities = ["particle_mass", "virial_radius", "particle_position_x",
 halo_masses = yt.YTArray([item["particle_mass"] for item in hc.catalog])
 if len(halo_masses) == 0:
     print_and_write("No halos at this redshift", out_file)
-    out_file.close()
 
 # We get the indices that sort it. The reversing there makes the biggest halos
 # first, like we want.
@@ -374,8 +373,8 @@ for halo in halos:
         n_body_plot.annotate_text(text=rank, pos=coord, text_args=text_args)
         grid_plot.annotate_text(text=rank, pos=coord, text_args=text_args)
 
-n_body_plot.save(n_body_plot_name)
-grid_plot.save(grid_plot_name)
+n_body_plot.save(n_body_plot_name, mpl_kwargs={"dpi": 400})
+grid_plot.save(grid_plot_name, mpl_kwargs={"dpi": 400})
 
 # Then do a plot of the halos
 halos_plot_name = plots_dir + "halos_{}.png".format(scale_factor)
@@ -404,7 +403,7 @@ ax_xy.equal_scale()
 
 ax_xz.scatter(species_x[0][::10000], species_z[0][::10000], s=10)
 add_virial_radii(hc, "x", "z", ax_xz)
-ax_xz.add_labels("X [Mpc]", "Z [Mpc]", z="{:.2f}".format(z))
+ax_xz.add_labels("X [Mpc]", "Z [Mpc]", "z={:.2f}".format(z))
 ax_xz.equal_scale()
 
 ax_yz.scatter(species_y[0][::10000], species_z[0][::10000], s=10)
@@ -412,7 +411,7 @@ add_virial_radii(hc, "y", "z", ax_yz)
 ax_yz.add_labels("Y [Mpc]", "Z [Mpc]")
 ax_yz.equal_scale()
 
-fig.savefig(halos_plot_name)
+fig.savefig(halos_plot_name, dpi=400)
 
 print_and_write("\nPlots will be saved to:", out_file)
 print_and_write(grid_plot_name, out_file)
