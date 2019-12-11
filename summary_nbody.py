@@ -198,7 +198,6 @@ halo_masses = yt.YTArray([item["particle_mass"] for item in hc.catalog])
 if len(halo_masses) == 0:
     print_and_write("No halos at this redshift", out_file)
     out_file.close()
-    exit()
 
 # We get the indices that sort it. The reversing there makes the biggest halos
 # first, like we want.
