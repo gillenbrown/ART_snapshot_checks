@@ -87,11 +87,11 @@ endif
 
 ifeq ($(machine),lou)                
 	runs_home = /u/gbrown12/art_runs/runs/
-	sim_dirs_nbody = $(runs_home)nbody/no_trim/run/outputs/first/ \
-                         $(runs_home)nbody/trim_ic_05/run/outputs/first/ \
-                         $(runs_home)nbody/trim_ic_06/run/outputs/first/ \
-                         $(runs_home)nbody/trim_ic_07/run/outputs/first/ \
-                         $(runs_home)nbody/trim_ic_08/run/outputs/first/
+	sim_dirs_nbody = $(runs_home)nbody/trim_ic_05/run/outputs/first/ \
+	                 $(runs_home)nbody/trim_ic_06/run/outputs/first/ \
+	                 $(runs_home)nbody/trim_ic_07/run/outputs/first/ \
+	                 $(runs_home)nbody/trim_ic_08/run/outputs/first/ 
+	                 #$(runs_home)nbody/no_trim/run/outputs/first/
 #                   $(runs_home)nbody/trim_ic/run/outputs/first/ 
 #                   $(runs_home)nbody/trim_ic/run/outputs/second/ 
 #                   $(runs_home)nbody/intel/run/outputs/tl_production 
@@ -285,6 +285,8 @@ clean:
 
 # Make directories if they don't exist
 .PHONY: dirs
+dirs: $(my_directories)
+
 $(my_directories):
 	mkdir $@
 
@@ -295,7 +297,7 @@ $(my_directories):
 .PHONY: halos
 halos: $(rockstar_sentinels)
 # We run the script with parameters to the output directory and rockstar halo 
-# directory, plus the remove keyword to replace previous halo catalogs
+# directory
 .SECONDEXPANSION:
 $(rockstar_sentinels): %: $$(call sentinel_to_sims, %) 
 	$(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@)

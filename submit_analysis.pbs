@@ -1,0 +1,19 @@
+#PBS -S /bin/bash
+#PBS -N snapshot_checks
+#PBS -l select=1:ncpus=20
+#PBS -l walltime=72:00:00
+#PBS -q ldan
+#PBS -r n
+#PBS -M gillenb@umich.edu
+#PBS -m abe
+#PBS -j oe
+#PBS -l site=needed=/u/gbrown12/
+
+source ~/.bashrc
+
+module purge
+
+cd $PBS_O_WORKDIR
+
+make dirs &>> $PBS_JOBNAME.stdout.$PBS_JOBID
+make -j20 &>> $PBS_JOBNAME.stdout.$PBS_JOBID

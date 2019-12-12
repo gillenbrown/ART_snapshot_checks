@@ -1,6 +1,6 @@
 #PBS -S /bin/bash
 #PBS -N snapshot_checks
-#PBS -l select=1:ncpus=20
+#PBS -l select=1:ncpus=5
 #PBS -l walltime=72:00:00
 #PBS -q ldan
 #PBS -r n
@@ -16,5 +16,8 @@ module load mpi-sgi/mpt
 
 cd $PBS_O_WORKDIR
 
-make -j4 halos &>> $PBS_JOBNAME.stdout.$PBS_JOBID
-make -j20 &>> $PBS_JOBNAME.stdout.$PBS_JOBID
+export MPI_DSM_VERBOSE=1
+
+make dirs &>> $PBS_JOBNAME.stdout.$PBS_JOBID
+make halos &>> $PBS_JOBNAME.stdout.$PBS_JOBID
+make -j5 &>> $PBS_JOBNAME.stdout.$PBS_JOBID
