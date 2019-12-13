@@ -12,6 +12,7 @@
 source ~/.bashrc
 
 module purge
+module load mpi-sgi/mpt
 
 cd $PBS_O_WORKDIR
 
