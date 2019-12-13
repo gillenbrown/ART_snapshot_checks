@@ -1,3 +1,4 @@
+# My notation is that no paths end in a slash
 # ------------------------------------------------------------------------------
 #
 #  Flag to figure out what machine we're on
@@ -28,19 +29,19 @@ endif
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
 	tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
-	tree_dir = /u/home/gillenb/code/not_mine/consistent-trees/
+	tree_dir = /u/home/gillenb/code/not_mine/consistent-trees
 	halo_finding_script = ./run_rockstar.sh
 	timing_script = /u/home/gillenb/code/mine/art_cluster/utils/scripts/parse_timing2.pl
 endif
 ifeq ($(machine),lou)
 	tree_config_script = /u/gbrown12/code/rockstar/scripts/gen_merger_cfg.pl
-	tree_dir = /u/gbrown12/code/consistent-trees/
+	tree_dir = /u/gbrown12/code/consistent-trees
 	halo_finding_script = ./run_rockstar_ldan.sh
 	timing_script = /u/gbrown12/code/parse_timing2.pl
 endif
 ifeq ($(machine),great_lakes)
 	tree_config_script = /home/gillenb/code/rockstar/scripts/gen_merger_cfg.pl
-	tree_dir = /home/gillenb/code/consistent-trees/
+	tree_dir = /home/gillenb/code/consistent-trees
 	halo_finding_script = ./run_rockstar_gl.sh
 	timing_script = /home/gillenb/code/art_cluster/utils/scripts/parse_timing2.pl
 endif
@@ -66,31 +67,31 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 # 
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
-	runs_home = /u/home/gillenb/art_runs/runs/
-	sim_dirs_nbody = $(runs_home)shangrila/test_new_ic/outputs/ 
-#                   $(runs_home)shangrila/nbody/run/outputs/tl 
-#                   $(runs_home)shangrila/nbody/run/outputs/rj 
-#                   $(runs_home)shangrila/nbody/run/outputs/br_no_refine_1 
-#                   $(runs_home)shangrila/nbody/run/outputs/br_no_refine_2
-	sim_dirs_hydro = $(runs_home)shangrila/discrete_old/run/outputs \
-	                 $(runs_home)shangrila/test_music_256/run/outputs \
-	                 $(runs_home)shangrila/test_music_128/run/outputs \
-	                 $(runs_home)great_lakes/hydro_test/discrete_128/run/outputs/first \
-	                 $(runs_home)great_lakes/hydro_test/discrete_256/run/outputs/first 
-#                   $(runs_home)pleiades/hydro/intel_broadwell_discrete/run/outputs/third 
-#                   $(runs_home)pleiades/hydro/intel_broadwell/run/outputs/alpha_restrict 
-#                   $(runs_home)pleiades/hydro/intel_broadwell/run/outputs/no_virial
-#                   $(runs_home)shangrila/test_all_elts/run
-#                   $(runs_home)shangrila/test_mine/run
-#                   $(runs_home)shangrila/NBm_10SFE_tidal_writeout/run
+	runs_home = /u/home/gillenb/art_runs/runs
+	sim_dirs_nbody = $(runs_home)/shangrila/test_new_ic/outputs 
+#                   $(runs_home)/shangrila/nbody/run/outputs/tl 
+#                   $(runs_home)/shangrila/nbody/run/outputs/rj 
+#                   $(runs_home)/shangrila/nbody/run/outputs/br_no_refine_1 
+#                   $(runs_home)/shangrila/nbody/run/outputs/br_no_refine_2
+	sim_dirs_hydro = $(runs_home)/shangrila/discrete_old/run/outputs \
+	                 $(runs_home)/shangrila/test_music_256/run/outputs \
+	                 $(runs_home)/shangrila/test_music_128/run/outputs \
+	                 $(runs_home)/great_lakes/hydro_test/discrete_128/run/outputs/first \
+	                 $(runs_home)/great_lakes/hydro_test/discrete_256/run/outputs/first 
+#                   $(runs_home)/pleiades/hydro/intel_broadwell_discrete/run/outputs/third 
+#                   $(runs_home)/pleiades/hydro/intel_broadwell/run/outputs/alpha_restrict 
+#                   $(runs_home)/pleiades/hydro/intel_broadwell/run/outputs/no_virial
+#                   $(runs_home)/shangrila/test_all_elts/run
+#                   $(runs_home)/shangrila/test_mine/run
+#                   $(runs_home)/shangrila/NBm_10SFE_tidal_writeout/run
 endif
 
 ifeq ($(machine),lou)                
-	runs_home = /u/gbrown12/art_runs/runs/
-	sim_dirs_nbody = $(runs_home)nbody/trim_ic_05/run/outputs/first \
-	                 $(runs_home)nbody/trim_ic_06/run/outputs/first \
-	                 $(runs_home)nbody/trim_ic_07/run/outputs/first \
-	                 $(runs_home)nbody/trim_ic_08/run/outputs/first 
+	runs_home = /u/gbrown12/art_runs/runs
+	sim_dirs_nbody = $(runs_home)/nbody/trim_ic_05/run/outputs/first \
+	                 $(runs_home)/nbody/trim_ic_06/run/outputs/first \
+	                 $(runs_home)/nbody/trim_ic_07/run/outputs/first \
+	                 $(runs_home)/nbody/trim_ic_08/run/outputs/first 
 	                 #$(runs_home)nbody/no_trim/run/outputs/first/
 #                   $(runs_home)nbody/trim_ic/run/outputs/first/ 
 #                   $(runs_home)nbody/trim_ic/run/outputs/second/ 
@@ -122,15 +123,15 @@ ifeq ($(machine),lou)
 endif
 
 ifeq ($(machine),great_lakes)                
-	runs_home = /home/gillenb/art_runs/runs/
+	runs_home = /home/gillenb/art_runs/runs
 	sim_dirs_nbody = 
-	sim_dirs_hydro = $(runs_home)hydro_test/discrete_128/run/outputs/first \
-	                 $(runs_home)hydro_test/discrete_256/run/outputs/first \
-	                 $(runs_home)hydro_test/scaling_discrete_256/run/outputs/1_cores \
-	                 $(runs_home)hydro_test/scaling_discrete_256/run/outputs/2_cores \
-	                 $(runs_home)hydro_test/scaling_discrete_256/run/outputs/4_cores \
-	                 $(runs_home)hydro_test/scaling_discrete_256/run/outputs/6_cores \
-	                 $(runs_home)hydro_test/scaling_discrete_256/run/outputs/8_cores 
+	sim_dirs_hydro = $(runs_home)/hydro_test/discrete_128/run/outputs/first \
+	                 $(runs_home)/hydro_test/discrete_256/run/outputs/first \
+	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/1_cores \
+	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/2_cores \
+	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/4_cores \
+	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/6_cores \
+	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/8_cores 
 endif
 
 # combine the N-Body and Hydro into one big list
@@ -202,11 +203,11 @@ summaries_nbody = $(foreach snapshot,$(snapshots),$(call sim_to_summary_nbody,$(
 #  Nbody movies
 # 
 # ------------------------------------------------------------------------------
-movies_nbody = $(foreach dir,$(sim_dirs),$(dir)plots/n_body.mp4)
+movies_nbody = $(foreach dir,$(sim_dirs),$(dir)/plots/n_body.mp4)
 movie_nbody_to_summary_nbody = $(call sim_to_summary_nbody,$(call dir_to_sims,$(subst plots/n_body.mp4,out,$(1))))
 movie_nbody_to_plot_dir = $(subst /n_body.mp4,,$(1))
 
-movies_grid = $(foreach dir,$(sim_dirs),$(dir)plots/grid.mp4)
+movies_grid = $(foreach dir,$(sim_dirs),$(dir)/plots/grid.mp4)
 movie_grid_to_summary_nbody = $(call sim_to_summary_nbody,$(call dir_to_sims,$(subst plots/grid.mp4,out,$(1))))
 movie_grid_to_plot_dir = $(subst /grid.mp4,,$(1))
 
@@ -268,7 +269,7 @@ smhm_plots = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_smhm,$(snapshot
 #  timing output
 # 
 # ------------------------------------------------------------------------------
-timings = $(foreach dir,$(sim_dirs),$(dir)checks/timing_debug.txt)
+timings = $(foreach dir,$(sim_dirs),$(dir)/checks/timing_debug.txt)
 timing_to_sims = $(call dir_to_sims,$(subst checks/timing_debug.txt,out,$(1)))
 timing_to_dir = $(subst checks/timing_debug.txt,log,$(1))
 
