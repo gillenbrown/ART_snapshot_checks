@@ -92,34 +92,34 @@ ifeq ($(machine),lou)
 	                 $(runs_home)/nbody/trim_ic_06/run/outputs/first \
 	                 $(runs_home)/nbody/trim_ic_07/run/outputs/first \
 	                 $(runs_home)/nbody/trim_ic_08/run/outputs/first \
-	                 $(runs_home)nbody/no_trim/run/outputs/first/
-#                   $(runs_home)nbody/trim_ic/run/outputs/first/ 
-#                   $(runs_home)nbody/trim_ic/run/outputs/second/ 
-#                   $(runs_home)nbody/intel/run/outputs/tl_production 
-#                   $(runs_home)nbody/intel/run/outputs/br_production 
-#                   $(runs_home)nbody/intel/run/outputs/rj_production 
-#                   $(runs_home)nbody/intel/run/outputs/change_core 
-#                   $(runs_home)nbody/intel/run/outputs/br_1.1.28_pleiades_no_refine 
-#                   $(runs_home)nbody/intel/run/outputs/br_2.1.28_pleiades_no_refine 
-#                   $(runs_home)nbody/intel/run/outputs/br_4.1.28_pleiades_no_refine 
-#                   $(runs_home)nbody/intel/run/outputs/br_8.1.28_electra_no_refine 
-#                   $(runs_home)nbody/intel/run/outputs/br_8.1.28_pleiades_no_refine 
-#                   $(runs_home)nbody/intel/run/outputs/br_8.2.14_pleiades_no_refine 
-	sim_dirs_hydro = #$(runs_home)hydro/intel_broadwell/run/outputs/no_virial \
-                   #$(runs_home)hydro/intel_broadwell/run/outputs/alpha_restrict \
-                   #$(runs_home)hydro/intel_broadwell_discrete/run/outputs/third \
-#                   $(runs_home)hydro/timing_test/current_code_no_elts/run/outputs/first \
-#                   $(runs_home)hydro/timing_test/current_code_with_elts/run/outputs/first \
-#                   $(runs_home)hydro/timing_test/current_code_with_elts_continuous/run/outputs/first \
-#                   $(runs_home)hydro/timing_test/old_code/run/outputs/first
-#                   $(runs_home)hydro/intel_broadwell/run/outputs/tl_first 
-#                   $(runs_home)hydro/intel_broadwell/run/outputs/tl_first_restart 
-#                   $(runs_home)hydro/intel_broadwell/run/outputs/tl_second 
-#                   $(runs_home)hydro/intel_broadwell/run/outputs/tl_debug 
-#                   $(runs_home)hydro/intel_broadwell/run/outputs/detail 
-#                   $(runs_home)hydro/intel_broadwell/run/outputs/detail_cfl_restart 
-#                   $(runs_home)hydro/intel_broadwell/run/outputs/refinement_delete 
-#                   $(runs_home)hydro/intel_broadwell/run/outputs/detail_low_res 
+	                 $(runs_home)/nbody/no_trim/run/outputs/first/
+#                   $(runs_home)/nbody/trim_ic/run/outputs/first/ 
+#                   $(runs_home)/nbody/trim_ic/run/outputs/second/ 
+#                   $(runs_home)/nbody/intel/run/outputs/tl_production 
+#                   $(runs_home)/nbody/intel/run/outputs/br_production 
+#                   $(runs_home)/nbody/intel/run/outputs/rj_production 
+#                   $(runs_home)/nbody/intel/run/outputs/change_core 
+#                   $(runs_home)/nbody/intel/run/outputs/br_1.1.28_pleiades_no_refine 
+#                   $(runs_home)/nbody/intel/run/outputs/br_2.1.28_pleiades_no_refine 
+#                   $(runs_home)/nbody/intel/run/outputs/br_4.1.28_pleiades_no_refine 
+#                   $(runs_home)/nbody/intel/run/outputs/br_8.1.28_electra_no_refine 
+#                   $(runs_home)/nbody/intel/run/outputs/br_8.1.28_pleiades_no_refine 
+#                   $(runs_home)/nbody/intel/run/outputs/br_8.2.14_pleiades_no_refine 
+	sim_dirs_hydro = #$(runs_home)/hydro/intel_broadwell/run/outputs/no_virial \
+                   #$(runs_home)/hydro/intel_broadwell/run/outputs/alpha_restrict \
+                   #$(runs_home)/hydro/intel_broadwell_discrete/run/outputs/third \
+#                   $(runs_home)/hydro/timing_test/current_code_no_elts/run/outputs/first \
+#                   $(runs_home)/hydro/timing_test/current_code_with_elts/run/outputs/first \
+#                   $(runs_home)/hydro/timing_test/current_code_with_elts_continuous/run/outputs/first \
+#                   $(runs_home)/hydro/timing_test/old_code/run/outputs/first
+#                   $(runs_home)/hydro/intel_broadwell/run/outputs/tl_first 
+#                   $(runs_home)/hydro/intel_broadwell/run/outputs/tl_first_restart 
+#                   $(runs_home)/hydro/intel_broadwell/run/outputs/tl_second 
+#                   $(runs_home)/hydro/intel_broadwell/run/outputs/tl_debug 
+#                   $(runs_home)/hydro/intel_broadwell/run/outputs/detail 
+#                   $(runs_home)/hydro/intel_broadwell/run/outputs/detail_cfl_restart 
+#                   $(runs_home)/hydro/intel_broadwell/run/outputs/refinement_delete 
+#                   $(runs_home)/hydro/intel_broadwell/run/outputs/detail_low_res 
 endif
 
 ifeq ($(machine),great_lakes)                
