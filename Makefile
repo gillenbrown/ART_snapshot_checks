@@ -92,7 +92,7 @@ ifeq ($(machine),lou)
 	                 $(runs_home)/nbody/trim_ic_06/run/outputs/first \
 	                 $(runs_home)/nbody/trim_ic_07/run/outputs/first \
 	                 $(runs_home)/nbody/trim_ic_08/run/outputs/first \
-	                 $(runs_home)/nbody/no_trim/run/outputs/first/
+	                 $(runs_home)/nbody/no_trim/run/outputs/first
 #                   $(runs_home)/nbody/trim_ic/run/outputs/first/ 
 #                   $(runs_home)/nbody/trim_ic/run/outputs/second/ 
 #                   $(runs_home)/nbody/intel/run/outputs/tl_production 

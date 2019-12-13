@@ -58,9 +58,9 @@ else:
 # Lou analysis machines have Skylake nodes with 20 cores. We have one master
 # process too. I use 1 reader since reading is quicker than analysis. 
 # I want to minimize the number of writers since there is one output file per 
-# writer, and Lou has a cap on file number. Using 3 gives 5 total cores per
-# process, which means we can run 4 at once on the LDANs
-rh = RockstarHaloFinder(ts, num_readers=1, num_writers=1, outbase=out_dir,
+# writer, and Lou has a cap on file number. Using 2 gives 4 total cores per
+# process, which means we can run 5 at once on the LDANs
+rh = RockstarHaloFinder(ts, num_readers=1, num_writers=2, outbase=out_dir,
                         particle_type=particle_type)
 rh.run(restart=restart)
 

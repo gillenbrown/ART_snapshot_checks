@@ -17,5 +17,5 @@ module load mpi-sgi/mpt
 cd $PBS_O_WORKDIR
 
 make dirs &>> $PBS_JOBNAME.stdout.$PBS_JOBID
-make -j6 halos &>> $PBS_JOBNAME.stdout.$PBS_JOBID
+make -j5 halos &>> $PBS_JOBNAME.stdout.$PBS_JOBID
 make -j20 &>> $PBS_JOBNAME.stdout.$PBS_JOBID
