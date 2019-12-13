@@ -20,4 +20,4 @@ export MPI_DSM_VERBOSE=1
 
 make dirs &>> $PBS_JOBNAME.stdout.$PBS_JOBID
 make halos &>> $PBS_JOBNAME.stdout.$PBS_JOBID
-make -j3 &>> $PBS_JOBNAME.stdout.$PBS_JOBID
+

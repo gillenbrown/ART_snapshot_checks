@@ -87,10 +87,10 @@ endif
 
 ifeq ($(machine),lou)                
 	runs_home = /u/gbrown12/art_runs/runs/
-	sim_dirs_nbody = $(runs_home)nbody/trim_ic_05/run/outputs/first/ \
-	                 $(runs_home)nbody/trim_ic_06/run/outputs/first/ \
-	                 $(runs_home)nbody/trim_ic_07/run/outputs/first/ \
-	                 $(runs_home)nbody/trim_ic_08/run/outputs/first/ 
+	sim_dirs_nbody = $(runs_home)nbody/trim_ic_05/run/outputs/first \
+	                 $(runs_home)nbody/trim_ic_06/run/outputs/first \
+	                 $(runs_home)nbody/trim_ic_07/run/outputs/first \
+	                 $(runs_home)nbody/trim_ic_08/run/outputs/first 
 	                 #$(runs_home)nbody/no_trim/run/outputs/first/
 #                   $(runs_home)nbody/trim_ic/run/outputs/first/ 
 #                   $(runs_home)nbody/trim_ic/run/outputs/second/ 
@@ -356,6 +356,9 @@ $(smhm_plots): %: $$(call smhm_to_sim,%) $(sfh_plots_script)
 	python $(sfh_plots_script) $(call smhm_to_sim, $@) $(call sim_to_halo, $(call smhm_to_sim, $@))
 
 # timing output
+.PHONY: timing
+dirs: $(timings)
+
 .SECONDEXPANSION:
 $(timings): %: $$(call timing_to_sims, %)
 	$(timing_script) $(call timing_to_dir, $@) > $@
