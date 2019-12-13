@@ -358,7 +358,7 @@ $(smhm_plots): %: $$(call smhm_to_sim,%) $(sfh_plots_script)
 
 # timing output
 .PHONY: timing
-dirs: $(timings)
+timing: $(timings)
 
 .SECONDEXPANSION:
 $(timings): %: $$(call timing_to_sims, %)
