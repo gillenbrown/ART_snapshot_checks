@@ -14,6 +14,11 @@ source ~/.bashrc
 module purge
 module load mpi-sgi/mpt
 
+# need to disable pinning to avoid having multiple processes running on same 
+# set of CPUs
+export MPI_DSM_VERBOSE=1
+export MPI_DSM_DISTRIBUTE=0
+
 cd $PBS_O_WORKDIR
 
 make dirs &>> $PBS_JOBNAME.stdout.$PBS_JOBID
