@@ -26,7 +26,11 @@ import numpy as np
 
 import betterplotlib as bpl
 import cmocean
+import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
+from matplotlib.colors import LogNorm
+import matplotlib.gridspec as gridspec
+import matplotlib.patheffects as PathEffects
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 bpl.presentation_style()
@@ -413,9 +417,145 @@ ax_yz.equal_scale()
 
 fig.savefig(halos_plot_name, dpi=400)
 
+# =========================================================================
+#         
+# Mega plot with all the individual N-body species
+# 
+# =========================================================================
+# This is some ugly code here, but it was actually the easiest way to get a 
+# multipanel plot. yt is not easy to handle, but this worked
+
+density_fields = [item for item in ds.derived_field_list
+                  if item[0] == "deposit" 
+                  and "N-BODY" in item[1] and "density" in item[1]]
+n_panels = len(density_fields)
+n_rows = 2
+n_cols = int(np.ceil(n_panels / n_rows))
+extra_plot = (n_panels % n_rows) != 0  # get rid of the last one?
+
+center = ds.domain_center
+
+# determine if we need to cut the box size. Here our maximum length will be the
+# full box size of the new trimmed IC
+box_length = ds.domain_width[0]
+max_length = ds.quan(12.5, "Mpccm") / ds.hubble_constant
+if box_length > max_length:
+    # make a box so that we don't project through the full box, just the region
+    # of interest
+    width = max_length
+    left_edges = [c - (width/2.0) for c in center]
+    right_edges = [c + (width/2.0) for c in center]
+    box = ds.box(left_edges, right_edges)
+else:
+    width = box_length
+    box = ds.all_data()
+
+# the labeling of this will be ugly, since we do things in terms of pixels
+width_tuple = (width.to("Mpc").value, "Mpc")
+n_pix = 1E4
+# determine the mapping from pixels to Mpc
+pix_per_mpc = n_pix / width_tuple[0]
+center_pix = n_pix / 2.0
+
+base_mpc = 10**np.floor(np.log10(width_tuple[0]/2.0))
+base_pix = base_mpc * pix_per_mpc
+
+# start from the center and work our way outwards
+pix_vals = [center_pix]
+pix_labels = ["0"]
+i = 0
+while max(pix_vals) < n_pix:
+    pix_vals.append(center_pix + i*base_pix)
+    pix_vals.append(center_pix - i*base_pix)
+    pix_labels.append("{:g}".format(i*base_mpc))
+    pix_labels.append("{:g}".format(-i*base_mpc))
+    i += 1
+
+# Create the projections. We can do all fields at once, then handle them later
+proj = yt.ProjectionPlot(ds, 'x', density_fields, width=width,
+                         center=center, data_source=box)
+# get the underlying data which we can use in imshow
+proj_data = proj.data_source.to_frb(width=width_tuple, height=width_tuple, 
+                                    resolution=n_pix)
+
+# handle the colormaps
+norm = LogNorm(vmin=1E-5, vmax=0.1)
+cmap = cmocean.cm.deep_r
+# since we are logging the data, zeros are bad. Handle those in the colormap
+cmap.set_bad(cmap(0))
+
+# then actually make the plot
+fig = plt.figure(figsize=[8*n_cols, 8*n_rows])
+# have a grid of axes, plus one extra column for the colorbar
+gs = gridspec.GridSpec(nrows=n_rows, ncols=n_cols+1,
+                       width_ratios=[1]*n_cols + [0.1], 
+                       wspace=0.02, hspace=0.02)
+
+axs = []
+for r in range(n_rows):
+    for c in range(n_cols):
+        axs.append(fig.add_subplot(gs[r,c], projection="bpl"))
+# last column is the colorbar
+cax = fig.add_subplot(gs[:,n_cols], projection="bpl")
+
+# then go through each of these and plot the right data
+for i, field in enumerate(density_fields):  
+    im_data = np.array(proj_data[field])
+    im = axs[i].imshow(im_data, origin="lower", norm=norm, cmap=cmap)
+    
+    if field[1] == "N-BODY_density":
+        title = "N-Body Total"
+    else:
+        title = field[1].replace("BODY", "Body")
+        title = title.replace("_", " ")
+        title = title.replace("density", "")
+    
+    text = axs[i].easy_add_text(title, "upper left", c="w")
+    text.set_path_effects([PathEffects.withStroke(linewidth=5,
+                           foreground=bpl.almost_black)])
+    
+for i, ax in enumerate(axs):
+    # set the limits, may be removed later
+    ax.xaxis.set_ticks(pix_vals)
+    ax.yaxis.set_ticks(pix_vals)
+    ax.xaxis.set_ticklabels(pix_labels)
+    ax.yaxis.set_ticklabels(pix_labels)    
+    # remove the outer boxes
+    ax.remove_spines(["all"])
+    
+    # then remove the plot labels depending on where we are
+    row_number = i // n_cols
+    col_number = i % n_cols
+    
+    # if we're not in the last row, we need to remove the x labels
+    if row_number != (n_rows - 1):
+        # but if we're the first item, we need to keep the y 
+        if col_number == 0:
+            ax.remove_labels("x")
+            ax.add_labels(y_label="Y [Mpc]")
+        else:
+            # otherwise we remove both
+            ax.remove_labels("both")
+    else:  # last row, keep x labels
+        if col_number != 0:  # remove y label unless first column
+            ax.remove_labels("y")
+            ax.add_labels(x_label="X [Mpc]")
+    
+# make the colorbar
+cbar = fig.colorbar(im, cax=cax)
+cbar.set_label("Projected Density [g/cm$^2$]")
+
+# if we have an odd number of panels remove the last one
+if extra_plot:
+    axs[-1].set_axis_off()
+
+n_body_split_plot_name = plots_dir + "n_body_split_{}.png".format(scale_factor)
+fig.savefig(n_body_split_plot_name, dpi=400)
+
 print_and_write("\nPlots will be saved to:", out_file)
 print_and_write(grid_plot_name, out_file)
 print_and_write(n_body_plot_name, out_file)
+print_and_write(n_body_split_plot_name, out_file)
 print_and_write(halos_plot_name, out_file)
 
 out_file.close()

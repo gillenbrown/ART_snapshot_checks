@@ -88,11 +88,11 @@ endif
 
 ifeq ($(machine),lou)                
 	runs_home = /u/gbrown12/art_runs/runs
-	sim_dirs_nbody = $(runs_home)/nbody/trim_ic_05/run/outputs/first \
-	                 $(runs_home)/nbody/trim_ic_06/run/outputs/first \
-	                 $(runs_home)/nbody/trim_ic_07/run/outputs/first \
-	                 $(runs_home)/nbody/trim_ic_08/run/outputs/first \
-	                 $(runs_home)/nbody/no_trim/run/outputs/first
+	sim_dirs_nbody = $(runs_home)/nbody/trim_ic_05/run/outputs/fix_vel \
+	                 $(runs_home)/nbody/trim_ic_06/run/outputs/fix_vel \
+	                 $(runs_home)/nbody/trim_ic_07/run/outputs/fix_vel \
+	                 $(runs_home)/nbody/trim_ic_08/run/outputs/fix_vel \
+	                 $(runs_home)/nbody/no_trim/run/outputs/fix_vel
 #                   $(runs_home)/nbody/trim_ic/run/outputs/first/ 
 #                   $(runs_home)/nbody/trim_ic/run/outputs/second/ 
 #                   $(runs_home)/nbody/intel/run/outputs/tl_production 
@@ -105,9 +105,15 @@ ifeq ($(machine),lou)
 #                   $(runs_home)/nbody/intel/run/outputs/br_8.1.28_electra_no_refine 
 #                   $(runs_home)/nbody/intel/run/outputs/br_8.1.28_pleiades_no_refine 
 #                   $(runs_home)/nbody/intel/run/outputs/br_8.2.14_pleiades_no_refine 
-	sim_dirs_hydro = #$(runs_home)/hydro/intel_broadwell/run/outputs/no_virial \
-                   #$(runs_home)/hydro/intel_broadwell/run/outputs/alpha_restrict \
-                   #$(runs_home)/hydro/intel_broadwell_discrete/run/outputs/third \
+	sim_dirs_hydro = #$(runs_home)/hydro/old_ic/default/run/outputs/run_1 \
+	                 #$(runs_home)/hydro/old_ic/continuous/run/outputs/run_1 \
+	                 #$(runs_home)/hydro/old_ic/continuous_no_hn/run/outputs/run_1 \
+	                 #$(runs_home)/hydro/old_ic/no_changes/run/outputs/run_1 \
+	                 #$(runs_home)/hydro/old_ic/no_alpha/run/outputs/run_1 \
+	                 #$(runs_home)/hydro/old_ic/no_hn/run/outputs/run_1
+#                   $(runs_home)/hydro/intel_broadwell/run/outputs/no_virial \
+#                   $(runs_home)/hydro/intel_broadwell/run/outputs/alpha_restrict \
+#                   $(runs_home)/hydro/intel_broadwell_discrete/run/outputs/third \
 #                   $(runs_home)/hydro/timing_test/current_code_no_elts/run/outputs/first \
 #                   $(runs_home)/hydro/timing_test/current_code_with_elts/run/outputs/first \
 #                   $(runs_home)/hydro/timing_test/current_code_with_elts_continuous/run/outputs/first \
@@ -206,6 +212,10 @@ summaries_nbody = $(foreach snapshot,$(snapshots),$(call sim_to_summary_nbody,$(
 movies_nbody = $(foreach dir,$(sim_dirs),$(dir)/plots/n_body.mp4)
 movie_nbody_to_summary_nbody = $(call sim_to_summary_nbody,$(call dir_to_sims,$(subst plots/n_body.mp4,out,$(1))))
 movie_nbody_to_plot_dir = $(subst /n_body.mp4,,$(1))
+
+movies_nbody_split = $(foreach dir,$(sim_dirs),$(dir)/plots/n_body_split.mp4)
+movie_nbody_split_to_summary_nbody = $(call sim_to_summary_nbody,$(call dir_to_sims,$(subst plots/n_body_split.mp4,out,$(1))))
+movie_nbody_split_to_plot_dir = $(subst /n_body_split.mp4,,$(1))
 
 movies_grid = $(foreach dir,$(sim_dirs),$(dir)/plots/grid.mp4)
 movie_grid_to_summary_nbody = $(call sim_to_summary_nbody,$(call dir_to_sims,$(subst plots/grid.mp4,out,$(1))))
@@ -317,6 +327,9 @@ $(summaries_nbody): %: $$(call summary_nbody_to_halo, %) $(summary_nbody_script)
 .SECONDEXPANSION:
 $(movies_nbody): %: $$(call movie_nbody_to_summary_nbody, %)
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_nbody_to_plot_dir,$@)/n_body_*.png' -c:v h264 -pix_fmt yuv420p -y $@
+
+$(movies_nbody_split): %: $$(call movie_nbody_split_to_summary_nbody, %)
+	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_nbody_split_to_plot_dir,$@)/n_body_split_*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
 .SECONDEXPANSION:
 $(movies_grid): %: $$(call movie_grid_to_summary_nbody, %)
