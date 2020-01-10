@@ -19,11 +19,9 @@ import os
 import yt
 import numpy as np
 
-import betterplotlib as bpl
+import cmocean
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
-bpl.presentation_style()
-bpl.presentation_style()  # for some reason this needs to be there twice
 
 # Check that the third argument is correct
 if len(sys.argv) == 3 and sys.argv[2] not in ["clobber", "silent"]:
@@ -218,18 +216,42 @@ for unit in ["code_mass", "Msun"]:
 # Plots
 # 
 # =========================================================================
-normals = {"x": [1, 0, 0], 
-           "y": [0, 1, 0], 
-           "z": [0, 0, 1]}
-for direction in normals:
-    gas_plot_name = plots_dir + "gas_density_{}_{}.png".format(direction,
-                                                               scale_factor)
+center = ds.domain_center
+box_length = ds.domain_width[0]
+max_length = ds.quan(12.5, "Mpccm") / ds.hubble_constant
+if box_length > max_length:
+    # make a box so that we don't project through the full box, just the region
+    # of interest
+    width = max_length
+    left_edges = [c - (width/2.0) for c in center]
+    right_edges = [c + (width/2.0) for c in center]
+    box = ds.box(left_edges, right_edges)
+else:
+    width = box_length
+    box = ds.all_data()
 
-    gas_plot = yt.SlicePlot(ds, normal=normals[direction], 
-                            fields=("gas", "density"), width=(15, "Mpccm"))
-    gas_plot.save(gas_plot_name)
+# First is the density plot
+plot = yt.SlicePlot(ds, normal=[1, 0, 0], fields="density", center=center, width=width)
+plot.set_zlim("density", 7E-25, 1.1E-24)
+plot.set_cmap("density", cmocean.cm.tempo_r)
+
+gas_density_plot_name = plots_dir + "gas_density_{}.png".format(scale_factor)
+plot.save(gas_density_plot_name, mpl_kwargs={"dpi": 400})
+
+# then the velocity
+for dim in ["x", "y", "z"]:
+    field = ('gas', 'velocity_{}'.format(dim))
+    
+    plot = yt.SlicePlot(ds, normal=[1, 0, 0], fields=field, center=center, width=width)
+    plot.set_log(field, False)
+    plot.set_unit(field, "km/s")
+    plot.set_zlim(field, -50, 50)
+    plot.set_cmap(field, cmocean.cm.balance)
+
+    gas_vel_name = plots_dir + "gas_velocity_{}_{}.png".format(dim, scale_factor)
+    plot.save(gas_vel_name, mpl_kwargs={"dpi": 400})
 
 print_and_write("\nPlots will be saved to:", out_file)
-print_and_write(gas_plot_name, out_file)
+print_and_write(gas_density_plot_name, out_file)
 
 out_file.close()

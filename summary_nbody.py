@@ -315,7 +315,7 @@ if len(halos) >= 2:
 # 
 # =========================================================================
 grid_plot_name = plots_dir + "grid_idxs_{}.png".format(scale_factor)
-n_body_plot_name = plots_dir + "n_body_{}.png".format(scale_factor)
+n_body_plot_name = plots_dir + "n_body_single_{}.png".format(scale_factor)
 
 grid_level_field = ('index', 'grid_level')
 n_body_density_field = ("deposit", "High-Res_Dark_Matter_Density")
