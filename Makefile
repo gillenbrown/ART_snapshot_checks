@@ -83,13 +83,13 @@ ifeq ($(machine),lou)
 	                 $(runs_home)/hydro/trimmed_ic_scaling/trim_ic_05/run/outputs/first \
 	                 $(runs_home)/hydro/trimmed_ic_scaling/trim_ic_06/run/outputs/first \
 	                 $(runs_home)/hydro/trimmed_ic_scaling/trim_ic_07/run/outputs/first \
-	                 $(runs_home)/hydro/trimmed_ic_scaling/trim_ic_08/run/outputs/first
-	                 #$(runs_home)/hydro/old_ic/default/run/outputs/run_1 \
+	                 $(runs_home)/hydro/trimmed_ic_scaling/trim_ic_08/run/outputs/first \
+	                 $(runs_home)/hydro/old_ic/default/run/outputs/run_1 \
+	                 $(runs_home)/hydro/old_ic/no_hn/run/outputs/run_1
 	                 #$(runs_home)/hydro/old_ic/continuous/run/outputs/run_1 \
 	                 #$(runs_home)/hydro/old_ic/continuous_no_hn/run/outputs/run_1 \
 	                 #$(runs_home)/hydro/old_ic/no_changes/run/outputs/run_1 \
 	                 #$(runs_home)/hydro/old_ic/no_alpha/run/outputs/run_1 \
-	                 #$(runs_home)/hydro/old_ic/no_hn/run/outputs/run_1
 endif
 
 ifeq ($(machine),great_lakes)                
