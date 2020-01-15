@@ -348,8 +348,8 @@ plot_size = min(max_length, box_length).to("Mpc")
 grid_plot = yt.ProjectionPlot(ds, "x", grid_level_field, method="mip", 
                               center=center, width=plot_size)
 grid_plot.set_log(grid_level_field, False)
-grid_plot.set_cmap(grid_level_field, "Pastel1")
-grid_plot.set_zlim(grid_level_field, -0.5, 8.5)
+grid_plot.set_cmap(grid_level_field, "tab20")
+grid_plot.set_zlim(grid_level_field, -0.5, 19.5)
 grid_plot.annotate_timestamp(redshift=True, corner='upper_left', time_unit="Gyr",
                              time_format='t = {time:.2f} {units}', 
                              redshift_format='z = {redshift:.2f}')

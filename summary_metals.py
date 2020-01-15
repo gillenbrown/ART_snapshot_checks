@@ -232,7 +232,8 @@ else:
 
 # First is the density plot
 plot = yt.SlicePlot(ds, normal=[1, 0, 0], fields="density", center=center, width=width)
-plot.set_zlim("density", 7E-25, 1.1E-24)
+# plot.set_zlim("density", 7E-25, 1.1E-24) # appropriate for IC only
+plot.set_zlim("density", 1E-30, 1E-24)
 plot.set_cmap("density", cmocean.cm.tempo_r)
 
 gas_density_plot_name = plots_dir + "gas_density_{}.png".format(scale_factor)
@@ -245,7 +246,7 @@ for dim in ["x", "y", "z"]:
     plot = yt.SlicePlot(ds, normal=[1, 0, 0], fields=field, center=center, width=width)
     plot.set_log(field, False)
     plot.set_unit(field, "km/s")
-    plot.set_zlim(field, -50, 50)
+    plot.set_zlim(field, -1000, 1000)
     plot.set_cmap(field, cmocean.cm.balance)
 
     gas_vel_name = plots_dir + "gas_velocity_{}_{}.png".format(dim, scale_factor)
