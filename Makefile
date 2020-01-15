@@ -89,7 +89,7 @@ ifeq ($(machine),lou)
 	                 #$(runs_home)/hydro/old_ic/continuous/run/outputs/run_1 \
 	                 #$(runs_home)/hydro/old_ic/continuous_no_hn/run/outputs/run_1 \
 	                 #$(runs_home)/hydro/old_ic/no_changes/run/outputs/run_1 \
-	                 #$(runs_home)/hydro/old_ic/no_alpha/run/outputs/run_1 \
+	                 #$(runs_home)/hydro/old_ic/no_alpha/run/outputs/run_1 
 endif
 
 ifeq ($(machine),great_lakes)                
