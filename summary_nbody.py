@@ -365,6 +365,7 @@ n_body_plot.annotate_timestamp(redshift=True, corner='upper_left', time_unit="Gy
 n_body_plot.set_background_color(n_body_density_field, n_body_cmap(0))
 n_body_plot.set_axes_unit("Mpc")
 n_body_plot.set_cmap(n_body_density_field, n_body_cmap)
+n_body_plot.set_zlim(n_body_density_field, 1E-5, 0.1)
 
 # annotate the halos in both plots
 text_args={"color":"k", "va":"center", "ha":"center"}
@@ -429,7 +430,7 @@ density_fields = [item for item in ds.derived_field_list
                   if item[0] == "deposit" 
                   and "N-BODY" in item[1] and "density" in item[1]]
 n_panels = len(density_fields)
-n_rows = 2
+n_rows = min(2, n_panels)
 n_cols = int(np.ceil(n_panels / n_rows))
 extra_plot = (n_panels % n_rows) != 0  # get rid of the last one?
 
@@ -451,7 +452,7 @@ else:
     box = ds.all_data()
 
 # the labeling of this will be ugly, since we do things in terms of pixels
-width_tuple = (width.to("Mpc").value, "Mpc")
+width_tuple = (float(width.to("Mpc").value), "Mpc")
 n_pix = 1E4
 # determine the mapping from pixels to Mpc
 pix_per_mpc = n_pix / width_tuple[0]
@@ -464,12 +465,20 @@ base_pix = base_mpc * pix_per_mpc
 pix_vals = [center_pix]
 pix_labels = ["0"]
 i = 0
-while max(pix_vals) < n_pix:
-    pix_vals.append(center_pix + i*base_pix)
-    pix_vals.append(center_pix - i*base_pix)
-    pix_labels.append("{:g}".format(i*base_mpc))
-    pix_labels.append("{:g}".format(-i*base_mpc))
-    i += 1
+while True:
+    next_hi = center_pix + i*base_pix
+    next_lo = center_pix - i*base_pix
+    
+    if next_hi < n_pix:
+        pix_vals.append(next_hi)
+        pix_vals.append(next_lo)
+
+        pix_labels.append("{:g}".format(i*base_mpc))
+        pix_labels.append("{:g}".format(-i*base_mpc))
+
+        i += 1
+    else:
+        break
 
 # Create the projections. We can do all fields at once, then handle them later
 proj = yt.ProjectionPlot(ds, 'x', density_fields, width=width,
@@ -479,7 +488,7 @@ proj_data = proj.data_source.to_frb(width=width_tuple, height=width_tuple,
                                     resolution=n_pix)
 
 # handle the colormaps
-norm = LogNorm(vmin=1E-5, vmax=0.1)
+norm = LogNorm(vmin=1E-6, vmax=0.1)
 cmap = cmocean.cm.deep_r
 # since we are logging the data, zeros are bad. Handle those in the colormap
 cmap.set_bad(cmap(0))
@@ -537,9 +546,12 @@ for i, ax in enumerate(axs):
             # otherwise we remove both
             ax.remove_labels("both")
     else:  # last row, keep x labels
-        if col_number != 0:  # remove y label unless first column
+        ax.add_labels(x_label="X [Mpc]")   
+        # remove y label unless first column
+        if col_number == 0:
+            ax.add_labels(y_label="Y [Mpc]")
+        else:
             ax.remove_labels("y")
-            ax.add_labels(x_label="X [Mpc]")
     
 # make the colorbar
 cbar = fig.colorbar(im, cax=cax)
