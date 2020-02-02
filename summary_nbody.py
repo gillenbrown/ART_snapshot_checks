@@ -254,11 +254,13 @@ def mass_fractions(sphere):
     masses = sphere[('N-BODY', 'MASS')]
     unique_masses, num_particles = np.unique(masses, return_counts=True)
     total_mass = masses.sum()
+    print_and_write("Total Mass: {:.3e}".format(total_mass.to("Msun")), out_file)
+    print_and_write("{:<7s} {:>10s} {:>15s} {:>15s}".format("Species", "Number", "Mass", "Mass Fraction"), out_file)
     for m, n_m in zip(unique_masses, num_particles):
         this_m_tot = m * n_m  # total mass in this species of particle
         frac = (this_m_tot / total_mass).value
         s = mass_to_species["{:.0f}".format(m.to("Msun"))]
-        print_and_write("{}: N = {:>10,} {:>6.2f}%".format(s, n_m, frac*100), out_file)
+        print_and_write("{:<7} {:>10,} {:>10.2e} {:>14.2f}%".format(s, n_m, this_m_tot, frac*100), out_file)
 
 # Print information about all the halos present
 for halo in halos:
@@ -290,12 +292,13 @@ for halo in halos:
         center = get_center(halo, with_units=True)
         virial_sphere = ds.sphere(center=center, radius=virial_radius)
         mpc_sphere = ds.sphere(center=center, radius=1*yt.units.Mpc)
-        print_and_write("\nFraction of the DM mass from different species", out_file)
-        print_and_write("Within the virial radius", out_file)
-        mass_fractions(virial_sphere)
+
+        for sphere, name in zip([virial_sphere, mpc_sphere],
+                                ["the virial radius", "1 Mpc"]):
+            print_and_write("\nDM mass and fraction of total from different "
+                            "species within {}".format(name), out_file)
+            mass_fractions(sphere)
         
-        print_and_write("\nWithin 1 Mpc", out_file)
-        mass_fractions(mpc_sphere)
 print_and_write("\n==================================\n", out_file)
         
 # Then print the separation of the two biggest halos
