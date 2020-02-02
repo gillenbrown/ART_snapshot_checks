@@ -257,7 +257,7 @@ def mass_fractions(sphere):
     print_and_write("Total Mass: {:.3e}".format(total_mass.to("Msun")), out_file)
     print_and_write("{:<7s} {:>10s} {:>15s} {:>15s}".format("Species", "Number", "Mass", "Mass Fraction"), out_file)
     for m, n_m in zip(unique_masses, num_particles):
-        this_m_tot = m * n_m  # total mass in this species of particle
+        this_m_tot = (m * n_m).to("Msun")  # total mass in this species of particle
         frac = (this_m_tot / total_mass).value
         s = mass_to_species["{:.0f}".format(m.to("Msun"))]
         print_and_write("{:<7} {:>10,} {:>10.2e} {:>14.2f}%".format(s, n_m, this_m_tot, frac*100), out_file)
