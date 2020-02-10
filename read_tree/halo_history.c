@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <libgen.h>
+#include <math.h>
 #include <inttypes.h>
 #include "read_tree.h"
 
@@ -75,7 +76,7 @@ void write_mergers(struct halo satellite, FILE *out_file){
         }
     }
     // Now we have the information we can write to the file.
-    fprintf(out_file, "%15f %15E %15E %15lu %15lu %15f %15E %15E %15lu %15lu\n", 
+    fprintf(out_file, "%15f %25E %25E %15lu %15lu %15f %25E %25E %15lu %15lu\n", 
             scale_factor, satellite_mass, central_mass, 
             satellite_id, central_id, central.scale, satellite.mvir,
 	    central.mvir, satellite.id, central.id);
@@ -97,7 +98,7 @@ void growth_history(struct halo endpoint, FILE *out_file){
     // start at the endpoint, and write out the progenitor at all redshifts
     struct halo endpoint_progenitor = endpoint;
     while (1){
-        fprintf(out_file, "%15f %15E %15lu\n",
+        fprintf(out_file, "%15f %25E %15lu\n",
                 endpoint_progenitor.scale,
                 endpoint_progenitor.mvir,
                 endpoint_progenitor.id);
@@ -107,6 +108,55 @@ void growth_history(struct halo endpoint, FILE *out_file){
         }
         // otherwise, go to the next progenitor
         endpoint_progenitor = *endpoint_progenitor.prog;
+    }
+}
+
+void write_satellite(struct halo central, struct halo satellite, 
+                     FILE *out_file){
+    // here we want to write the distance and peak mass of this satellite
+    // distance is pretty easy. Note that this distance is in Mpccm/h
+    float distance;
+    distance = sqrt(pow(central.pos[0] - satellite.pos[0], 2) +
+                    pow(central.pos[1] - satellite.pos[1], 2) +
+                    pow(central.pos[2] - satellite.pos[2], 2));
+    // turn distance into kpccm/h
+    distance *= 1000;
+
+    // we have to track the mass backwards to do get the peak mass
+    struct halo satellite_progenitor = satellite;
+    float satellite_mass = 0;
+    while (1){
+        if (satellite_progenitor.mvir > satellite_mass){
+            satellite_mass = satellite_progenitor.mvir;
+        }
+        // check if we can go back a timestep
+        if (satellite_progenitor.prog != NULL){
+            // If we can go back, put it equal to their next progenitor
+            satellite_progenitor = *satellite_progenitor.prog;
+        }
+        else{ // We can't trace one this back any further
+            break;
+        }
+    }
+    // Now we have the information we can write to the file.
+    fprintf(out_file, "%30E %40f\n", 
+            satellite_mass, distance);
+}
+
+void satellites(struct halo central, FILE *out_file){
+    // first find all satellites of the central
+    struct halo this_halo;
+    for (int i=0; i < all_halos.num_halos; i++){
+        this_halo = all_halos.halos[i];
+        // check that they're at the last output
+        if (this_halo.scale == central.scale){
+            // the parent attribute tells what is a subhalo of what
+            if (this_halo.parent != NULL){
+                if (this_halo.parent->id == central.id){
+                    write_satellite(central, this_halo, out_file);
+                }
+            }
+        }
     }
 }
 
@@ -130,23 +180,29 @@ int main(int argc, char *argv[]) {
 
     // First we want to organize the output files, which we first need to do
     // Organize the output files
-    FILE *mergers_1, *mergers_2, *growth_1, *growth_2;
+    FILE *mergers_1, *mergers_2, *growth_1, *growth_2, *satellites_1, *satellites_2;
     mergers_1 = fopen(make_output_files(argv[1], "mergers_1.txt"), "w");
     mergers_2 = fopen(make_output_files(argv[1], "mergers_2.txt"), "w");
     growth_1 = fopen(make_output_files(argv[1], "growth_1.txt"), "w");
     growth_2 = fopen(make_output_files(argv[1], "growth_2.txt"), "w");
+    satellites_1 = fopen(make_output_files(argv[1], "satellites_1.txt"), "w");
+    satellites_2 = fopen(make_output_files(argv[1], "satellites_2.txt"), "w");
 
     // First write the headers
-    fprintf(mergers_1, "# %13s %15s %15s %15s %15s %15s %15s %15s %15s %15s\n", 
-            "scale_factor", "satellite_mass", "central_mass",   "satellite_id", "central_id",
-            "final_scale",  "final_sat_mass", "final_cen_mass", "final_sat_id", "final_cen_id");
-    fprintf(mergers_2, "# %13s %15s %15s %15s %15s %15s %15s %15s %15s %15s\n",                            
-            "scale_factor", "satellite_mass", "central_mass",   "satellite_id", "central_id",
-            "final_scale",  "final_sat_mass", "final_cen_mass", "final_sat_id", "final_cen_id");
-    fprintf(growth_1, "# %13s %15s %15s\n", 
-            "scale_factor", "central_mass", "central_id");
-    fprintf(growth_2, "# %13s %15s %15s\n", 
-            "scale_factor", "central_mass", "central_id");
+    fprintf(mergers_1, "# %13s %25s %25s %15s %15s %15s %25s %25s %15s %15s\n",                            
+            "scale_factor", "satellite_mass_[Msun/h]", "central_mass_[Msun/h]",   "satellite_id", "central_id",
+            "final_scale",  "final_sat_mass_[Msun/h]", "final_cen_mass_[Msun/h]", "final_sat_id", "final_cen_id");
+    fprintf(mergers_2, "# %13s %25s %25s %15s %15s %15s %25s %25s %15s %15s\n",                            
+            "scale_factor", "satellite_mass_[Msun/h]", "central_mass_[Msun/h]",   "satellite_id", "central_id",
+            "final_scale",  "final_sat_mass_[Msun/h]", "final_cen_mass_[Msun/h]", "final_sat_id", "final_cen_id");
+    fprintf(growth_1, "# %13s %25s %15s\n", 
+            "scale_factor", "central_mass_[Msun/h]", "central_id");
+    fprintf(growth_2, "# %13s %25s %15s\n", 
+            "scale_factor", "central_mass_[Msun/h]", "central_id");
+    fprintf(satellites_1, "# %28s %40s\n", 
+            "satellite_m_peak[Msun/h]", "satellite_final_distance_[kpccm/h]");
+    fprintf(satellites_2, "# %28s %40s\n", 
+            "satellite_m_peak[Msun/h]", "satellite_final_distance_[kpccm/h]");
 
     read_tree(argv[1]);
 
@@ -196,10 +252,16 @@ int main(int argc, char *argv[]) {
     growth_history(halo_1, growth_1);
     growth_history(halo_2, growth_2);
 
+    // then write the satellite info
+    satellites(halo_1, satellites_1);
+    satellites(halo_2, satellites_2);
+
     fclose(mergers_1);
     fclose(mergers_2);
     fclose(growth_1);
     fclose(growth_2);
+    fclose(satellites_1);
+    fclose(satellites_2);
 
     return 0;
 }
