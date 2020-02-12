@@ -24,17 +24,7 @@ import yt
 from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
 import numpy as np
 
-import betterplotlib as bpl
-import cmocean
-import matplotlib.pyplot as plt
-from matplotlib.patches import Circle
-from matplotlib.colors import LogNorm
-import matplotlib.gridspec as gridspec
-import matplotlib.patheffects as PathEffects
-
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
-bpl.presentation_style()
-bpl.presentation_style()  # for some reason this needs to be there twice
 
 # Check that the third argument is correct
 if len(sys.argv) == 4 and sys.argv[3] not in ["clobber", "silent"]:
@@ -312,265 +302,23 @@ if len(halos) >= 2:
     print_and_write("\nSeparation of two largest halos: {:.2f}".format(dist), 
                     out_file)
 
-# =========================================================================
-#         
-# Plots
-# 
-# =========================================================================
-grid_plot_name = plots_dir + "grid_idxs_{}.png".format(scale_factor)
-n_body_plot_name = plots_dir + "n_body_single_{}.png".format(scale_factor)
 
-grid_level_field = ('index', 'grid_level')
-n_body_density_field = ("deposit", "High-Res_Dark_Matter_Density")
-# We want to set up a deposit N-body density field that has only the high res
-# particles. 
-def _n_density_high_res(field, data):
-    # We need to check for sims without the high res particles
-    try:
-        return data[("deposit", "N-BODY_0_density")] + \
-               data[("deposit", "N-BODY_1_density")]
-    except yt.utilities.exceptions.YTFieldNotFound:
-        return data[("deposit", "N-BODY_density")]
-ds.add_field(n_body_density_field, function=_n_density_high_res, 
-             units="g/cm**3", sampling_type="cell")
+# Saving this for posterity - way to get multiple species into one field
+# n_body_density_field = ("deposit", "High-Res_Dark_Matter_Density")
+# # We want to set up a deposit N-body density field that has only the high res
+# # particles. 
+# def _n_density_high_res(field, data):
+#     # We need to check for sims without the high res particles
+#     try:
+#         return data[("deposit", "N-BODY_0_density")] + \
+#                data[("deposit", "N-BODY_1_density")]
+#     except yt.utilities.exceptions.YTFieldNotFound:
+#         return data[("deposit", "N-BODY_density")]
+# ds.add_field(n_body_density_field, function=_n_density_high_res, 
+#              units="g/cm**3", sampling_type="cell")
 
 # then find the center, which will be the median of the high res particles, or
 # the domain center, if there are no high res particles
-if is_zoom:
-    center = [np.median(ad[('N-BODY_0', 'POSITION_X')]),
-              np.median(ad[('N-BODY_0', 'POSITION_Y')]),
-              np.median(ad[('N-BODY_0', 'POSITION_Z')])]
-else:
-    center = ds.domain_center
 
-# determine how big to make the plot window
-box_length = ds.domain_width[0]
-max_length = ds.quan(10.0, "Mpccm")
-plot_size = min(max_length, box_length).to("Mpc")
-
-grid_plot = yt.ProjectionPlot(ds, "x", grid_level_field, method="mip", 
-                              center=center, width=plot_size)
-grid_plot.set_log(grid_level_field, False)
-grid_plot.set_cmap(grid_level_field, "tab20")
-grid_plot.set_zlim(grid_level_field, -0.5, 19.5)
-grid_plot.annotate_timestamp(redshift=True, corner='upper_left', time_unit="Gyr",
-                             time_format='t = {time:.2f} {units}', 
-                             redshift_format='z = {redshift:.2f}')
-grid_plot.set_axes_unit("Mpc")
-# will be saved below after we annotate both
-
-n_body_cmap = cmocean.cm.deep_r
-n_body_plot = yt.ProjectionPlot(ds, "x", n_body_density_field, 
-                                center=center, width=plot_size)
-n_body_plot.annotate_timestamp(redshift=True, corner='upper_left', time_unit="Gyr",
-                               time_format='t = {time:.2f} {units}', 
-                               redshift_format='z = {redshift:.2f}')
-n_body_plot.set_background_color(n_body_density_field, n_body_cmap(0))
-n_body_plot.set_axes_unit("Mpc")
-n_body_plot.set_cmap(n_body_density_field, n_body_cmap)
-n_body_plot.set_zlim(n_body_density_field, 1E-5, 0.1)
-
-# annotate the halos in both plots
-text_args={"color":"k", "va":"center", "ha":"center"}
-for halo in halos:
-    coord = [halo["particle_position_x"], 
-             halo["particle_position_y"], 
-             halo["particle_position_z"]]
-    rank = halo["rank"]
-    if rank < 6:
-        n_body_plot.annotate_text(text=rank, pos=coord, text_args=text_args)
-        grid_plot.annotate_text(text=rank, pos=coord, text_args=text_args)
-
-n_body_plot.save(n_body_plot_name, mpl_kwargs={"dpi": 400})
-grid_plot.save(grid_plot_name, mpl_kwargs={"dpi": 400})
-
-# Then do a plot of the halos
-halos_plot_name = plots_dir + "halos_{}.png".format(scale_factor)
-
-def add_virial_radii(hc, axis_1, axis_2, ax):
-    for halo in halos:
-        coord_1 = halo["particle_position_{}".format(axis_1)].to("Mpc").value
-        coord_2 = halo["particle_position_{}".format(axis_2)].to("Mpc").value
-        radius = halo["virial_radius"].to("Mpc").value
-        rank = halo["rank"]
-        c = Circle((coord_1, coord_2), radius, 
-                   fill=False, clip_on=True, ls="--")
-        ax.add_artist(c)
-        ax.add_text(coord_1, coord_2, rank, ha="center", va="center", 
-                    fontsize=10, color="w")
-        ax.scatter([coord_1], [coord_2], s=20, c=bpl.color_cycle[1])
-
-
-fig, axs = bpl.subplots(ncols=3, figsize=[15, 5])
-ax_xy, ax_xz, ax_yz = axs.flatten()
-
-ax_xy.scatter(species_x[0][::10000], species_y[0][::10000], s=10)
-add_virial_radii(hc, "x", "y", ax_xy)
-ax_xy.add_labels("X [Mpc]", "Y [Mpc]")
-ax_xy.equal_scale()
-
-ax_xz.scatter(species_x[0][::10000], species_z[0][::10000], s=10)
-add_virial_radii(hc, "x", "z", ax_xz)
-ax_xz.add_labels("X [Mpc]", "Z [Mpc]", "z={:.2f}".format(z))
-ax_xz.equal_scale()
-
-ax_yz.scatter(species_y[0][::10000], species_z[0][::10000], s=10)
-add_virial_radii(hc, "y", "z", ax_yz)
-ax_yz.add_labels("Y [Mpc]", "Z [Mpc]")
-ax_yz.equal_scale()
-
-fig.savefig(halos_plot_name, dpi=400)
-
-# =========================================================================
-#         
-# Mega plot with all the individual N-body species
-# 
-# =========================================================================
-# This is some ugly code here, but it was actually the easiest way to get a 
-# multipanel plot. yt is not easy to handle, but this worked
-
-density_fields = [item for item in ds.derived_field_list
-                  if item[0] == "deposit" 
-                  and "N-BODY" in item[1] and "density" in item[1]]
-n_panels = len(density_fields)
-n_rows = min(2, n_panels)
-n_cols = int(np.ceil(n_panels / n_rows))
-extra_plot = (n_panels % n_rows) != 0  # get rid of the last one?
-
-center = ds.domain_center
-
-# determine if we need to cut the box size. Here our maximum length will be the
-# full box size of the new trimmed IC
-box_length = ds.domain_width[0]
-max_length = ds.quan(12.5, "Mpccm") / ds.hubble_constant
-if box_length > max_length:
-    # make a box so that we don't project through the full box, just the region
-    # of interest
-    width = max_length
-    left_edges = [c - (width/2.0) for c in center]
-    right_edges = [c + (width/2.0) for c in center]
-    box = ds.box(left_edges, right_edges)
-else:
-    width = box_length
-    box = ds.all_data()
-
-# the labeling of this will be ugly, since we do things in terms of pixels
-width_tuple = (float(width.to("Mpc").value), "Mpc")
-n_pix = 1E4
-# determine the mapping from pixels to Mpc
-pix_per_mpc = n_pix / width_tuple[0]
-center_pix = n_pix / 2.0
-
-base_mpc = 10**np.floor(np.log10(width_tuple[0]/2.0))
-base_pix = base_mpc * pix_per_mpc
-
-# start from the center and work our way outwards
-pix_vals = [center_pix]
-pix_labels = ["0"]
-i = 0
-while True:
-    next_hi = center_pix + i*base_pix
-    next_lo = center_pix - i*base_pix
-    
-    if next_hi < n_pix:
-        pix_vals.append(next_hi)
-        pix_vals.append(next_lo)
-
-        pix_labels.append("{:g}".format(i*base_mpc))
-        pix_labels.append("{:g}".format(-i*base_mpc))
-
-        i += 1
-    else:
-        break
-
-# Create the projections. We can do all fields at once, then handle them later
-proj = yt.ProjectionPlot(ds, 'x', density_fields, width=width,
-                         center=center, data_source=box)
-# get the underlying data which we can use in imshow
-proj_data = proj.data_source.to_frb(width=width_tuple, height=width_tuple, 
-                                    resolution=n_pix)
-
-# handle the colormaps
-norm = LogNorm(vmin=1E-6, vmax=0.1)
-cmap = cmocean.cm.deep_r
-# since we are logging the data, zeros are bad. Handle those in the colormap
-cmap.set_bad(cmap(0))
-
-# then actually make the plot
-fig = plt.figure(figsize=[8*n_cols, 8*n_rows])
-# have a grid of axes, plus one extra column for the colorbar
-gs = gridspec.GridSpec(nrows=n_rows, ncols=n_cols+1,
-                       width_ratios=[1]*n_cols + [0.1], 
-                       wspace=0.02, hspace=0.02)
-
-axs = []
-for r in range(n_rows):
-    for c in range(n_cols):
-        axs.append(fig.add_subplot(gs[r,c], projection="bpl"))
-# last column is the colorbar
-cax = fig.add_subplot(gs[:,n_cols], projection="bpl")
-
-# then go through each of these and plot the right data
-for i, field in enumerate(density_fields):  
-    im_data = np.array(proj_data[field])
-    im = axs[i].imshow(im_data, origin="lower", norm=norm, cmap=cmap)
-    
-    if field[1] == "N-BODY_density":
-        title = "N-Body Total"
-    else:
-        title = field[1].replace("BODY", "Body")
-        title = title.replace("_", " ")
-        title = title.replace("density", "")
-    
-    text = axs[i].easy_add_text(title, "upper left", c="w")
-    text.set_path_effects([PathEffects.withStroke(linewidth=5,
-                           foreground=bpl.almost_black)])
-    
-for i, ax in enumerate(axs):
-    # set the limits, may be removed later
-    ax.xaxis.set_ticks(pix_vals)
-    ax.yaxis.set_ticks(pix_vals)
-    ax.xaxis.set_ticklabels(pix_labels)
-    ax.yaxis.set_ticklabels(pix_labels)    
-    # remove the outer boxes
-    ax.remove_spines(["all"])
-    
-    # then remove the plot labels depending on where we are
-    row_number = i // n_cols
-    col_number = i % n_cols
-    
-    # if we're not in the last row, we need to remove the x labels
-    if row_number != (n_rows - 1):
-        # but if we're the first item, we need to keep the y 
-        if col_number == 0:
-            ax.remove_labels("x")
-            ax.add_labels(y_label="Y [Mpc]")
-        else:
-            # otherwise we remove both
-            ax.remove_labels("both")
-    else:  # last row, keep x labels
-        ax.add_labels(x_label="X [Mpc]")   
-        # remove y label unless first column
-        if col_number == 0:
-            ax.add_labels(y_label="Y [Mpc]")
-        else:
-            ax.remove_labels("y")
-    
-# make the colorbar
-cbar = fig.colorbar(im, cax=cax)
-cbar.set_label("Projected Density [g/cm$^2$]")
-
-# if we have an odd number of panels remove the last one
-if extra_plot:
-    axs[-1].set_axis_off()
-
-n_body_split_plot_name = plots_dir + "n_body_split_{}.png".format(scale_factor)
-fig.savefig(n_body_split_plot_name, dpi=400)
-
-print_and_write("\nPlots will be saved to:", out_file)
-print_and_write(grid_plot_name, out_file)
-print_and_write(n_body_plot_name, out_file)
-print_and_write(n_body_split_plot_name, out_file)
-print_and_write(halos_plot_name, out_file)
 
 out_file.close()

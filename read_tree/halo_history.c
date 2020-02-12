@@ -124,10 +124,14 @@ void write_satellite(struct halo central, struct halo satellite,
 
     // we have to track the mass backwards to do get the peak mass
     struct halo satellite_progenitor = satellite;
-    float satellite_mass = 0;
+    float m_peak = 0;
+    float vmax_peak = 0;
     while (1){
-        if (satellite_progenitor.mvir > satellite_mass){
-            satellite_mass = satellite_progenitor.mvir;
+        if (satellite_progenitor.mvir > m_peak){
+            m_peak = satellite_progenitor.mvir;
+        }
+        if (satellite_progenitor.vmax > vmax_peak){
+            vmax_peak = satellite_progenitor.vmax;
         }
         // check if we can go back a timestep
         if (satellite_progenitor.prog != NULL){
@@ -139,8 +143,8 @@ void write_satellite(struct halo central, struct halo satellite,
         }
     }
     // Now we have the information we can write to the file.
-    fprintf(out_file, "%30E %40f\n", 
-            satellite_mass, distance);
+    fprintf(out_file, "%35E %35E %35f %35f %40f\n", 
+            satellite.mvir, m_peak, satellite.vmax, vmax_peak, distance);
 }
 
 void satellites(struct halo central, FILE *out_file){
@@ -199,10 +203,14 @@ int main(int argc, char *argv[]) {
             "scale_factor", "central_mass_[Msun/h]", "central_id");
     fprintf(growth_2, "# %13s %25s %15s\n", 
             "scale_factor", "central_mass_[Msun/h]", "central_id");
-    fprintf(satellites_1, "# %28s %40s\n", 
-            "satellite_m_peak[Msun/h]", "satellite_final_distance_[kpccm/h]");
-    fprintf(satellites_2, "# %28s %40s\n", 
-            "satellite_m_peak[Msun/h]", "satellite_final_distance_[kpccm/h]");
+    fprintf(satellites_1, "# %33s %35s %35s %35s %40s\n", 
+            "satellite_m_vir_final[Msun/h]", "satellite_m_vir_peak[Msun/h]", 
+            "satellite_v_circ_final[km/s]", "satellite_v_circ_peak[km/s]",
+            "satellite_final_distance_[kpccm/h]");
+    fprintf(satellites_2, "# %33s %35s %35s %35s %40s\n", 
+            "satellite_m_vir_final[Msun/h]", "satellite_m_vir_peak[Msun/h]", 
+            "satellite_v_circ_final[km/s]", "satellite_v_circ_peak[km/s]",
+            "satellite_final_distance_[kpccm/h]");
 
     read_tree(argv[1]);
 

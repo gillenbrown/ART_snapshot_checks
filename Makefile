@@ -54,6 +54,11 @@ endif
 halo_finding_py_file = ./halo_finding_rockstar.py
 rename_script = ./rename_halos.py
 summary_nbody_script = ./summary_nbody.py
+nbody_single_halo_plots_script = ./plot_single_halo_nbody.py
+nbody_refined_plot_script = ./plot_refined_region_nbody.py
+nbody_local_group_plot_script = ./plot_local_group_nbody.py
+nbody_full_plot_script = ./utils/nbody_projection_all_species.py
+nbody_split_plot_script = ./utils/nbody_projection_split_species.py
 summary_metal_script = ./summary_metals.py
 summary_vel_script = ./summary_velocity.py
 sfh_plots_script = ./plots_sfh.py
@@ -68,28 +73,35 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs
-	sim_dirs_nbody = 
-	sim_dirs_hydro = $(runs_home)/shangrila/test_defs_suite/enrich_ia_elts/run/outputs 
+	sim_dirs_nbody = $(runs_home)/pleiades/nbody/new_ic_trim_12.5mpc/root_07/run/outputs/vel_offset
+	sim_dirs_hydro = #$(runs_home)/shangrila/test_defs_suite/enrich_ia_elts/run/outputs 
 endif
 
-ifeq ($(machine),lou)                
+ifeq ($(machine),lou)
 	runs_home = /u/gbrown12/art_runs/runs
-	sim_dirs_nbody = $(runs_home)/nbody/trim_ic_05/run/outputs/fix_vel \
-	                 $(runs_home)/nbody/trim_ic_06/run/outputs/fix_vel \
-	                 $(runs_home)/nbody/trim_ic_07/run/outputs/fix_vel \
-	                 $(runs_home)/nbody/trim_ic_08/run/outputs/fix_vel \
-	                 $(runs_home)/nbody/no_trim/run/outputs/fix_vel
-	sim_dirs_hydro = $(runs_home)/hydro/trimmed_ic_scaling/no_trim/run/outputs/first \
-	                 $(runs_home)/hydro/trimmed_ic_scaling/trim_ic_05/run/outputs/first \
-	                 $(runs_home)/hydro/trimmed_ic_scaling/trim_ic_06/run/outputs/first \
-	                 $(runs_home)/hydro/trimmed_ic_scaling/trim_ic_07/run/outputs/first \
-	                 $(runs_home)/hydro/trimmed_ic_scaling/trim_ic_08/run/outputs/first \
+	sim_dirs_nbody = $(runs_home)/nbody/new_ic_trim_12.5mpc/root_05/run/outputs/fix_vel \
+	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_06/run/outputs/fix_vel \
+	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_07/run/outputs/fix_vel \
+	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_08/run/outputs/fix_vel \
+	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_05/run/outputs/vel_offset \
+	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_06/run/outputs/vel_offset \
+	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_07/run/outputs/vel_offset \
+	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_08/run/outputs/vel_offset \
+	                 $(runs_home)/nbody/new_ic_trim_25mpc/root_06/run/outputs/vel_offset \
+	                 $(runs_home)/nbody/new_ic_trim_25mpc/root_07/run/outputs/vel_offset \
+	                 $(runs_home)/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset \
+	                 $(runs_home)/nbody/new_ic_50mpc/root_07/run/outputs/fix_vel
+	sim_dirs_hydro = $(runs_home)/hydro/new_ic_50mpc/root_07/run/outputs/first \
+	                 $(runs_home)/hydro/new_ic_trim_12.5mpc/root_05/run/outputs/first \
+	                 $(runs_home)/hydro/new_ic_trim_12.5mpc/root_06/run/outputs/first \
+	                 $(runs_home)/hydro/new_ic_trim_12.5mpc/root_07/run/outputs/first \
+	                 $(runs_home)/hydro/new_ic_trim_12.5mpc/root_08/run/outputs/first \
 	                 $(runs_home)/hydro/old_ic/default/run/outputs/run_1 \
 	                 $(runs_home)/hydro/old_ic/no_hn/run/outputs/run_1
 	                 #$(runs_home)/hydro/old_ic/continuous/run/outputs/run_1 \
 	                 #$(runs_home)/hydro/old_ic/continuous_no_hn/run/outputs/run_1 \
 	                 #$(runs_home)/hydro/old_ic/no_changes/run/outputs/run_1 \
-	                 #$(runs_home)/hydro/old_ic/no_alpha/run/outputs/run_1 
+	                 #$(runs_home)/hydro/old_ic/no_alpha/run/outputs/run_1
 endif
 
 ifeq ($(machine),great_lakes)                
@@ -170,6 +182,49 @@ summaries_nbody = $(foreach snapshot,$(snapshots),$(call sim_to_summary_nbody,$(
 
 # ------------------------------------------------------------------------------
 #
+#  Nbody plots
+# 
+# ------------------------------------------------------------------------------
+sim_to_halo_1_full = $(subst .art,.png,$(subst out/continuous,plots/n_body_halo_rank_1, $(1)))
+sim_to_halo_2_full = $(subst .art,.png,$(subst out/continuous,plots/n_body_halo_rank_2, $(1)))
+sim_to_halo_1_split = $(subst .art,.png,$(subst out/continuous,plots/n_body_split_halo_rank_1, $(1)))
+sim_to_halo_2_split = $(subst .art,.png,$(subst out/continuous,plots/n_body_split_halo_rank_2, $(1)))
+sim_to_refined_full = $(subst .art,.png,$(subst out/continuous,plots/n_body_refined, $(1)))
+sim_to_refined_spilt = $(subst .art,.png,$(subst out/continuous,plots/n_body_split_refined, $(1)))
+sim_to_local_group_full = $(subst .art,.png,$(subst out/continuous,plots/n_body_local_group, $(1)))
+sim_to_local_group_spilt = $(subst .art,.png,$(subst out/continuous,plots/n_body_split_local_group, $(1)))
+
+halo_1_full_to_sim = $(subst .png,.art,$(subst plots/n_body_halo_rank_1,out/continuous, $(1)))
+halo_2_full_to_sim = $(subst .png,.art,$(subst plots/n_body_halo_rank_2,out/continuous, $(1)))
+halo_1_split_to_sim = $(subst .png,.art,$(subst plots/n_body_split_halo_rank_1,out/continuous, $(1)))
+halo_2_split_to_sim = $(subst .png,.art,$(subst plots/n_body_split_halo_rank_2,out/continuous, $(1)))
+refined_full_to_sim = $(subst .png,.art,$(subst plots/n_body_refined,out/continuous, $(1)))
+refined_split_to_sim = $(subst .png,.art,$(subst plots/n_body_split_refined,out/continuous, $(1)))
+local_group_full_to_sim = $(subst .png,.art,$(subst plots/n_body_local_group,out/continuous, $(1)))
+local_group_split_to_sim = $(subst .png,.art,$(subst plots/n_body_split_local_group,out/continuous, $(1)))
+
+halo_1_full_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_halo_rank_1,halos/halos, $(1)))
+halo_2_full_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_halo_rank_2,halos/halos, $(1)))
+halo_1_split_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_split_halo_rank_1,halos/halos, $(1)))
+halo_2_split_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_split_halo_rank_2,halos/halos, $(1)))
+refined_full_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_refined,halos/halos, $(1)))
+refined_split_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_split_refined,halos/halos, $(1)))
+local_group_full_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_local_group,halos/halos, $(1)))
+local_group_split_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_split_local_group,halos/halos, $(1)))
+
+halo_1_full_plots = $(foreach snapshot,$(snapshots),$(call sim_to_halo_1_full,$(snapshot)))
+halo_2_full_plots = $(foreach snapshot,$(snapshots),$(call sim_to_halo_2_full,$(snapshot)))
+halo_1_split_plots = $(foreach snapshot,$(snapshots),$(call sim_to_halo_1_split,$(snapshot)))
+halo_2_split_plots = $(foreach snapshot,$(snapshots),$(call sim_to_halo_2_split,$(snapshot)))
+refined_full_plots = $(foreach snapshot,$(snapshots),$(call sim_to_refined_full,$(snapshot)))
+refined_split_plots = $(foreach snapshot,$(snapshots),$(call sim_to_refined_spilt,$(snapshot)))
+local_group_full_plots = $(foreach snapshot,$(snapshots),$(call sim_to_local_group_full,$(snapshot)))
+local_group_split_plots = $(foreach snapshot,$(snapshots),$(call sim_to_local_group_spilt,$(snapshot)))
+
+nbody_plots = $(halo_1_full_plots) $(halo_2_full_plots) $(halo_1_split_plots) $(halo_2_split_plots) $(refined_full_plots) $(refined_split_plots) $(local_group_full_plots) $(local_group_split_plots)
+
+# ------------------------------------------------------------------------------
+#
 #  Consistent trees
 # 
 # ------------------------------------------------------------------------------
@@ -237,7 +292,10 @@ timing_to_dir = $(subst checks/timing_debug.txt,log,$(1))
 # ------------------------------------------------------------------------------
 movies_all = $(foreach dir,$(sim_dirs),$(dir)/plots/$(1).mp4)
 movies_hydro = $(foreach dir,$(sim_dirs_hydro),$(dir)/plots/$(1).mp4)
-movie_to_nbody_summary = $(call sim_to_summary_nbody,$(call dir_to_sims,$(subst plots/$(1).mp4,out,$(2))))
+# in this next function argument 1 is the short of the movie, 2 is the full 
+# location where it will be saved, and 3 is the function that turns a simulation
+# into a plot file (these are all defined above)
+movie_to_plot = $(call $(3),$(call dir_to_sims,$(subst plots/$(1).mp4,out,$(2))))
 movie_to_metal_summary = $(call sim_to_summary_metal,$(call dir_to_sims,$(subst plots/$(1).mp4,out,$(2))))
 movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 
@@ -246,8 +304,8 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-movies = $(call movies_all,n_body_single) $(call movies_all,n_body_split) $(call movies_all,grid_idxs) $(call movies_hydro,gas_density) $(call movies_hydro,gas_velocity_x) $(call movies_hydro,gas_velocity_y) $(call movies_hydro,gas_velocity_z)
-all: $(my_directories) $(summaries_nbody) $(summaries_metal) $(summaries_vel) $(smhm_plots) $(timings) $(merger_sentinels) $(movies)
+movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group) $(call movies_hydro,gas_density) $(call movies_hydro,gas_velocity_x) $(call movies_hydro,gas_velocity_y) $(call movies_hydro,gas_velocity_z)
+all: $(my_directories) $(summaries_nbody) $(summaries_metal) $(summaries_vel) $(smhm_plots) $(timings) $(merger_sentinels) $(movies) $(nbody_plots)
 
 .PHONY: clean
 clean:
@@ -286,18 +344,55 @@ $(halos_catalogs): %: $(rename_script) $$(call halo_to_sentinel,%)
 $(summaries_nbody): %: $$(call summary_nbody_to_halo, %) $(summary_nbody_script)
 	python $(summary_nbody_script) $(call summary_nbody_to_sim, $@) $(call summary_nbody_to_halo, $@) clobber silent
 
+# Make the individual nbody plots - several examples of very similar things here
+.SECONDEXPANSION:
+$(halo_1_full_plots): %: $$(call halo_1_full_to_halo, %) $(nbody_single_halo_plots_script) $(nbody_full_plot_script)
+	python $(nbody_single_halo_plots_script) $(call halo_1_full_to_sim, $@) $(call halo_1_full_to_halo, $@) 1 full
+
+.SECONDEXPANSION:
+$(halo_2_full_plots): %: $$(call halo_2_full_to_halo, %) $(nbody_single_halo_plots_script) $(nbody_full_plot_script)
+	python $(nbody_single_halo_plots_script) $(call halo_2_full_to_sim, $@) $(call halo_2_full_to_halo, $@) 2 full
+
+.SECONDEXPANSION:
+$(halo_1_split_plots): %: $$(call halo_1_split_to_halo, %) $(nbody_single_halo_plots_script) $(nbody_split_plot_script)
+	python $(nbody_single_halo_plots_script) $(call halo_1_split_to_sim, $@) $(call halo_1_split_to_halo, $@) 1 split
+
+.SECONDEXPANSION:
+$(halo_2_split_plots): %: $$(call halo_2_split_to_halo, %) $(nbody_single_halo_plots_script) $(nbody_split_plot_script)
+	python $(nbody_single_halo_plots_script) $(call halo_2_split_to_sim, $@) $(call halo_2_split_to_halo, $@) 2 split
+
+.SECONDEXPANSION:
+$(refined_full_plots): %: $$(call refined_full_to_halo, %) $(nbody_refined_plot_script) $(nbody_full_plot_script)
+	python $(nbody_refined_plot_script) $(call refined_full_to_sim, $@) $(call refined_full_to_halo, $@) full
+
+.SECONDEXPANSION:
+$(refined_split_plots): %: $$(call refined_split_to_halo, %) $(nbody_refined_plot_script) $(nbody_split_plot_script)
+	python $(nbody_refined_plot_script) $(call refined_split_to_sim, $@) $(call refined_split_to_halo, $@) split
+
+.SECONDEXPANSION:
+$(local_group_full_plots): %: $$(call local_group_full_to_halo, %) $(nbody_local_group_plot_script) $(nbody_full_plot_script)
+	python $(nbody_local_group_plot_script) $(call local_group_full_to_sim, $@) $(call local_group_full_to_halo, $@) full
+
+.SECONDEXPANSION:
+$(local_group_split_plots): %: $$(call local_group_split_to_halo, %) $(nbody_local_group_plot_script) $(nbody_split_plot_script)
+	python $(nbody_local_group_plot_script) $(call local_group_split_to_sim, $@) $(call local_group_split_to_halo, $@) split
+
 # Make the movies. We can't parametrize this all since there is no third expansion 
 .SECONDEXPANSION:
-$(call movies_all,n_body_single): %: $$(call movie_to_nbody_summary,n_body_single,%)
-	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_single,$@)/n_body_single_*.png' -c:v h264 -pix_fmt yuv420p -y $@
+$(call movies_all,n_body_refined): %: $$(call movie_to_plot,n_body_refined,%,sim_to_refined_full)
+	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_refined,$@)/n_body_refined*.png' -c:v h264 -pix_fmt yuv420p -y $@
+
+SECONDEXPANSION:
+$(call movies_all,n_body_split_refined): %: $$(call movie_to_plot,n_body_refined_split,%,sim_to_refined_split)
+	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_split_refined,$@)/n_body_split_refined*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
 .SECONDEXPANSION:
-$(call movies_all,n_body_split): %: $$(call movie_to_nbody_summary,n_body_split,%)
-	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_split,$@)/n_body_split_*.png' -c:v h264 -pix_fmt yuv420p -y $@
+$(call movies_all,n_body_local_group): %: $$(call movie_to_plot,n_body_local_group,%,sim_to_local_group_full)
+	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_local_group,$@)/n_body_local_group*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
-.SECONDEXPANSION:
-$(call movies_all,grid_idxs): %: $$(call movie_to_nbody_summary,grid_idxs,%)
-	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,grid_idxs,$@)/grid_idxs_*.png' -c:v h264 -pix_fmt yuv420p -y $@
+SECONDEXPANSION:
+$(call movies_all,n_body_split_local_group): %: $$(call movie_to_plot,n_body_local_group_split,%,sim_to_refined_split)
+	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_split_local_group,$@)/n_body_split_local_group*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
 .SECONDEXPANSION:
 $(call movies_hydro,gas_density): %: $$(call movie_to_metal_summary,gas_density,%)
