@@ -20,9 +20,13 @@ import os
 import numpy as np
 import yt
 
-import utils as u 
-
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
+
+def print_and_write(info, file_obj, silent):
+    if file_obj is not None:
+        file_obj.write(str(info) + "\n")
+    if not silent:
+        print(info)
 
 # Check that the third argument is correct
 if len(sys.argv) == 3 and sys.argv[2] not in ["clobber", "silent"]:
@@ -45,8 +49,8 @@ file_path = file_dir + "summary_velocity_a" + scale_factor + ".txt"
 plots_dir = sim_dir.replace("/out/", "/plots/")
 
 # inform the user of where the output is going
-u.print_and_write("Output being written to:", None, silent)
-u.print_and_write(file_path, None, silent)
+print_and_write("Output being written to:", None, silent)
+print_and_write(file_path, None, silent)
 
 # see if there is an existing file here that we don't want to replace.
 if "clobber" not in sys.argv:
@@ -73,7 +77,7 @@ out_file = open(file_path, "w")
 # define a shorthand function that handles the parameters to print_and_write,
 # so we don't have to duplicate that each time
 def out(info):
-    return u.print_and_write(info, out_file, silent)
+    return print_and_write(info, out_file, silent)
 
 ds = yt.load(sys.argv[1])
 ad = ds.all_data()
