@@ -1,10 +1,10 @@
 """
-velocity_check.py
+debug_output.py
 
-Reports the velocities of gas cells, N-boody particles, and star particles, to 
-help with debugging
+Reports some global properties of the simulation that are useful for looking
+at the nitty gritty of the simulations. 
 
-Takes 1 required and 2 optional parameters.
+Takes 2 required and 1 optional parameter.
 1 - Location of the simulation output. Can be relative to the working directory
     where this code was called from, or an absolute path.
 2 - Optional argument. Must be "clobber" if included. This will bypass the 
@@ -17,26 +17,26 @@ Takes 1 required and 2 optional parameters.
 import sys
 import os
 
-import numpy as np
 import yt
+from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
+import numpy as np
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
-def print_and_write(info, file_obj, silent):
-    if file_obj is not None:
-        file_obj.write(str(info) + "\n")
-    if not silent:
-        print(info)
-
 # Check that the third argument is correct
-if len(sys.argv) == 3 and sys.argv[2] not in ["clobber", "silent"]:
-    raise ValueError("Argument 2 (if used), must be 'clobber' or 'silent'")
+if len(sys.argv) == 4 and sys.argv[3] not in ["clobber", "silent"]:
+    raise ValueError("Argument 3 (if used), must be 'clobber' or 'silent'")
 if "silent" in sys.argv:
     silent = True
 else:
     silent = False
 
-# get the dataset info
+def print_and_write(info, file_obj):
+    if file_obj is not None:
+        file_obj.write(str(info) + "\n")
+    if not silent:
+        print(info)
+
 ds_loc = os.path.abspath(sys.argv[1])
 scale_factor = ds_loc[-10:-4]
 ds = yt.load(ds_loc)
@@ -45,12 +45,11 @@ ad = ds.all_data()
 # get the location of where to write the file.
 sim_dir = os.path.dirname(ds_loc) + os.sep
 file_dir = sim_dir.replace("/out/", "/checks/")
-file_path = file_dir + "summary_velocity_a" + scale_factor + ".txt"
+file_path = file_dir + "debug_a" + scale_factor + ".txt"
 plots_dir = sim_dir.replace("/out/", "/plots/")
 
-# inform the user of where the output is going
-print_and_write("Output being written to:", None, silent)
-print_and_write(file_path, None, silent)
+print_and_write("Output being written to:", None)
+print_and_write(file_path, None)
 
 # see if there is an existing file here that we don't want to replace.
 if "clobber" not in sys.argv:
@@ -74,19 +73,216 @@ if "clobber" not in sys.argv:
 # open the file
 out_file = open(file_path, "w")
 
-# define a shorthand function that handles the parameters to print_and_write,
+# define a shorthand function that handles the parameters to out,
 # so we don't have to duplicate that each time
 def out(info):
-    return print_and_write(info, out_file, silent)
+    return print_and_write(info, out_file)
 
-ds = yt.load(sys.argv[1])
-ad = ds.all_data()
+# =============================================================================
+#         
+# Basic information
+# 
+# =============================================================================
+print_and_write("", None)  # no write since this is just for console formatting
+out("Simulation location:")
+out(ds_loc)
+
+a = ds.scale_factor
+z = 1.0 / a - 1.0
+out("\na = {:.4f}".format(a))
+out("z = {:.4f}".format(z))
+
+is_zoom = ('N-BODY_0', 'POSITION_X') in ds.field_list
+
+# =============================================================================
+#         
+# Grid Structure
+# 
+# =============================================================================
+box_size = ds.domain_width.to("Mpccm")[0]
 levels_gas = ad[('index', 'grid_level')].value
 grid_levels, num_in_grid = np.unique(levels_gas, return_counts=True)
-cell_sizes = np.unique(ad["index", "dx"]).to("pc").value[::-1]
+total_cells = np.sum(num_in_grid)
+cell_sizes = np.unique(ad["index", "dx"]).to("pc")[::-1]
 # ^ np.unique returns the unique values in sorted order. We want the
 # largest cells to correspond to the smallest level, so we reverse it
+min_cell_size = np.min(cell_sizes)
+max_cell_size = np.max(cell_sizes)
+base_grid_size = np.log2(box_size / max_cell_size)
 
+out("\nGrid Structure\n==============")
+out("box size: {:.3f}".format(box_size))
+out("base grid size: {:.3f}".format(base_grid_size))
+out("total cells: {:,}".format(total_cells))
+grid_out_str = "{:<5d}    {:>10,}    {:<8.3f}"
+grid_header_str = "{:<5}    {:>10}    {:<14}"
+out(grid_header_str.format("Level", "Num Cells", "Cell Size"))
+for level in grid_levels:
+    level = int(level)
+    num_cells = num_in_grid[level]
+    cell_size = cell_sizes[level]
+    out(grid_out_str.format(level, num_cells, cell_size))
+
+# =============================================================================
+#         
+# Particles
+# 
+# =============================================================================
+all_masses = ad[('N-BODY', 'MASS')].to("Msun")
+masses, num_particles = np.unique(all_masses, return_counts=True)
+# Do not reverse, since in ART species 0 is the lightest
+total_particles = np.sum(num_particles)
+
+out("\nParticles\n=========")
+out("total particles: {:,}".format(total_particles))
+part_out_str =     "{:<8d}    {:>15,}    {:<12e}    {:<12e}    {:<.8f}"
+part_out_str_top = "{:<8d}    {:>15,}    {:<12e}    {:<12e}    ----------"
+part_header_str =  "{:<8s}    {:>15s}    {:<12s}    {:<12s}    {:<25s}"
+out(part_header_str.format("Species", "Num Particles","Mass [Code]", 
+                           "Mass [Msun]", "Mass Ratio to Next"))
+
+# print info about the species, but also add a dictionary that can convert
+# from a particle's mass to its species
+mass_to_species = dict()
+for species in range(len(masses)):
+    species = int(species)
+    dm_mass = masses[species]
+    m_sol = dm_mass.to("Msun").value
+    m_code = dm_mass.to("code_mass").value
+    dm_num = num_particles[species]
+
+    mass_to_species["{:.0f}".format(dm_mass)] = species
+    
+    if species == len(masses) - 1:
+        out(part_out_str_top.format(species, dm_num, m_code, m_sol))
+    else:
+        ratio = (masses[species + 1] / dm_mass).value
+        out(part_out_str.format(species, dm_num, m_code, m_sol, ratio))
+
+
+# =============================================================================
+#         
+# Gas cells
+# 
+# =============================================================================
+# See some statistics about the metal properties of the gas at various levels
+out("\nElement Abundances\n==================")
+
+if ('artio', 'HVAR_METAL_DENSITY_Mg') in ds.field_list:
+    elements = ["II", "Ia", "AGB", "C", "N", "O", "Mg", "S", "Ca", "Fe"]
+elif ('artio', 'HVAR_METAL_DENSITY_Fe') in ds.field_list:
+    elements = ["II", "Ia", "AGB", "C", "N", "O", "Fe"]
+elif ('artio', 'HVAR_METAL_DENSITY_FE') in ds.field_list:
+    elements = ["II", "Ia", "AGB", "C", "N", "O", "FE"]
+else:
+    elements = ["II", "Ia"]
+
+# Get all the cells at various levels
+level_idxs = {level:np.where(levels_gas == level)[0] 
+              for level in grid_levels}
+
+# Get the necessary data beforehand to reduce data accessing needs
+densities = ad[('gas', 'density')]
+volumes = ad[('gas', 'cell_volume')]
+metal_densities = {elt:ad[('artio', 'HVAR_METAL_DENSITY_{}'.format(elt))]
+                   for elt in elements}
+
+# yt doesn't know about the units for my new fields
+code_density = ds.mass_unit / (ds.length_unit)**3
+for elt in metal_densities:
+    if elt not in ["II", "Ia"]:
+        metal_densities[elt] *= code_density
+    metal_densities[elt] = metal_densities[elt].to("g/cm**3")
+
+# Then go level by level to get the properties of the gas at that level
+header_str = "{:<10s}{:>12s}{:>12s}{:>12s}{:>12s}"
+row_str = "{:<10s}{:>12.3E}{:>12.3E}{:>12.3E}{:>12.3E}"
+for level, cell_size, n_cells in zip(level_idxs, cell_sizes, num_in_grid):
+    out("level={:.0f}, cell size={:.2f}, "
+        "number of cells={:,.0f}".format(level, cell_size, n_cells))
+    out(header_str.format("Element", "Minimum Z", "Median Z", "Mean Z", 
+                          "Maximum Z"))
+    
+    # get the info at this level
+    idxs = level_idxs[level]  # indices of cells at this level
+    density_level = densities[idxs]  # densities of cell on this level
+    volume_level = volumes[idxs]  # volumes of cell on this level
+    total_mass_level = np.sum(density_level * volume_level) 
+    # ^ The total gas mass in cells on this level
+    
+    # then go element by element
+    for element in elements:
+        densities_elt_level = metal_densities[element][idxs]
+        z_elt = (densities_elt_level / density_level).value
+        total_elt_mass_level = np.sum(densities_elt_level * volume_level)
+        true_mean = (total_elt_mass_level / total_mass_level).value
+
+        out(row_str.format(element, np.min(z_elt), np.median(z_elt), true_mean, 
+                           np.max(z_elt)))
+    out("")  # for spacing
+
+# =============================================================================
+#         
+# Stars
+# 
+# =============================================================================
+# We do the equivalent thing here, although it's different because stars have
+# metallicity and mass, not densities
+# We also have to modify the elements
+star_elements = [elt.replace("II", "SNII").replace("Ia", "SNIa")
+                 for elt in elements]
+
+stellar_masses = ad[("STAR", "MASS")]
+total_mass = np.sum(stellar_masses)
+
+if len(stellar_masses) == 0:
+    out("No stars at this redshift")
+else:
+    out("Stars")
+    out(header_str.format("Element", "Minimum Z", "Median Z", "Mean Z", 
+                          "Maximum Z"))
+    for element in star_elements:
+        z_elt = ad[("STAR", "METALLICITY_{}".format(element))].value
+        total_elt_mass = np.sum(z_elt * stellar_masses)
+        true_mean = (total_elt_mass / total_mass).value
+
+        out(row_str.format(element, np.min(z_elt), np.median(z_elt), true_mean, 
+                           np.max(z_elt)))
+out("")  # for spacing
+
+# =========================================================================
+#         
+# Cell Masses
+# 
+# =========================================================================
+out("\nCell Masses\n===========")
+# Checking the mass of cells can help debug refinement, so make sure that 
+# the Lagrangian refinement is actually working correctly
+refine_top_header = "Percentiles of cell gas mass distribution, units of {}"
+percentiles = [0, 0.1, 1, 25, 50, 75, 99, 99.9, 100]
+refine_header_str = "{:<10s}" + "{:>10s}" + len(percentiles) * "{:>12.1f}"
+refine_row_str = "{:<10.0f}" + "{:>10,.0f}" + len(percentiles) * "{:>12.3E}"
+
+for unit in ["code_mass", "Msun"]:
+    # write header info
+    out(refine_top_header.format(unit))
+    out(refine_header_str.format("Level", "Number", *percentiles))
+
+    gas_mass = ad[('gas', 'cell_mass')].to(unit).value
+    for level in level_idxs:
+        idxs = level_idxs[level]  # indices of cells at this level
+        n_cell = len(level_idxs[level])
+        mass_percentiles = np.percentile(gas_mass[idxs], percentiles)
+        out(refine_row_str.format(level, n_cell, *mass_percentiles))
+    out("")  # for spacing
+
+
+# =========================================================================
+#         
+# Velocities
+# 
+# =========================================================================
+out("\nVelocities\n==========")
 # get the gas velocity
 vx_gas = ad[('gas', 'velocity_x')].to("km/s").value
 vy_gas = ad[('gas', 'velocity_y')].to("km/s").value
@@ -135,18 +331,17 @@ levels_dm   = ds.find_field_values_at_points([('index', 'grid_level')],
 # print the max velocities in each level
 # We have to have this ugly code to handle what happens when there are no stars
 # or DM on a given level. This is all for the string that gets printed
-header_str = "{:<10s} {:>10s}" + 7 * "{:>10s}"
-level_str = "{:<10.0f} {:>10,.0f}"
-not_empty = "{:>10.2f}"
-empty = "{:>10s}".format("---")
-time = "{:>10.2E}"
+header_str = "{:<12s} {:>12s}" + 7 * "{:>12s}"
+level_str = "{:<12.0f} {:>12,.0f}"
+not_empty = "{:>12.2f}"
+empty = "{:>12s}".format("---")
+time = "{:>12.2E}"
 row_str = level_str + 6 * not_empty + time
 row_str_no_star = level_str + 4 * not_empty + empty + not_empty + time
 row_str_no_dm = level_str + empty + 5 * not_empty + time
 row_str_no_both = level_str + empty + 3 * not_empty + empty + not_empty + time
 
-out("\n"
-    "- This shows the highest velocity present in the following components \n" 
+out("- This shows the highest velocity present in the following components \n" 
     "  at each level.\n"
     "- Velocities reported (other than sound speed) are the maximum of the \n"
     "  x, y, and z component of the velocity for the star, gas, or DM. \n"
@@ -185,33 +380,35 @@ for level, cell_size, n_cells in zip(grid_levels, cell_sizes, num_in_grid):
     if len(idx_star[0]) > 0:  # stars 
         if len(idx_dm[0]) > 0:  # stars and DM 
             vel_max_all = max([vel_max_gas_tot, vel_max_dm, vel_max_star])
-            dt = cell_size * yt.units.pc / (vel_max_all * yt.units.km / yt.units.s)
+            dt = cell_size / (vel_max_all * yt.units.km / yt.units.s)
             dt = dt.to("yr").value
 
             out_str = row_str.format(level, n_cells, vel_max_dm, vel_max_gas_bulk, 
                                      vel_max_gas_cs, vel_max_gas_tot, 
-                                     vel_max_star, cell_size, dt)
+                                     vel_max_star, cell_size.to("pc").value, dt)
         else:  # stars, no DM
             vel_max_all = max([vel_max_gas_tot, vel_max_star])
-            dt = cell_size * yt.units.pc / (vel_max_all * yt.units.km / yt.units.s)
+            dt = cell_size / (vel_max_all * yt.units.km / yt.units.s)
             dt = dt.to("yr").value
             out_str = row_str_no_dm.format(level, n_cells, vel_max_gas_bulk, 
                                            vel_max_gas_cs, vel_max_gas_tot, 
-                                           vel_max_star, cell_size, dt)
+                                           vel_max_star, 
+                                           cell_size.to("pc").value, dt)
     else:  # no stars
         if len(idx_dm[0]) > 0:  # no stars, but DM 
             vel_max_all = max([vel_max_gas_tot, vel_max_dm])
-            dt = cell_size * yt.units.pc / (vel_max_all * yt.units.km / yt.units.s)
+            dt = cell_size / (vel_max_all * yt.units.km / yt.units.s)
             dt = dt.to("yr").value
             out_str = row_str_no_star.format(level, n_cells, vel_max_dm, 
                                              vel_max_gas_bulk, vel_max_gas_cs, 
-                                             vel_max_gas_tot, cell_size, dt)
+                                             vel_max_gas_tot, 
+                                             cell_size.to("pc").value, dt)
         else:  # no stars, no dm
-            dt = cell_size * yt.units.pc / (vel_max_gas_tot * yt.units.km / yt.units.s)
+            dt = cell_size / (vel_max_gas_tot * yt.units.km / yt.units.s)
             dt = dt.to("yr").value
             out_str = row_str_no_both.format(level, n_cells, vel_max_gas_bulk, 
                                              vel_max_gas_cs, vel_max_gas_tot, 
-                                             cell_size, dt)
+                                             cell_size.to("pc").value, dt)
         
     out(out_str)
 
@@ -274,4 +471,4 @@ for name in ["DM", "Gas bulk", "Gas c_s", "Gas total", "Stars"]:
         x, y, z = positions[idx].to("code_length").value
         out(row_str.format(velocities[idx], levels[idx], masses[idx], x, y, z))
 
-
+out_file.close()

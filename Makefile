@@ -53,14 +53,12 @@ endif
 # ------------------------------------------------------------------------------
 halo_finding_py_file = ./halo_finding_rockstar.py
 rename_script = ./rename_halos.py
-summary_nbody_script = ./summary_nbody.py
+debug_script = ./debug_output.py
 nbody_single_halo_plots_script = ./plot_single_halo_nbody.py
 nbody_refined_plot_script = ./plot_refined_region_nbody.py
 nbody_local_group_plot_script = ./plot_local_group_nbody.py
 nbody_full_plot_script = ./utils/nbody_projection_all_species.py
 nbody_split_plot_script = ./utils/nbody_projection_split_species.py
-summary_metal_script = ./summary_metals.py
-summary_vel_script = ./summary_velocity.py
 sfh_plots_script = ./plots_sfh.py
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
@@ -73,8 +71,9 @@ read_tree_src = $(read_tree_dir)/halo_history.c
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs
-	sim_dirs_nbody = $(runs_home)/pleiades/nbody/new_ic_trim_12.5mpc/root_07/run/outputs/vel_offset
-	sim_dirs_hydro = #$(runs_home)/shangrila/test_defs_suite/enrich_ia_elts/run/outputs 
+	sim_dirs_nbody = 
+	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_100 \
+	                 $(runs_home)/shangrila/old_ic_comparison/default_test/run
 endif
 
 ifeq ($(machine),lou)
@@ -172,13 +171,12 @@ halo_to_sentinel = $(call words_to_path,$(call halo_words_to_sentinel_words,$(ca
 
 # ------------------------------------------------------------------------------
 #
-#  Summary files - Nbody
+#  Debug output files
 # 
 # ------------------------------------------------------------------------------
-sim_to_summary_nbody = $(subst .art,.txt,$(subst out/continuous,checks/summary_nbody, $(1)))
-summary_nbody_to_sim = $(subst .txt,.art,$(subst checks/summary_nbody,out/continuous, $(1)))
-summary_nbody_to_halo = $(subst .txt,.0.bin,$(subst checks/summary_nbody,halos/halos, $(1)))
-summaries_nbody = $(foreach snapshot,$(snapshots),$(call sim_to_summary_nbody,$(snapshot)))
+sim_to_debug = $(subst .art,.txt,$(subst out/continuous,checks/debug, $(1)))
+debug_to_sim = $(subst .txt,.art,$(subst checks/debug,out/continuous, $(1)))
+debugs = $(foreach snapshot,$(snapshots),$(call sim_to_debug,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
@@ -250,24 +248,6 @@ merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_
 
 # ------------------------------------------------------------------------------
 #
-#  Summary files - metals
-# 
-# ------------------------------------------------------------------------------
-sim_to_summary_metal = $(subst .art,.txt,$(subst out/continuous,checks/summary_metals, $(1)))
-summary_metal_to_sim = $(subst .txt,.art,$(subst checks/summary_metals,out/continuous, $(1)))
-summaries_metal = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_summary_metal,$(snapshot)))
-
-# ------------------------------------------------------------------------------
-#
-#  Summary files - velocity
-# 
-# ------------------------------------------------------------------------------
-sim_to_summary_vel = $(subst .art,.txt,$(subst out/continuous,checks/summary_velocity, $(1)))
-summary_vel_to_sim = $(subst .txt,.art,$(subst checks/summary_velocity,out/continuous, $(1)))
-summaries_vel = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_summary_vel,$(snapshot)))
-
-# ------------------------------------------------------------------------------
-#
 #  Plots - SFH
 # 
 # ------------------------------------------------------------------------------
@@ -305,14 +285,14 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group) $(call movies_hydro,gas_density) $(call movies_hydro,gas_velocity_x) $(call movies_hydro,gas_velocity_y) $(call movies_hydro,gas_velocity_z)
-all: $(my_directories) $(summaries_nbody) $(summaries_metal) $(summaries_vel) $(smhm_plots) $(timings) $(merger_sentinels) $(movies) $(nbody_plots)
+all: $(my_directories) $(timings) $(merger_sentinels) $(movies) $(debugs) $(smhm_plots)
 
 .PHONY: clean
 clean:
 	rm -r $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_plots_dirs)
 
 .PHONY: clean_all
-clean_some:
+clean_all:
 	rm -r $(my_directories)  # includes rockstar halos
 
 # Make directories if they don't exist
@@ -328,6 +308,9 @@ $(my_directories):
 # that come later
 .PHONY: halos
 halos: $(rockstar_sentinels)
+
+# Throughout I use Make's static pattern rules to parameterize over my different
+# outputs
 # We run the script with parameters to the output directory and rockstar halo 
 # directory
 .SECONDEXPANSION:
@@ -339,10 +322,10 @@ $(rockstar_sentinels): %: $$(call sentinel_to_sims, %)
 $(halos_catalogs): %: $(rename_script) $$(call halo_to_sentinel,%)
 	python $(rename_script) $@
 
-# Make the summary files for N-body
+# Make the debug files
 .SECONDEXPANSION:
-$(summaries_nbody): %: $$(call summary_nbody_to_halo, %) $(summary_nbody_script)
-	python $(summary_nbody_script) $(call summary_nbody_to_sim, $@) $(call summary_nbody_to_halo, $@) clobber silent
+$(debugs): %: $$(call debug_to_halo, %) $(debug_script)
+	python $(debug_script) $(call debug_to_sim, $@) clobber silent
 
 # Make the individual nbody plots - several examples of very similar things here
 .SECONDEXPANSION:
@@ -429,16 +412,6 @@ $(read_tree_exe): $(read_tree_src)
 $(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 	$(read_tree_exe) $(call merger_to_tree,$@) && touch $@
 
-# Make the summary files for metals
-.SECONDEXPANSION:
-$(summaries_metal): %: $$(call summary_metal_to_sim,%) $(summary_metal_script)
-	python $(summary_metal_script) $(call summary_metal_to_sim, $@) clobber silent
-
-# Make the summary files for velocities
-.SECONDEXPANSION:
-$(summaries_vel): %: $$(call summary_vel_to_sim,%) $(summary_vel_script)
-	python $(summary_vel_script) $(call summary_vel_to_sim, $@) clobber silent
-
 # SFH plots
 .SECONDEXPANSION:
 $(smhm_plots): %: $$(call smhm_to_sim,%) $(sfh_plots_script)
@@ -450,5 +423,5 @@ timing: $(timings)
 
 .SECONDEXPANSION:
 $(timings): %: $$(call timing_to_sims, %)
-	$(timing_script) $(call timing_to_dir, $@) > $@
+	$(timing_script) $(call timing_to_dir, $@) > $@ || echo "Timing failed"
 
