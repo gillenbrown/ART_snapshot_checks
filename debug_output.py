@@ -92,8 +92,6 @@ z = 1.0 / a - 1.0
 out("\na = {:.4f}".format(a))
 out("z = {:.4f}".format(z))
 
-is_zoom = ('N-BODY_0', 'POSITION_X') in ds.field_list
-
 # =============================================================================
 #         
 # Grid Structure

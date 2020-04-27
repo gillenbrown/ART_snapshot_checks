@@ -54,6 +54,7 @@ endif
 halo_finding_py_file = ./halo_finding_rockstar.py
 rename_script = ./rename_halos.py
 debug_script = ./debug_output.py
+galaxies_script = ./galaxy_summaries.py
 nbody_single_halo_plots_script = ./plot_single_halo_nbody.py
 nbody_refined_plot_script = ./plot_refined_region_nbody.py
 nbody_local_group_plot_script = ./plot_local_group_nbody.py
@@ -180,6 +181,16 @@ debugs = $(foreach snapshot,$(snapshots),$(call sim_to_debug,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
+#  Galaxies output files
+# 
+# ------------------------------------------------------------------------------
+sim_to_galaxies = $(subst .art,.txt,$(subst out/continuous,checks/galaxies, $(1)))
+galaxies_to_sim = $(subst .txt,.art,$(subst checks/galaxies,out/continuous, $(1)))
+galaxies_to_halo = $(subst .txt,.0.bin,$(subst checks/galaxies,halos/halos, $(1)))
+galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
+
+# ------------------------------------------------------------------------------
+#
 #  Nbody plots
 # 
 # ------------------------------------------------------------------------------
@@ -285,7 +296,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group) $(call movies_hydro,gas_density) $(call movies_hydro,gas_velocity_x) $(call movies_hydro,gas_velocity_y) $(call movies_hydro,gas_velocity_z)
-all: $(my_directories) $(timings) $(merger_sentinels) $(movies) $(debugs) $(smhm_plots)
+all: $(my_directories) $(timings) $(merger_sentinels) $(movies) $(debugs) $(galaxies) $(smhm_plots)
 
 .PHONY: clean
 clean:
@@ -324,8 +335,12 @@ $(halos_catalogs): %: $(rename_script) $$(call halo_to_sentinel,%)
 
 # Make the debug files
 .SECONDEXPANSION:
-$(debugs): %: $$(call debug_to_halo, %) $(debug_script)
+$(debugs): %: $(debug_script)
 	python $(debug_script) $(call debug_to_sim, $@) clobber silent
+
+.SECONDEXPANSION:
+$(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
+	python $(galaxies_script) $(call galaxies_to_sim, $@) $(call galaxies_to_halo, $@) clobber silent
 
 # Make the individual nbody plots - several examples of very similar things here
 .SECONDEXPANSION:
