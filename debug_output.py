@@ -282,9 +282,9 @@ for unit in ["code_mass", "Msun"]:
 # =========================================================================
 out("\nVelocities\n==========")
 # get the gas velocity
-vx_gas = ad[('gas', 'velocity_x')].to("km/s").value
-vy_gas = ad[('gas', 'velocity_y')].to("km/s").value
-vz_gas = ad[('gas', 'velocity_z')].to("km/s").value
+vx_gas = np.abs(ad[('gas', 'velocity_x')].to("km/s").value)
+vy_gas = np.abs(ad[('gas', 'velocity_y')].to("km/s").value)
+vz_gas = np.abs(ad[('gas', 'velocity_z')].to("km/s").value)
 # the velocity ART uses for the bulk gas velocith is the maximum of the x, y, 
 # and z components. The next function call does this for each cell.
 velocity_bulk_gas = np.amax([vx_gas, vy_gas, vz_gas], axis=0)
@@ -295,14 +295,14 @@ sound_speed_gas = np.sqrt(gamma * (gamma - 1.0) * ad[('artio', 'HVAR_INTERNAL_EN
 v_tot_gas = velocity_bulk_gas + sound_speed_gas
 
 # do this for stars and DM too
-vx_star = ad[('STAR', 'particle_velocity_x')].to("km/s").value
-vy_star = ad[('STAR', 'particle_velocity_y')].to("km/s").value
-vz_star = ad[('STAR', 'particle_velocity_z')].to("km/s").value
+vx_star = np.abs(ad[('STAR', 'particle_velocity_x')].to("km/s").value)
+vy_star = np.abs(ad[('STAR', 'particle_velocity_y')].to("km/s").value)
+vz_star = np.abs(ad[('STAR', 'particle_velocity_z')].to("km/s").value)
 velocity_star = np.amax([vx_star, vy_star, vz_star], axis=0)
 
-vx_dm = ad[('N-BODY', 'particle_velocity_x')].to("km/s").value
-vy_dm = ad[('N-BODY', 'particle_velocity_y')].to("km/s").value
-vz_dm = ad[('N-BODY', 'particle_velocity_z')].to("km/s").value
+vx_dm = np.abs(ad[('N-BODY', 'particle_velocity_x')].to("km/s").value)
+vy_dm = np.abs(ad[('N-BODY', 'particle_velocity_y')].to("km/s").value)
+vz_dm = np.abs(ad[('N-BODY', 'particle_velocity_z')].to("km/s").value)
 velocity_dm = np.amax([vx_dm, vy_dm, vz_dm], axis=0)
 
 # We'll need to restrict this to a few particles. We wnat to find the cell a 
