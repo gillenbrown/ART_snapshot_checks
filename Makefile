@@ -60,10 +60,11 @@ nbody_refined_plot_script = ./plot_refined_region_nbody.py
 nbody_local_group_plot_script = ./plot_local_group_nbody.py
 nbody_full_plot_script = ./utils/nbody_projection_all_species.py
 nbody_split_plot_script = ./utils/nbody_projection_split_species.py
-sfh_plots_script = ./plots_sfh.py
+sfh_plots_script = ./plot_sfh.py
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
 read_tree_src = $(read_tree_dir)/halo_history.c
+comparison_plots_dir = ./comparison_plots
 
 # ------------------------------------------------------------------------------
 #
@@ -74,7 +75,10 @@ ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs
 	sim_dirs_nbody = 
 	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_100 \
-	                 $(runs_home)/shangrila/old_ic_comparison/default_test/run
+	                 $(runs_home)/shangrila/old_ic_comparison/default_test/run 
+	                 #$(runs_home)/stampede2/ic_timing_tests/original_50_128 \
+	                 #$(runs_home)/stampede2/ic_timing_tests/trim_12_256 \
+	                 #$(runs_home)/stampede2/ic_timing_tests/trim_25_256 
 endif
 
 ifeq ($(machine),lou)
@@ -129,7 +133,7 @@ sim_rockstar_halos_dirs = $(foreach dir,$(sim_dirs),$(dir)/rockstar_halos)
 sim_human_halos_dirs = $(foreach dir,$(sim_dirs),$(dir)/halos)
 sim_checks_dirs = $(foreach dir,$(sim_dirs),$(dir)/checks)
 sim_plots_dirs = $(foreach dir,$(sim_dirs),$(dir)/plots)
-my_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos_dirs) $(sim_plots_dirs)
+my_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos_dirs) $(sim_plots_dirs) $(comparison_plots_dir)
 
 # ------------------------------------------------------------------------------
 #
@@ -188,6 +192,14 @@ sim_to_galaxies = $(subst .art,.txt,$(subst out/continuous,checks/galaxies, $(1)
 galaxies_to_sim = $(subst .txt,.art,$(subst checks/galaxies,out/continuous, $(1)))
 galaxies_to_halo = $(subst .txt,.0.bin,$(subst checks/galaxies,halos/halos, $(1)))
 galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
+
+# ------------------------------------------------------------------------------
+#
+#  SFH plots
+# 
+# ------------------------------------------------------------------------------
+sfh_plots = $(comparison_plots_dir)/mass_growth_comparison.png \
+            $(comparison_plots_dir)/sfh_comparison.png
 
 # ------------------------------------------------------------------------------
 #
@@ -259,16 +271,6 @@ merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_
 
 # ------------------------------------------------------------------------------
 #
-#  Plots - SFH
-# 
-# ------------------------------------------------------------------------------
-# Here the SMHM relation plot is used as the sentinel
-sim_to_smhm = $(subst .art,.png,$(subst out/continuous,plots/smhm, $(1)))
-smhm_to_sim = $(subst .png,.art,$(subst plots/smhm,out/continuous, $(1)))
-smhm_plots = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_smhm,$(snapshot)))
-
-# ------------------------------------------------------------------------------
-#
 #  timing output
 # 
 # ------------------------------------------------------------------------------
@@ -296,7 +298,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group) $(call movies_hydro,gas_density) $(call movies_hydro,gas_velocity_x) $(call movies_hydro,gas_velocity_y) $(call movies_hydro,gas_velocity_z)
-all: $(my_directories) $(timings) $(merger_sentinels) $(movies) $(debugs) $(galaxies) $(smhm_plots)
+all: $(my_directories) $(debugs) $(sfh_plots) $(movies) $(smhm_plots) $(timings) $(merger_sentinels)
 
 .PHONY: clean
 clean:
@@ -338,9 +340,15 @@ $(halos_catalogs): %: $(rename_script) $$(call halo_to_sentinel,%)
 $(debugs): %: $(debug_script)
 	python $(debug_script) $(call debug_to_sim, $@) clobber silent
 
+# Make the summary files
 .SECONDEXPANSION:
 $(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
 	python $(galaxies_script) $(call galaxies_to_sim, $@) $(call galaxies_to_halo, $@) clobber silent
+
+# Make the SFH plots. That & indicates a grouped target, telling make that the recipe
+# produces all the targets.
+$(sfh_plots) &: $(snapshots_hydro)
+	python $(sfh_plots_script) $(sim_dirs_hydro)
 
 # Make the individual nbody plots - several examples of very similar things here
 .SECONDEXPANSION:
