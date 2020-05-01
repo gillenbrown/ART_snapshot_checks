@@ -1,3 +1,4 @@
+# https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
 # My notation is that no paths end in a slash
 # ------------------------------------------------------------------------------
 #
@@ -210,10 +211,10 @@ sim_to_halo_1_full = $(subst .art,.png,$(subst out/continuous,plots/n_body_halo_
 sim_to_halo_2_full = $(subst .art,.png,$(subst out/continuous,plots/n_body_halo_rank_2, $(1)))
 sim_to_halo_1_split = $(subst .art,.png,$(subst out/continuous,plots/n_body_split_halo_rank_1, $(1)))
 sim_to_halo_2_split = $(subst .art,.png,$(subst out/continuous,plots/n_body_split_halo_rank_2, $(1)))
-sim_to_refined_full = $(subst .art,.png,$(subst out/continuous,plots/n_body_refined, $(1)))
-sim_to_refined_spilt = $(subst .art,.png,$(subst out/continuous,plots/n_body_split_refined, $(1)))
+sim_to_refined_full  = $(subst .art,.png,$(subst out/continuous,plots/n_body_refined, $(1)))
+sim_to_refined_split = $(subst .art,.png,$(subst out/continuous,plots/n_body_split_refined, $(1)))
 sim_to_local_group_full = $(subst .art,.png,$(subst out/continuous,plots/n_body_local_group, $(1)))
-sim_to_local_group_spilt = $(subst .art,.png,$(subst out/continuous,plots/n_body_split_local_group, $(1)))
+sim_to_local_group_split = $(subst .art,.png,$(subst out/continuous,plots/n_body_split_local_group, $(1)))
 
 halo_1_full_to_sim = $(subst .png,.art,$(subst plots/n_body_halo_rank_1,out/continuous, $(1)))
 halo_2_full_to_sim = $(subst .png,.art,$(subst plots/n_body_halo_rank_2,out/continuous, $(1)))
@@ -238,9 +239,9 @@ halo_2_full_plots = $(foreach snapshot,$(snapshots),$(call sim_to_halo_2_full,$(
 halo_1_split_plots = $(foreach snapshot,$(snapshots),$(call sim_to_halo_1_split,$(snapshot)))
 halo_2_split_plots = $(foreach snapshot,$(snapshots),$(call sim_to_halo_2_split,$(snapshot)))
 refined_full_plots = $(foreach snapshot,$(snapshots),$(call sim_to_refined_full,$(snapshot)))
-refined_split_plots = $(foreach snapshot,$(snapshots),$(call sim_to_refined_spilt,$(snapshot)))
+refined_split_plots = $(foreach snapshot,$(snapshots),$(call sim_to_refined_split,$(snapshot)))
 local_group_full_plots = $(foreach snapshot,$(snapshots),$(call sim_to_local_group_full,$(snapshot)))
-local_group_split_plots = $(foreach snapshot,$(snapshots),$(call sim_to_local_group_spilt,$(snapshot)))
+local_group_split_plots = $(foreach snapshot,$(snapshots),$(call sim_to_local_group_split,$(snapshot)))
 
 nbody_plots = $(halo_1_full_plots) $(halo_2_full_plots) $(halo_1_split_plots) $(halo_2_split_plots) $(refined_full_plots) $(refined_split_plots) $(local_group_full_plots) $(local_group_split_plots)
 
@@ -285,10 +286,14 @@ timing_to_dir = $(subst checks/timing_debug.txt,log,$(1))
 # ------------------------------------------------------------------------------
 movies_all = $(foreach dir,$(sim_dirs),$(dir)/plots/$(1).mp4)
 movies_hydro = $(foreach dir,$(sim_dirs_hydro),$(dir)/plots/$(1).mp4)
-# in this next function argument 1 is the short of the movie, 2 is the full 
-# location where it will be saved, and 3 is the function that turns a simulation
-# into a plot file (these are all defined above)
-movie_to_plot = $(call $(3),$(call dir_to_sims,$(subst plots/$(1).mp4,out,$(2))))
+
+# Here 1 is the full location of the movie
+movie_to_out_dir = $(subst plots/,out,$(dir $(1)))
+movie_to_sims = $(call dir_to_sims,$(call movie_to_out_dir,$(1)))
+# in this next function argument 1 is the full location where the movie will 
+# be saved, and 2 is the function that turns a simulation into a plot file 
+# (these are all defined above)
+movie_to_plots = $(foreach sim,$(call movie_to_sims,$(1)),$(call $(2),$(sim)))
 movie_to_metal_summary = $(call sim_to_summary_metal,$(call dir_to_sims,$(subst plots/$(1).mp4,out,$(2))))
 movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 
@@ -297,7 +302,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group) $(call movies_hydro,gas_density) $(call movies_hydro,gas_velocity_x) $(call movies_hydro,gas_velocity_y) $(call movies_hydro,gas_velocity_z)
+movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
 all: $(my_directories) $(debugs) $(sfh_plots) $(movies) $(smhm_plots) $(timings) $(merger_sentinels)
 
 .PHONY: clean
@@ -314,6 +319,10 @@ dirs: $(my_directories)
 
 $(my_directories):
 	mkdir $@
+
+# have phony target for movies
+.PHONY: movies
+movies: $(movies)
 
 # Rule to make the rockstar sentinel files
 # Phony target to allow us to make only the rockstar halos, for example on 
@@ -383,38 +392,23 @@ $(local_group_full_plots): %: $$(call local_group_full_to_halo, %) $(nbody_local
 $(local_group_split_plots): %: $$(call local_group_split_to_halo, %) $(nbody_local_group_plot_script) $(nbody_split_plot_script)
 	python $(nbody_local_group_plot_script) $(call local_group_split_to_sim, $@) $(call local_group_split_to_halo, $@) split
 
+
 # Make the movies. We can't parametrize this all since there is no third expansion 
 .SECONDEXPANSION:
-$(call movies_all,n_body_refined): %: $$(call movie_to_plot,n_body_refined,%,sim_to_refined_full)
+$(call movies_all,n_body_refined): %: $$(call movie_to_plots,%,sim_to_refined_full)
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_refined,$@)/n_body_refined*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
 SECONDEXPANSION:
-$(call movies_all,n_body_split_refined): %: $$(call movie_to_plot,n_body_refined_split,%,sim_to_refined_split)
+$(call movies_all,n_body_split_refined): %: $$(call movie_to_plots,%,sim_to_refined_split)
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_split_refined,$@)/n_body_split_refined*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
 .SECONDEXPANSION:
-$(call movies_all,n_body_local_group): %: $$(call movie_to_plot,n_body_local_group,%,sim_to_local_group_full)
+$(call movies_all,n_body_local_group): %: $$(call movie_to_plots,%,sim_to_local_group_full)
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_local_group,$@)/n_body_local_group*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
 SECONDEXPANSION:
-$(call movies_all,n_body_split_local_group): %: $$(call movie_to_plot,n_body_local_group_split,%,sim_to_refined_split)
+$(call movies_all,n_body_split_local_group): %: $$(call movie_to_plots,%,sim_to_refined_split)
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_split_local_group,$@)/n_body_split_local_group*.png' -c:v h264 -pix_fmt yuv420p -y $@
-
-.SECONDEXPANSION:
-$(call movies_hydro,gas_density): %: $$(call movie_to_metal_summary,gas_density,%)
-	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,gas_density,$@)/gas_density_*.png' -c:v h264 -pix_fmt yuv420p -y $@
-
-.SECONDEXPANSION:
-$(call movies_hydro,gas_velocity_x): %: $$(call movie_to_metal_summary,gas_velocity_x,%)
-	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,gas_velocity_x,$@)/gas_velocity_x_*.png' -c:v h264 -pix_fmt yuv420p -y $@
-
-SECONDEXPANSION:
-$(call movies_hydro,gas_velocity_y): %: $$(call movie_to_metal_summary,gas_velocity_y,%)
-	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,gas_velocity_y,$@)/gas_velocity_y_*.png' -c:v h264 -pix_fmt yuv420p -y $@
-
-SECONDEXPANSION:
-$(call movies_hydro,gas_velocity_z): %: $$(call movie_to_metal_summary,gas_velocity_z,%)
-	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,gas_velocity_z,$@)/gas_velocity_z_*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
 # Make the consistent trees config files
 .SECONDEXPANSION:
