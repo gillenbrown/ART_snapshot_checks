@@ -76,10 +76,11 @@ ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs
 	sim_dirs_nbody = 
 	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_100 \
-	                 $(runs_home)/shangrila/old_ic_comparison/default_test/run 
-	                 #$(runs_home)/stampede2/ic_timing_tests/original_50_128 \
-	                 #$(runs_home)/stampede2/ic_timing_tests/trim_12_256 \
-	                 #$(runs_home)/stampede2/ic_timing_tests/trim_25_256 
+	                 $(runs_home)/shangrila/old_ic_comparison/default_test/run \
+	                 $(runs_home)/stampede2/ic_timing_tests/original_50_128 \
+	                 $(runs_home)/stampede2/ic_timing_tests/trim_12_128 \
+	                 $(runs_home)/stampede2/ic_timing_tests/trim_12_256 \
+	                 $(runs_home)/stampede2/ic_timing_tests/trim_25_256 
 endif
 
 ifeq ($(machine),lou)
@@ -275,9 +276,16 @@ merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_
 #  timing output
 # 
 # ------------------------------------------------------------------------------
-timings = $(foreach dir,$(sim_dirs),$(dir)/checks/timing_debug.txt)
-timing_to_sims = $(call dir_to_sims,$(subst checks/timing_debug.txt,out,$(1)))
-timing_to_dir = $(subst checks/timing_debug.txt,log,$(1))
+# Here we either use just the log directory or all the subdirectories of log.
+# We go through each simulation directory, finds the equivalent log
+# directory, then goes through that. We initially get the directory part of each
+# item there. If the log directory has children, those will be stored, but if 
+# it does not, then the main log dir will be kept
+log_dirs = $(foreach dir,$(sim_dirs),$(foreach item,$(wildcard $(dir)/log/*/),$(dir $(item))))
+# sorting this removes any duplicates. Order doesn't matter to me anyway
+timing_dirs = $(sort $(log_dirs))
+# the output of $(dir ...) keeps the last slash, so don't include it here
+timings = $(foreach t_dir,$(timing_dirs),$(t_dir)timing_debug.txt)
 
 # ------------------------------------------------------------------------------
 #
@@ -356,7 +364,7 @@ $(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
 
 # Make the SFH plots. That & indicates a grouped target, telling make that the recipe
 # produces all the targets.
-$(sfh_plots) &: $(snapshots_hydro)
+$(sfh_plots) &: $(snapshots_hydro) $(halos_catalogs)
 	python $(sfh_plots_script) $(sim_dirs_hydro)
 
 # Make the individual nbody plots - several examples of very similar things here
@@ -407,7 +415,7 @@ $(call movies_all,n_body_local_group): %: $$(call movie_to_plots,%,sim_to_local_
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_local_group,$@)/n_body_local_group*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
 SECONDEXPANSION:
-$(call movies_all,n_body_split_local_group): %: $$(call movie_to_plots,%,sim_to_refined_split)
+$(call movies_all,n_body_split_local_group): %: $$(call movie_to_plots,%,sim_to_local_group_split)
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_split_local_group,$@)/n_body_split_local_group*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
 # Make the consistent trees config files
@@ -438,7 +446,10 @@ $(smhm_plots): %: $$(call smhm_to_sim,%) $(sfh_plots_script)
 .PHONY: timing
 timing: $(timings)
 
-.SECONDEXPANSION:
-$(timings): %: $$(call timing_to_sims, %)
-	$(timing_script) $(call timing_to_dir, $@) > $@ || echo "Timing failed"
+# Here I have all timing outputs dependent on all snapshots. This isn't right.
+# But it's really hard to get the actual directory, since the timing scripts
+# have many subdirectories with unknown names. This is techincaly wrong, but 
+# costs essentially no time, so I keep it. 
+$(timings): $(snapshots)
+	$(timing_script) $(dir $@) > $@ 
 
