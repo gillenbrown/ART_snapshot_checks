@@ -22,7 +22,7 @@ from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
 import numpy as np
 
 import betterplotlib as bpl
-bpl.presentation_style()
+bpl.set_style()
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 

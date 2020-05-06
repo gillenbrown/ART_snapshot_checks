@@ -18,12 +18,10 @@ import abundance_matching
 um = abundance_matching.UniverseMachine()
 
 import betterplotlib as bpl
-bpl.presentation_style()
+bpl.set_style()
 
 import yt
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
-
-n_galaxies_each = 1
 
 # I have to hardcode some labels to make this easier, parsing them won't work
 # nearly as well
@@ -52,6 +50,13 @@ for directory in sys.argv[1:]:
     halos_ds = yt.load(os.path.join(halos_dir, last_halo))
 
     all_ds[names[directory]] = ds
+
+    # if we are the old IC set, we have one galaxy, otherwise two
+    # check what kind of particles are present
+    if ('N-BODY_0', 'MASS') in ds.derived_field_list:
+        n_galaxies_each = 2
+    else:
+        n_galaxies_each = 1
 
     # create halo catalog object
     hc = HaloCatalog(halos_ds=halos_ds, data_ds=ds)
@@ -158,8 +163,12 @@ for idx, name in enumerate(all_halos):
         plot_times = times.to("Gyr").value
         plot_sfh = sfh_values.to("msun/yr").value
         dt = plot_times[1] - plot_times[0]
+        if halo.quantities["rank"] == 1:
+            label = name
+        else:
+            label = None
         ax.errorbar(plot_times, plot_sfh, xerr=0.5 * dt, markersize=8,
-                    c=c, label=name)
+                    c=c, label=label)
         ax.plot(plot_times, plot_sfh, lw=1.0, c=c)
 
         # figure out the max time to use for the plot limit

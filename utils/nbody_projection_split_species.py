@@ -7,7 +7,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.patheffects as PathEffects
 import betterplotlib as bpl
 
-bpl.presentation_style()
+bpl.set_style()
 
 cmap = cmocean.cm.deep_r
 # =========================================================================
@@ -150,4 +150,4 @@ def nbody_projection_split_species(ds, center, plot_width, axes_unit, savename):
     if extra_plot:
         axs[-1].set_axis_off()
 
-    fig.savefig(savename, dpi=400, bbox_inches='tight')
+    fig.savefig(savename, dpi=400)
