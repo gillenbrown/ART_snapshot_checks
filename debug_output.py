@@ -112,14 +112,14 @@ out("\nGrid Structure\n==============")
 out("box size: {:.3f}".format(box_size))
 out("base grid size: {:.3f}".format(base_grid_size))
 out("total cells: {:,}".format(total_cells))
-grid_out_str = "{:<5d}    {:>10,}    {:<8.3f}"
-grid_header_str = "{:<5}    {:>10}    {:<14}"
-out(grid_header_str.format("Level", "Num Cells", "Cell Size"))
+grid_out_str = "{:<5d}    {:>13,}    {:>12.3f}"
+grid_header_str = "{:<5}    {:>13}    {:>16}"
+out(grid_header_str.format("Level", "Num Cells", "Cell Size [pc]"))
 for level in grid_levels:
     level = int(level)
     num_cells = num_in_grid[level]
     cell_size = cell_sizes[level]
-    out(grid_out_str.format(level, num_cells, cell_size))
+    out(grid_out_str.format(level, num_cells, cell_size.to("pc").value))
 
 # =============================================================================
 #         
@@ -258,8 +258,8 @@ out("\nCell Masses\n===========")
 # the Lagrangian refinement is actually working correctly
 refine_top_header = "Percentiles of cell gas mass distribution, units of {}"
 percentiles = [0, 0.1, 1, 25, 50, 75, 99, 99.9, 100]
-refine_header_str = "{:<10s}" + "{:>10s}" + len(percentiles) * "{:>12.1f}"
-refine_row_str = "{:<10.0f}" + "{:>10,.0f}" + len(percentiles) * "{:>12.3E}"
+refine_header_str = "{:<10s}" + "{:>13s}" + len(percentiles) * "{:>12.1f}"
+refine_row_str = "{:<10.0f}" + "{:>13,.0f}" + len(percentiles) * "{:>12.3E}"
 
 for unit in ["code_mass", "Msun"]:
     # write header info
