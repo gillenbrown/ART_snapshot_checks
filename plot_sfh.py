@@ -19,6 +19,7 @@ um = abundance_matching.UniverseMachine()
 
 import betterplotlib as bpl
 bpl.set_style()
+bpl.color_cycle.append("0.5")
 
 import yt
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -29,8 +30,13 @@ def full_dir(partial_path):
     base_dir = "/u/home/gillenb/art_runs/runs/"
     return os.path.join(base_dir, partial_path)
 
-names = {full_dir("shangrila/old_ic_comparison/default_test/run"): "New SFE100",
-         full_dir("shangrila/hui/sfe_100"): "NBm SFE100"}
+names = {full_dir("shangrila/old_ic_comparison/test_default/run"): "ART 2.0 Not Final SFE100",
+         full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 Final SFE100",
+         full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
+         full_dir("stampede2/ic_timing_tests/original_50_128"): "T&L - Original",
+         full_dir("stampede2/ic_timing_tests/trim_12_128"): "T&L - 4x Trim 128",
+         full_dir("stampede2/ic_timing_tests/trim_12_256"): "T&L - 4x Trim 256",
+         full_dir("stampede2/ic_timing_tests/trim_25_256"): "T&L - 2x Trim 256"}
     
 # make dictionary to store the resulting datasets
 all_ds = dict()
@@ -244,13 +250,17 @@ for idx, name in enumerate(all_halos):
         plot_times = times.to("Gyr").value
         cumulative_mass = cumulative_mass.to("msun").value
         dt = plot_times[1] - plot_times[0]
-        ax.plot(plot_times, cumulative_mass, c=c, label=name)
+        if halo.quantities["rank"] == 1:
+            label = name
+        else:
+            label = None
+        ax.plot(plot_times, cumulative_mass, c=c, label=label)
 
         # figure out the max time to use for the plot limit
         if max(plot_times) > max_time:
             max_time = max(plot_times)
 
-ax.legend(loc=2)
+ax.legend()
 ax.set_yscale("log")
 ax.set_limits(0, 1.05*max_time, y_min=1E6)
 ax.add_labels("Time [Gyr]", "Stellar Mass  [$M_\odot$]")
