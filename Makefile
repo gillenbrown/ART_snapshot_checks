@@ -76,7 +76,8 @@ ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs
 	sim_dirs_nbody = 
 	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_100 \
-	                 $(runs_home)/shangrila/old_ic_comparison/default_test/run \
+	                 $(runs_home)/shangrila/old_ic_comparison/test_default/run \
+	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
 	                 $(runs_home)/stampede2/ic_timing_tests/original_50_128 \
 	                 $(runs_home)/stampede2/ic_timing_tests/trim_12_128 \
 	                 $(runs_home)/stampede2/ic_timing_tests/trim_12_256 \
