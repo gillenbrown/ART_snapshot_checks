@@ -62,6 +62,7 @@ nbody_local_group_plot_script = ./plot_local_group_nbody.py
 nbody_full_plot_script = ./utils/nbody_projection_all_species.py
 nbody_split_plot_script = ./utils/nbody_projection_split_species.py
 sfh_plots_script = ./plot_sfh.py
+dt_history_script = ./dt_history.py
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
 read_tree_src = $(read_tree_dir)/halo_history.c
@@ -274,7 +275,7 @@ merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_
 
 # ------------------------------------------------------------------------------
 #
-#  timing output
+#  timing output and dt history
 # 
 # ------------------------------------------------------------------------------
 # Here we either use just the log directory or all the subdirectories of log.
@@ -287,6 +288,7 @@ log_dirs = $(foreach dir,$(sim_dirs),$(foreach item,$(wildcard $(dir)/log/*/),$(
 timing_dirs = $(sort $(log_dirs))
 # the output of $(dir ...) keeps the last slash, so don't include it here
 timings = $(foreach t_dir,$(timing_dirs),$(t_dir)timing_debug.txt)
+dt_history_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)timestep_history.png)
 
 # ------------------------------------------------------------------------------
 #
@@ -312,7 +314,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(debugs) $(sfh_plots) $(movies) $(smhm_plots) $(timings) $(merger_sentinels)
+all: $(my_directories) $(debugs) $(sfh_plots) $(movies) $(smhm_plots) $(timings) $(dt_history_plots) $(merger_sentinels) 
 
 .PHONY: clean
 clean:
@@ -453,4 +455,7 @@ timing: $(timings)
 # costs essentially no time, so I keep it. 
 $(timings): $(snapshots)
 	$(timing_script) $(dir $@) > $@ 
+
+$(dt_history_plots): $(snapshots) $(dt_history_script)
+	python $(dt_history_script) $(dir $@)
 
