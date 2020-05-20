@@ -32,7 +32,11 @@ def full_dir(partial_path):
 
 names = {full_dir("shangrila/old_ic_comparison/test_default/run"): "ART 2.0 Not Final SFE100",
          full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 Final SFE100",
+         full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
+         full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
          full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
+         full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
+         full_dir("stampede2/production/sfe100"): "T&L SFE100",
          full_dir("stampede2/ic_timing_tests/original_50_128"): "T&L - Original",
          full_dir("stampede2/ic_timing_tests/trim_12_128"): "T&L - 4x Trim 128",
          full_dir("stampede2/ic_timing_tests/trim_12_256"): "T&L - 4x Trim 256",

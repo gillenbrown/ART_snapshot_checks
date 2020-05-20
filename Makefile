@@ -76,9 +76,13 @@ comparison_plots_dir = ./comparison_plots
 ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs
 	sim_dirs_nbody = 
-	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_100 \
+	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_10 \
+	                 $(runs_home)/shangrila/hui/sfe_50 \
+	                 $(runs_home)/shangrila/hui/sfe_100 \
+	                 $(runs_home)/shangrila/hui/sfe_200 \
+	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
 	                 $(runs_home)/shangrila/old_ic_comparison/test_default/run \
-	                 $(runs_home)/shangrila/old_ic_comparison/default/run 
+	                 $(runs_home)/stampede2/production/sfe100
 endif
 
 ifeq ($(machine),lou)
