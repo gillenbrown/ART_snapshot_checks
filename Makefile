@@ -62,6 +62,7 @@ nbody_local_group_plot_script = ./plot_local_group_nbody.py
 nbody_full_plot_script = ./utils/nbody_projection_all_species.py
 nbody_split_plot_script = ./utils/nbody_projection_split_species.py
 sfh_plots_script = ./plot_sfh.py
+cimf_plots_script = ./plot_cimf.py
 dt_history_script = ./dt_history.py
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
@@ -80,9 +81,8 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/shangrila/hui/sfe_50 \
 	                 $(runs_home)/shangrila/hui/sfe_100 \
 	                 $(runs_home)/shangrila/hui/sfe_200 \
-	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
-	                 $(runs_home)/shangrila/old_ic_comparison/test_default/run \
-	                 $(runs_home)/stampede2/production/sfe100
+	                 $(runs_home)/shangrila/old_ic_comparison/default/run 
+	                 # $(runs_home)/stampede2/production/sfe100
 endif
 
 ifeq ($(machine),lou)
@@ -199,11 +199,13 @@ galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
-#  SFH plots
+#  comparison plots that have all sims on one plot
 # 
 # ------------------------------------------------------------------------------
 sfh_plots = $(comparison_plots_dir)/mass_growth_comparison.png \
             $(comparison_plots_dir)/sfh_comparison.png
+cimf_plots = $(comparison_plots_dir)/cimf_common.png \
+             $(comparison_plots_dir)/cimf_last.png \
 
 # ------------------------------------------------------------------------------
 #
@@ -314,7 +316,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(debugs) $(sfh_plots) $(movies) $(smhm_plots) $(timings) $(dt_history_plots) $(merger_sentinels) 
+all: $(my_directories) $(debugs) $(sfh_plots) $(cimf_plots) $(movies) $(timings) $(dt_history_plots)
 
 .PHONY: clean
 clean:
@@ -365,10 +367,15 @@ $(debugs): %: $(debug_script)
 $(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
 	python $(galaxies_script) $(call galaxies_to_sim, $@) $(call galaxies_to_halo, $@) clobber silent
 
-# Make the SFH plots. That & indicates a grouped target, telling make that the recipe
-# produces all the targets.
-$(sfh_plots) &: $(snapshots_hydro) $(halos_catalogs)
+# Make the CIMF plots. We could use &: instead of : to indicate a grouped
+# target, but that required Make 4.3 or higher
+$(sfh_plots): $(snapshots_hydro) $(halos_catalogs)
 	python $(sfh_plots_script) $(sim_dirs_hydro)
+
+# Make the CIMF plots. We could use &: instead of : to indicate a grouped
+# target, but that required Make 4.3 or higher
+$(cimf_plots): $(snapshots_hydro) $(halos_catalogs)
+	python $(cimf_plots_script) $(sim_dirs_hydro)
 
 # Make the individual nbody plots - several examples of very similar things here
 .SECONDEXPANSION:
@@ -439,11 +446,6 @@ $(read_tree_exe): $(read_tree_src)
 .SECONDEXPANSION:
 $(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 	$(read_tree_exe) $(call merger_to_tree,$@) && touch $@
-
-# SFH plots
-.SECONDEXPANSION:
-$(smhm_plots): %: $$(call smhm_to_sim,%) $(sfh_plots_script)
-	python $(sfh_plots_script) $(call smhm_to_sim, $@) $(call sim_to_halo, $(call smhm_to_sim, $@))
 
 # timing output
 .PHONY: timing

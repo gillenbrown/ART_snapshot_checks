@@ -30,8 +30,7 @@ def full_dir(partial_path):
     base_dir = "/u/home/gillenb/art_runs/runs/"
     return os.path.join(base_dir, partial_path)
 
-names = {full_dir("shangrila/old_ic_comparison/test_default/run"): "ART 2.0 Not Final SFE100",
-         full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 Final SFE100",
+names = {full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 SFE100",
          full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
          full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
          full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
