@@ -99,9 +99,13 @@ common_ds = dict()
 last_ds = dict()
 common_halos = dict()
 last_halos = dict()
+# and one to ensure each has the same color
+colors = dict()
 
-for directory in sys.argv[1:]:
+for idx, directory in enumerate(sys.argv[1:]):
     directory = Path(directory)
+    colors[names[directory]] = bpl.color_cycle[idx]
+
     out_dir = directory / "out"
     
     all_snapshots = [file for file in out_dir.iterdir()
@@ -110,21 +114,23 @@ for directory in sys.argv[1:]:
                      and str(file.name).startswith("continuous_a")]
     # get the actual last snapshot
     last_snapshot = sorted(all_snapshots)[-1]
+
+    ds_last, halos_last = get_ds_and_halos(str(last_snapshot))
+    last_ds[names[directory]] = ds_last
+    last_halos[names[directory]] = halos_last
     
     # then the last one that's in common with the other simulations
     all_common_snapshots = [file for file in all_snapshots
                             if filename_to_scale_factor(file.name) <= common_scale]
-    last_common_snapshot = sorted(all_common_snapshots)[-1]
+    # if there are no snapshots early enough for this, don't add them
+    if len(all_common_snapshots) > 0:
+        last_common_snapshot = sorted(all_common_snapshots)[-1]
+
+        # then get the dataset and halo objects
+        ds_common, halos_common = get_ds_and_halos(str(last_common_snapshot))
+        common_ds[names[directory]] = ds_common
+        common_halos[names[directory]] = halos_common
     
-    # then get the dataset and halo objects
-    ds_last, halos_last = get_ds_and_halos(str(last_snapshot))
-    ds_common, halos_common = get_ds_and_halos(str(last_common_snapshot))
-    
-    # and store them
-    common_ds[names[directory]] = ds_common
-    last_ds[names[directory]] = ds_last
-    common_halos[names[directory]] = halos_common
-    last_halos[names[directory]] = halos_last
 
 # Then the functions to calculate the CIMF. Here we need to do some analysis
 # of the bound fraction. 
@@ -218,7 +224,7 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix):
     fig, ax = bpl.subplots(figsize=[9, 7])
 
     for idx, name in enumerate(halos_dict):
-        c = bpl.color_cycle[idx]
+        c = colors[name]
         for halo in halos_dict[name]:
             center = [halo.quantities["particle_position_x"],
                       halo.quantities["particle_position_y"],
