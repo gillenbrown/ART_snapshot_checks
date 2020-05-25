@@ -81,8 +81,8 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/shangrila/hui/sfe_50 \
 	                 $(runs_home)/shangrila/hui/sfe_100 \
 	                 $(runs_home)/shangrila/hui/sfe_200 \
-	                 $(runs_home)/shangrila/old_ic_comparison/default/run 
-	                 # $(runs_home)/stampede2/production/sfe100
+	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
+	                 $(runs_home)/stampede2/production/sfe100
 endif
 
 ifeq ($(machine),lou)
@@ -285,7 +285,7 @@ merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_
 # directory, then goes through that. We initially get the directory part of each
 # item there. If the log directory has children, those will be stored, but if 
 # it does not, then the main log dir will be kept
-log_dirs = $(foreach dir,$(sim_dirs),$(foreach item,$(wildcard $(dir)/log/*/),$(dir $(item))))
+log_dirs = $(foreach dir,$(sim_dirs),$(foreach item,$(wildcard $(dir)/log/*/log_),$(dir $(item))))
 # sorting this removes any duplicates. Order doesn't matter to me anyway
 timing_dirs = $(sort $(log_dirs))
 # the output of $(dir ...) keeps the last slash, so don't include it here
