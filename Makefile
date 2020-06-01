@@ -76,7 +76,7 @@ comparison_plots_dir = ./comparison_plots
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs
-	sim_dirs_nbody = 
+	sim_dirs_nbody = $(runs_home)/pleiades/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset
 	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_10 \
 	                 $(runs_home)/shangrila/hui/sfe_50 \
 	                 $(runs_home)/shangrila/hui/sfe_100 \
@@ -316,7 +316,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(debugs) $(sfh_plots) $(cimf_plots) $(movies) $(timings) $(dt_history_plots)
+all: $(my_directories) $(debugs) $(galaxies) $(sfh_plots) $(cimf_plots) $(movies) $(timings) $(dt_history_plots)
 
 .PHONY: clean
 clean:

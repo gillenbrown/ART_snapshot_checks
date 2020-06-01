@@ -164,6 +164,11 @@ for species in range(len(masses)):
 # 
 # =============================================================================
 # See some statistics about the metal properties of the gas at various levels
+# first check if we actually have hydro cells. If not we exit
+if ('gas', 'density') not in ds.derived_field_list:
+    out_file.close()
+    exit()
+
 out("\nElement Abundances\n==================")
 
 if ('artio', 'HVAR_METAL_DENSITY_Mg') in ds.field_list:

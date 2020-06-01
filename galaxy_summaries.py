@@ -214,14 +214,17 @@ for halo in halos[:n_halos]:
             out("\nDM mass and fraction of total from different "
                 "species within {}".format(name))
             mass_fractions(sphere)
+    else:
+        total_mass = sphere_virial[('N-BODY', 'MASS')].to("Msun").value.sum()
+        out("\nTotal DM particle mass within the virial radius = {:.3e} Msun".format(total_mass))
 
     # print the stellar mass 
     
     stellar_mass_30kpc = np.sum(sphere_30_kpc[('STAR', 'MASS')].to("Msun").value)
     stellar_mass_virial = np.sum(sphere_virial[('STAR', 'MASS')].to("Msun").value)
     out("")
-    out("Stellar Mass within 30 kpc: {:.2E} Msun".format(stellar_mass_30kpc))
-    out("Stellar Mass within the virial radius: {:.2E} Msun".format(stellar_mass_virial))
+    out("Stellar Mass within 30 kpc: {:.2e} Msun".format(stellar_mass_30kpc))
+    out("Stellar Mass within the virial radius: {:.2e} Msun".format(stellar_mass_virial))
         
 out("\n==================================\n")
         
