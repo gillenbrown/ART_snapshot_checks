@@ -89,4 +89,4 @@ for file in os.listdir(rockstar_dir):
         old_path = rockstar_dir + os.sep + file
         new_name = file.replace(old_prefix, new_prefix)
         new_path = halo_output_dir + os.sep + new_name
-        shutil.copy(old_path, new_path)
+        shutil.copy2(old_path, new_path)
