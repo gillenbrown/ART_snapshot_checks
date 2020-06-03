@@ -352,9 +352,8 @@ out("- This shows the highest velocity present in the following components \n"
     "- All velocities are in km/s, cell size in pc, dt in years.\n"
     "- The gas cell with the highest v_tot = bulk + c_s is selected, then the\n"
     "  bulk motion and sound speed for that cell are reported.\n"
-    "- dt is simply cell size divided by the maximum of velocity among \n"
-    "  Gas v_tot, DM, and Stars. The real timestep in ART has the extra \n"
-    "  of CFL_run, but it only considers the gas.\n"
+    "- dt is the equivalent to the timestep in ART, i.e. \n"
+    "  0.5 * cell_size / v_tot, where v_tot is defined above.\n"
     "- Only the fastest {} DM and star particles in the entire simulation box\n"
     "  are selected, so some levels may have no DM or stars listed.\n"
     "".format(n_vels))
@@ -373,6 +372,10 @@ for level, cell_size, n_cells in zip(grid_levels, cell_sizes, num_in_grid):
     vel_max_gas_bulk = velocity_bulk_gas[idx_gas][vel_max_gas_tot_idx]
     vel_max_gas_cs   = sound_speed_gas[idx_gas][vel_max_gas_tot_idx]
 
+    # the timestep ART chooses only depends on the gas
+    dt = 0.5 * cell_size / (vel_max_gas_tot * yt.units.km / yt.units.s)
+    dt = dt.to("yr").value
+
     # get the maximum velocity at this level, if we have particles here
     if len(idx_star[0]) > 0:  # we do have stars at this level
         vel_max_star = np.max(velocity_star[idx_star])
@@ -382,33 +385,21 @@ for level, cell_size, n_cells in zip(grid_levels, cell_sizes, num_in_grid):
     # then decide what to print
     if len(idx_star[0]) > 0:  # stars 
         if len(idx_dm[0]) > 0:  # stars and DM 
-            vel_max_all = max([vel_max_gas_tot, vel_max_dm, vel_max_star])
-            dt = cell_size / (vel_max_all * yt.units.km / yt.units.s)
-            dt = dt.to("yr").value
-
             out_str = row_str.format(level, n_cells, vel_max_dm, vel_max_gas_bulk, 
                                      vel_max_gas_cs, vel_max_gas_tot, 
                                      vel_max_star, cell_size.to("pc").value, dt)
         else:  # stars, no DM
-            vel_max_all = max([vel_max_gas_tot, vel_max_star])
-            dt = cell_size / (vel_max_all * yt.units.km / yt.units.s)
-            dt = dt.to("yr").value
             out_str = row_str_no_dm.format(level, n_cells, vel_max_gas_bulk, 
                                            vel_max_gas_cs, vel_max_gas_tot, 
                                            vel_max_star, 
                                            cell_size.to("pc").value, dt)
     else:  # no stars
         if len(idx_dm[0]) > 0:  # no stars, but DM 
-            vel_max_all = max([vel_max_gas_tot, vel_max_dm])
-            dt = cell_size / (vel_max_all * yt.units.km / yt.units.s)
-            dt = dt.to("yr").value
             out_str = row_str_no_star.format(level, n_cells, vel_max_dm, 
                                              vel_max_gas_bulk, vel_max_gas_cs, 
                                              vel_max_gas_tot, 
                                              cell_size.to("pc").value, dt)
         else:  # no stars, no dm
-            dt = cell_size / (vel_max_gas_tot * yt.units.km / yt.units.s)
-            dt = dt.to("yr").value
             out_str = row_str_no_both.format(level, n_cells, vel_max_gas_bulk, 
                                              vel_max_gas_cs, vel_max_gas_tot, 
                                              cell_size.to("pc").value, dt)
