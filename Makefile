@@ -195,7 +195,7 @@ debugs = $(foreach snapshot,$(snapshots),$(call sim_to_debug,$(snapshot)))
 sim_to_galaxies = $(subst .art,.txt,$(subst out/continuous,checks/galaxies, $(1)))
 galaxies_to_sim = $(subst .txt,.art,$(subst checks/galaxies,out/continuous, $(1)))
 galaxies_to_halo = $(subst .txt,.0.bin,$(subst checks/galaxies,halos/halos, $(1)))
-galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
+galaxies = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_galaxies,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
@@ -354,7 +354,7 @@ $(rockstar_sentinels): %: $$(call sentinel_to_sims, %)
 
 # Rule to rename the halo catalogs into something more user-friendly
 .SECONDEXPANSION:
-$(halos_catalogs): %: $(rename_script) $$(call halo_to_sentinel,%)
+$(halos_catalogs): %: | $(rename_script) $$(call halo_to_sentinel,%)
 	python $(rename_script) $@
 
 # Make the debug files
