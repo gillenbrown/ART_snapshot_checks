@@ -280,18 +280,19 @@ merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_
 #  timing output and dt history
 # 
 # ------------------------------------------------------------------------------
-# Here we either use just the log directory or all the subdirectories of log.
-# We go through each simulation directory, finds the equivalent log
-# directory, then goes through that. We initially get the directory part of each
-# item there. If the log directory has children, those will be stored, but if 
-# it does not, then the main log dir will be kept
-log_dirs = $(foreach dir,$(sim_dirs),$(foreach item,$(wildcard $(dir)/log/*/log_),$(dir $(item))))
+# Here we assume all log files are located as follows. Each `log` directory
+# has several subdirectories holding the logs for each run, starting with
+# `log_`. Any other directories will be ignored. We have to do this weird
+# thing we we get all items in each directory, then get the parent of each of
+# those, to ensure that what we got is really a directory. 
+log_dirs = $(foreach dir,$(sim_dirs),$(foreach item,$(wildcard $(dir)/log/log_*/*),$(dir $(item))))
 # sorting this removes any duplicates. Order doesn't matter to me anyway
 timing_dirs = $(sort $(log_dirs))
 # the output of $(dir ...) keeps the last slash, so don't include it here
 timings = $(foreach t_dir,$(timing_dirs),$(t_dir)timing_debug.txt)
 dt_history_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)timestep_history.png)
 
+$(info $(timings))
 # ------------------------------------------------------------------------------
 #
 #  Movies
@@ -316,7 +317,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(debugs) $(galaxies) $(sfh_plots) $(cimf_plots) $(movies) $(timings) $(dt_history_plots)
+all: $(my_directories) $(timings) $(dt_history_plots) $(debugs) $(galaxies) $(sfh_plots) $(cimf_plots) $(movies)
 
 .PHONY: clean
 clean:
