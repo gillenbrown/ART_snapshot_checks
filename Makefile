@@ -292,7 +292,6 @@ timing_dirs = $(sort $(log_dirs))
 timings = $(foreach t_dir,$(timing_dirs),$(t_dir)timing_debug.txt)
 dt_history_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)timestep_history.png)
 
-$(info $(timings))
 # ------------------------------------------------------------------------------
 #
 #  Movies
