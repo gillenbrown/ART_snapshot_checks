@@ -291,7 +291,7 @@ norm = colors.BoundaryNorm(boundaries, cmap.N*0.98)
 mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
 mappable.set_array([])
 
-fig, ax = bpl.subplots(figsize=[2 + len(timestep_successes) / 8, 7])
+fig, ax = bpl.subplots(figsize=[4 + len(timestep_successes) / 8, 7])
 ax.make_ax_dark()
 
 for level in range(get_max_level(level_dts)+1):
