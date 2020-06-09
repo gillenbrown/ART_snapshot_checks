@@ -246,9 +246,14 @@ def _plot_base(ax, xs, ys, successes, color):
     x_bad = [xs[idx] for idx in bad_idx]
     y_bad = [ys[idx] for idx in bad_idx]
     
-    # good points are filled circles, bad ones filled with white
-    ax.scatter(x_good, y_good, s=20, edgecolors=[color], c=[color], lw=1, zorder=2)
-    ax.scatter(x_bad,  y_bad,  s=20, edgecolors=[color], c="w",     lw=1, zorder=2)
+    # good points are filled circles, bad ones filled with white.
+    # Make a list of colors (that are all the same) so scatter doesn't get
+    # confused by the rgb tuples
+    colors_good = [color for _ in x_good]
+    colors_bad = [color for _ in x_bad]
+    common = {"s":20, "lw":1, "zorder":2}
+    ax.scatter(x_good, y_good, edgecolors=colors_good, c=colors_good, **common)
+    ax.scatter(x_bad,  y_bad,  edgecolors=colors_bad,  c="w", **common)
 
 def plot_level(ax, timestep_successes, dts, color):
     # what we do here is go through the values and break it into a list
