@@ -169,7 +169,10 @@ def mass_fractions(sphere):
     for m, n_m in zip(unique_masses, num_particles):
         this_m_tot = (m * n_m).to("Msun")  # total mass in this species of particle
         frac = (this_m_tot / total_mass).value
-        s = mass_to_species["{:.0f}".format(m.to("Msun"))]
+        # then get the species. We take advantage of the fact the the unique masses
+        # are sorted, with the smallest mass (last species) first.
+        s = len(unique_masses) - np.where(unique_masses == m)[0][0] - 1
+
         out("{:<7} {:>10,} {:>10.2e} {:>14.2f}%".format(s, n_m, this_m_tot, frac*100))
 
 # =========================================================================
