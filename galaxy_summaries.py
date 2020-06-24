@@ -109,7 +109,8 @@ ordered_quantities = ["particle_mass", "virial_radius", "particle_position_x",
 # for early outputs where nothing has collapsed yet.
 halo_masses = yt.YTArray([item["particle_mass"] for item in hc.catalog])
 if len(halo_masses) == 0:
-    out("No halos at this redshift")
+    out("No DM halos above 10^9 Msun at this redshift.")
+    out_file.close()
     exit()
 
 # We get the indices that sort it. The reversing there makes the biggest halos
