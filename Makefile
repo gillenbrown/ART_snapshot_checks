@@ -61,6 +61,7 @@ nbody_refined_plot_script = ./plot_refined_region_nbody.py
 nbody_local_group_plot_script = ./plot_local_group_nbody.py
 nbody_full_plot_script = ./utils/nbody_projection_all_species.py
 nbody_split_plot_script = ./utils/nbody_projection_split_species.py
+halo_growth_comp_script = ./halo_growth_comparison.py
 sfh_plots_script = ./plot_sfh.py
 cimf_plots_script = ./plot_cimf.py
 dt_history_script = ./dt_history.py
@@ -205,7 +206,8 @@ galaxies = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_galaxies,$(snapsh
 sfh_plots = $(comparison_plots_dir)/mass_growth_comparison.png \
             $(comparison_plots_dir)/sfh_comparison.png
 cimf_plots = $(comparison_plots_dir)/cimf_common.png \
-             $(comparison_plots_dir)/cimf_last.png \
+             $(comparison_plots_dir)/cimf_last.png 
+halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
 
 # ------------------------------------------------------------------------------
 #
@@ -316,7 +318,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(debugs) $(galaxies) $(sfh_plots) $(cimf_plots) $(movies)
+all: $(my_directories) $(timings) $(dt_history_plots) $(debugs) $(galaxies) $(sfh_plots) $(cimf_plots) $(halo_growth_plot) $(movies)
 
 .PHONY: clean
 clean:
@@ -446,6 +448,10 @@ $(read_tree_exe): $(read_tree_src)
 .SECONDEXPANSION:
 $(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 	$(read_tree_exe) $(call merger_to_tree,$@) && touch $@
+
+# Then use those to make the halo comparison plot
+$(halo_growth_plot): $(merger_sentinels) $(halo_growth_comp_script)
+	python  $(halo_growth_comp_script)
 
 # timing output
 .PHONY: timing
