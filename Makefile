@@ -70,7 +70,7 @@ endif
 ifeq ($(machine),stampede2)
 	tree_config_script = $(HOME)/code/rockstar-galaxies/scripts/gen_merger_cfg.pl
 	tree_dir = $(HOME)/code/consistent-trees
-	halo_finding_script = ./run_rockstar.sh
+	halo_finding_script = ./run_rockstar_stampede2.sh
 	timing_script = $(HOME)/code/art_cluster/utils/scripts/parse_timing2.pl
 endif
 
