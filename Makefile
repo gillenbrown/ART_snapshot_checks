@@ -233,14 +233,20 @@ galaxies = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_galaxies,$(snapsh
 
 # ------------------------------------------------------------------------------
 #
-#  comparison plots that have all sims on one plot
+#  comparison plots that have all sims on one plot. Only on shangrila!
 # 
 # ------------------------------------------------------------------------------
-sfh_plots = $(comparison_plots_dir)/mass_growth_comparison.png \
-            $(comparison_plots_dir)/sfh_comparison.png
-cimf_plots = $(comparison_plots_dir)/cimf_common.png \
-             $(comparison_plots_dir)/cimf_last.png 
-halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
+ifeq ($(machine),shangrila)
+	sfh_plots = $(comparison_plots_dir)/mass_growth_comparison.png \
+				$(comparison_plots_dir)/sfh_comparison.png
+	cimf_plots = $(comparison_plots_dir)/cimf_common.png \
+				 $(comparison_plots_dir)/cimf_last.png
+	halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
+else
+	sfh_plots =
+	cimf_plots =
+	halo_growth_plot =
+endif
 
 # ------------------------------------------------------------------------------
 #
