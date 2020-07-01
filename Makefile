@@ -136,7 +136,7 @@ ifeq ($(machine),great_lakes)
 endif
 
 ifeq ($(machine),stampede2)
-	scratch = $(shell echo SCRATCH)
+	scratch = $(shell echo $SCRATCH)
 	runs_home = $(scratch)/art_runs/runs
 	sim_dirs_nbody =
 	sim_dirs_hydro = $(runs_home)/production/sfe_100/run/
