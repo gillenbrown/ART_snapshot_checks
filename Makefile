@@ -22,6 +22,9 @@ endif
 ifneq (,$(findstring gl-login,$(hostname)))
 	machine = great_lakes
 endif
+ifneq (,$(findstring stampede2,$(hostname)))
+	machine = stampede2
+endif
 
 # ------------------------------------------------------------------------------
 #
@@ -45,6 +48,13 @@ ifeq ($(machine),great_lakes)
 	tree_dir = /home/gillenb/code/consistent-trees
 	halo_finding_script = ./run_rockstar_gl.sh
 	timing_script = /home/gillenb/code/art_cluster/utils/scripts/parse_timing2.pl
+endif
+ifeq ($(machine),stampede2)
+	home_dir = $(shell echo $HOME)
+	tree_config_script = $(home_dir)/code/rockstar-galaxies/scripts/gen_merger_cfg.pl
+	tree_dir = $(home_dir)/code/consistent-trees
+	halo_finding_script = ./run_rockstar.sh
+	timing_script = $(home_dir)/code/art_cluster/utils/scripts/parse_timing2.pl
 endif
 
 # ------------------------------------------------------------------------------
@@ -123,6 +133,13 @@ ifeq ($(machine),great_lakes)
 	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/4_cores \
 	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/6_cores \
 	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/8_cores 
+endif
+
+ifeq ($(machine),stampede2)
+	scratch = $(shell echo SCRATCH)
+	runs_home = $(scratch)/art_runs/runs
+	sim_dirs_nbody =
+	sim_dirs_hydro = $(runs_home)/production/sfe_100/run/
 endif
 
 # combine the N-Body and Hydro into one big list
