@@ -50,11 +50,10 @@ ifeq ($(machine),great_lakes)
 	timing_script = /home/gillenb/code/art_cluster/utils/scripts/parse_timing2.pl
 endif
 ifeq ($(machine),stampede2)
-	home_dir = $(shell echo $HOME)
-	tree_config_script = $(home_dir)/code/rockstar-galaxies/scripts/gen_merger_cfg.pl
-	tree_dir = $(home_dir)/code/consistent-trees
+	tree_config_script = $(HOME)/code/rockstar-galaxies/scripts/gen_merger_cfg.pl
+	tree_dir = $(HOME)/code/consistent-trees
 	halo_finding_script = ./run_rockstar.sh
-	timing_script = $(home_dir)/code/art_cluster/utils/scripts/parse_timing2.pl
+	timing_script = $(HOME)/code/art_cluster/utils/scripts/parse_timing2.pl
 endif
 
 # ------------------------------------------------------------------------------
@@ -136,8 +135,7 @@ ifeq ($(machine),great_lakes)
 endif
 
 ifeq ($(machine),stampede2)
-	scratch = $(shell echo $SCRATCH)
-	runs_home = $(scratch)/art_runs/runs
+	runs_home = $(SCRATCH)/art_runs/runs
 	sim_dirs_nbody =
 	sim_dirs_hydro = $(runs_home)/production/sfe_100/run/
 endif
