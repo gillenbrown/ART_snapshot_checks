@@ -4,7 +4,7 @@ import sys
 import numpy as np
 from matplotlib import colors
 from matplotlib import cm
-import cmocean
+import colorcet as cc
 
 import betterplotlib as bpl
 bpl.set_style()
@@ -233,10 +233,10 @@ def get_max_level(level_dts):
         if max(level_dts[level]) > 0:
             return level
 
-cmap = cmocean.cm.thermal
+cmap = cc.m_CET_R1
 # make boundaries for colormap. They will be centered on the levels in the simulation.
 boundaries = [-0.5 + level for level in range(get_max_level(level_dts)+2)]
-norm = colors.BoundaryNorm(boundaries, cmap.N*0.97)
+norm = colors.BoundaryNorm(boundaries, cmap.N)
 mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
 mappable.set_array([])
 
