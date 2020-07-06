@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 
+import numpy as np
 from matplotlib import colors
 from matplotlib import cm
 import cmocean
@@ -52,7 +53,7 @@ def is_end_of_level_timesteps(line):
 
 def is_timestep_success_line(line):
     return line.startswith("done with timestep") or \
-           line == "Error: could not complete timestep, restarting from previous timestep" or \
+           line.startswith("Must reduce timestep[") or \
            line.startswith("level=0 vFac(aexpv)/vFac(aexp0)")
            # This last one is only used for the intial condition
 
@@ -81,11 +82,14 @@ def get_timestep_that_succeeded(line):
     if not is_timestep_success_line(line):
         raise ValueError("This is not a timestep success line!")
     
-    # CFL violations will give -1
+    # The first item returned will be the success or failure. If there was a success, it
+    # will be the timestep number. If not, it will be the level of the CFL violation.
     if line.startswith("done with timestep"):
-        return int(line.split()[3])
+        return True, int(line.split()[3])
     else:
-        return -1
+        idx_start = line.find("[") + 1  # add 1 to get to the number in brackets
+        idx_end = line.find("]")
+        return False, int(line[idx_start:idx_end])
 
 # ======================================================================
 # 
@@ -95,7 +99,9 @@ def get_timestep_that_succeeded(line):
 
 # We'll keep track of the following things:
 timestep_numbers = []  # the actual number
-timestep_successes = []  # whether the timestep succeeded or had CFL error
+# the level on which CFL violations happened in a given level. Will be -99 if there was
+# no CFL violation in that timestep
+cfl_violations_level = []
 level_dts = {l:[] for l in range(20)}
 
 # first we need to know where we're starting
@@ -108,6 +114,7 @@ stdout = open(log_file, "r")
 looking_for_global_timestep = True
 looking_for_level_dt = False
 looking_for_timestep_success = False
+looking_for_cfl_level = False
 # We start by looking for the dts used for the first timestep
 for line in stdout:
     # get rid of spaces
@@ -173,17 +180,16 @@ for line in stdout:
     if looking_for_timestep_success:
         if is_timestep_success_line(line):
             # figure out what to do with the counters
-            new_timestep = get_timestep_that_succeeded(line)
-            if new_timestep < 0:
-                # CFL violation
-                timestep_successes.append(False)
-            else:
+            success, value = get_timestep_that_succeeded(line)
+            if success:
                 # check that this matches what we think the current timestep is
-                if not timestep_number == new_timestep:
+                if not timestep_number == value:
                     raise ValueError(f"Something is wrong with the timestep numbers at {new_timestep}!")
                 # otherwise just increment it
                 timestep_number += 1
-                timestep_successes.append(True)
+                cfl_violations_level.append(-99)
+            else:  # CFL violation
+                cfl_violations_level.append(value)
         
             # reset state variables
             looking_for_timestep_success = False
@@ -203,16 +209,16 @@ for line in stdout:
 # close the file
 stdout.close()
 
-# there may be one extra dt available compared to the timestep success if 
+# there may be one extra dt available compared to the CFL levels if
 # the run died in the middle of a timestep (as it usually does). Check that
-if len(timestep_numbers) == len(timestep_successes) + 1:
+if len(timestep_numbers) == len(cfl_violations_level) + 1:
     # throw away the last timestep
     timestep_numbers = timestep_numbers[:-1]
     for level in level_dts:
         level_dts[level] = level_dts[level][:-1]
     
 # then they should all be equal
-assert len(timestep_numbers) == len(timestep_successes)
+assert len(timestep_numbers) == len(cfl_violations_level)
 for level in level_dts:
     assert len(level_dts[level]) == len(timestep_numbers)
 
@@ -227,39 +233,61 @@ def get_max_level(level_dts):
         if max(level_dts[level]) > 0:
             return level
 
-def _plot_base(ax, xs, ys, successes, color):
+cmap = cmocean.cm.thermal
+# make boundaries for colormap. They will be centered on the levels in the simulation.
+boundaries = [-0.5 + level for level in range(get_max_level(level_dts)+2)]
+norm = colors.BoundaryNorm(boundaries, cmap.N*0.97)
+mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
+mappable.set_array([])
+
+def _plot_base(ax, xs, ys, cfl_violation_level, level):
     """
     Underlying function to plot the timesteps as points, with lines connecting
     them. Points are filled if the timestep was successful, open if not.
     """
+    color = mappable.to_rgba(level)
+
     ax.plot(xs, ys, lw=1, c=color, zorder=1)
     
     # then plot the successes and failures as points separately
-    good_idx = [idx for idx in range(len(successes)) 
-                if successes[idx] is True]
-    bad_idx =  [idx for idx in range(len(successes)) 
-                if successes[idx] is False]
+    good_idx = [idx for idx in range(len(cfl_violation_level))
+                if cfl_violation_level[idx] == -99]
+    bad_idx =  [idx for idx in range(len(cfl_violation_level))
+                if cfl_violation_level[idx] >= 0 and cfl_violation_level[idx] != level]
+    cfl_idx =  [idx for idx in range(len(cfl_violation_level))
+                if cfl_violation_level[idx] == level]
     
     x_good = [xs[idx] for idx in good_idx]
     y_good = [ys[idx] for idx in good_idx]
     
     x_bad = [xs[idx] for idx in bad_idx]
     y_bad = [ys[idx] for idx in bad_idx]
+
+    x_cfl = [xs[idx] for idx in cfl_idx]
+    y_cfl = [ys[idx] for idx in cfl_idx]
     
     # good points are filled circles, bad ones filled with white.
     # Make a list of colors (that are all the same) so scatter doesn't get
     # confused by the rgb tuples
     colors_good = [color for _ in x_good]
     colors_bad = [color for _ in x_bad]
-    common = {"s":20, "lw":1, "zorder":2}
-    ax.scatter(x_good, y_good, edgecolors=colors_good, c=colors_good, **common)
-    ax.scatter(x_bad,  y_bad,  edgecolors=colors_bad,  c="w", **common)
+    colors_cfl = [color for _ in x_cfl]
 
-def plot_level(ax, timestep_successes, dts, color):
-    # what we do here is go through the values and break it into a list
-    # of nonzero values, to be plotted separately, without connection
+    common_circle = {"s":20, "lw":1, "zorder":2, "alpha":1.0}
+    # the CFL indicators should go behind the bad markers
+    common_x = {"lw":1, "zorder": 1, "alpha":1.0}
+    size_cfl = 130  # leave this separate since the X needs to be smaller than +
+    ax.scatter(x_good, y_good, edgecolors=colors_good, c=colors_good, **common_circle)
+    ax.scatter(x_bad,  y_bad,  edgecolors=colors_bad,  c=bpl.light_grey, **common_circle)
+    ax.scatter(x_cfl,  y_cfl,  edgecolors=colors_bad,  c="w", **common_circle)
+    ax.scatter(x_cfl,  y_cfl,  c=colors_cfl, marker="+", s=size_cfl, **common_x)
+    ax.scatter(x_cfl, y_cfl,   c=colors_cfl, marker="x", s=size_cfl*0.5, **common_x)
+
+def plot_level(ax, cfl_violation_level, dts, level):
+    # what we do here is go through the dts and break it into contiguous segments
+    # where that level existed
     
-    xs = list(range(len(timestep_successes)))
+    xs = list(range(len(dts)))
     
     # check that they're the same length
     assert len(xs) == len(dts)
@@ -269,54 +297,47 @@ def plot_level(ax, timestep_successes, dts, color):
     # we'll plot it and reset
     contiguous_xs = []
     contiguous_ys = []
-    contiguous_successes = []
+    contiguous_cfl_level = []
     
     for idx in range(len(xs)):
         y = dts[idx]
         if y > 0:
             contiguous_xs.append(xs[idx])
             contiguous_ys.append(y)
-            contiguous_successes.append(timestep_successes[idx])
+            contiguous_cfl_level.append(cfl_violation_level[idx])
             
         else:
             if len(contiguous_xs) > 0:
-                _plot_base(ax, contiguous_xs, contiguous_ys, contiguous_successes, color=color)
+                _plot_base(ax, contiguous_xs, contiguous_ys, contiguous_cfl_level, level)
                 contiguous_xs = []
                 contiguous_ys = []
-                contiguous_successes = []
+                contiguous_cfl_level = []
             
     # if we've reached the end, we may need to plot too
     if len(contiguous_xs) > 0:
-        _plot_base(ax, contiguous_xs, contiguous_ys, contiguous_successes, color=color) 
+        _plot_base(ax, contiguous_xs, contiguous_ys, contiguous_cfl_level, level)
 
-cmap = cmocean.cm.thermal
-# make boundaries for colormap. They will be centered on the levels in the simulation.
-boundaries = [-0.5 + level for level in range(get_max_level(level_dts)+2)]
-norm = colors.BoundaryNorm(boundaries, cmap.N*0.98)
-mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
-mappable.set_array([])
-
-fig, ax = bpl.subplots(figsize=[4 + len(timestep_successes) / 8, 7])
+fig, ax = bpl.subplots(figsize=[4 + len(timestep_numbers) / 8, 7])
 ax.make_ax_dark()
 
 for level in range(get_max_level(level_dts)+1):
-    plot_level(ax, timestep_successes, level_dts[level], mappable.to_rgba(level))
+    plot_level(ax, cfl_violations_level, level_dts[level], level)
 
 ax.set_yscale("log")
 
 # label every 5 timesteps
 x_labels = [x for x in timestep_numbers
             if x % 5 == 0]
-plot_xs = list(range(len(timestep_successes)))
+plot_xs = list(range(len(timestep_numbers)))
 for label in x_labels:
     # find the right x_value to place this at
-    for idx in range(len(timestep_successes)):
-        if timestep_numbers[idx] == label and timestep_successes[idx]:
+    for idx in range(len(timestep_numbers)):
+        if timestep_numbers[idx] == label and cfl_violations_level[idx] == -99:
             x = plot_xs[idx]
             y = level_dts[0][idx]
             
             ax.add_text(x, y*1.2, label, va="bottom", ha="center", fontsize=12)
-            ax.plot([x, x], [y, y*1.2], c=bpl.almost_black, lw=1, zorder=0)
+            ax.plot([x, x], [y, y*1.2], c=mappable.to_rgba(0), lw=1, zorder=1)
             
 # Then add the colorbar
 cbar = fig.colorbar(mappable, ax=ax, ticks=list(level_dts.keys()))
