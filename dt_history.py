@@ -86,6 +86,8 @@ def get_timestep_that_succeeded(line):
     # will be the timestep number. If not, it will be the level of the CFL violation.
     if line.startswith("done with timestep"):
         return True, int(line.split()[3])
+    elif line.startswith("level=0 vFac(aexpv)/vFac(aexp0)"):
+        return True, 0
     else:
         idx_start = line.find("[") + 1  # add 1 to get to the number in brackets
         idx_end = line.find("]")
@@ -187,7 +189,9 @@ for line in stdout:
                     raise ValueError(f"Something is wrong with the timestep numbers at {new_timestep}!")
                 # otherwise just increment it
                 timestep_number += 1
-                cfl_violations_level.append(-99)
+                # don't save the IC, since there's no timestep there
+                if value >= 0:
+                    cfl_violations_level.append(-99)
             else:  # CFL violation
                 cfl_violations_level.append(value)
         
