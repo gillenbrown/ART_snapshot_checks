@@ -184,13 +184,13 @@ for line in stdout:
             # figure out what to do with the counters
             success, value = get_timestep_that_succeeded(line)
             if success:
-                # check that this matches what we think the current timestep is
-                if not timestep_number == value:
-                    raise ValueError(f"Something is wrong with the timestep numbers at {new_timestep}!")
-                # otherwise just increment it
-                timestep_number += 1
-                # don't save the IC, since there's no timestep there
-                if value >= 0:
+                # the IC is defined as a success, but we don't do anything with it.
+                if value != 0:
+                    # check that this matches what we think the current timestep is
+                    if not timestep_number == value:
+                        raise ValueError(f"Something is wrong with the timestep numbers at {value}!")
+                    # otherwise just increment it
+                    timestep_number += 1
                     cfl_violations_level.append(-99)
             else:  # CFL violation
                 cfl_violations_level.append(value)
