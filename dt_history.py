@@ -246,9 +246,9 @@ for line in stdout:
                     cfl_violation_levels.append(None)
                     cfl_violation_reasons.append("")
 
-                    # reset state variables
-                    looking_for_timestep_success = False
-                    looking_for_global_timestep = True
+                # reset state variables
+                looking_for_timestep_success = False
+                looking_for_global_timestep = True
             else:  # CFL violation
                 # set up CFL info
                 this_violation = dict()
