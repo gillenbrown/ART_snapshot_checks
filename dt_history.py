@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 
 import numpy as np
+from astropy import units as u
 from matplotlib import colors
 from matplotlib import cm
 import colorcet as cc
@@ -53,9 +54,12 @@ def is_end_of_level_timesteps(line):
 
 def is_timestep_success_line(line):
     return line.startswith("done with timestep") or \
-           line.startswith("Must reduce timestep[") or \
+           "CFL" in line or \
            line.startswith("level=0 vFac(aexpv)/vFac(aexp0)")
            # This last one is only used for the intial condition
+
+def is_end_of_cfl_violation_info(line):
+    return "---------------------------------------------------------" in line
 
 def get_global_timestep(line):
     # Returns a value in years, rather than Myr as is in the file
@@ -78,20 +82,62 @@ def get_level_timestep(line):
     
     return level, dt
 
-def get_timestep_that_succeeded(line):
+def did_timestep_succeed(line):
     if not is_timestep_success_line(line):
         raise ValueError("This is not a timestep success line!")
     
     # The first item returned will be the success or failure. If there was a success, it
     # will be the timestep number. If not, it will be the level of the CFL violation.
     if line.startswith("done with timestep"):
-        return True, int(line.split()[3])
+        return True
     elif line.startswith("level=0 vFac(aexpv)/vFac(aexp0)"):
-        return True, 0
+        return True
     else:
-        idx_start = line.find("[") + 1  # add 1 to get to the number in brackets
-        idx_end = line.find("]")
-        return False, int(line[idx_start:idx_end])
+        return False
+
+        # idx_start = line.find("[") + 1  # add 1 to get to the number in brackets
+        # idx_end = line.find("]")
+        # return False, int(line[idx_start:idx_end])
+
+def get_successful_timestep_number(line):
+    if line.startswith("level=0 vFac(aexpv)/vFac(aexp0)"):
+        return 0  # IC doesn't really count
+    elif line.startswith("done with timestep"):
+        return int(line.split()[3])
+    else:
+        raise ValueError("Line not recognized!")
+
+
+def get_rid_of_beginning_of_line(line):
+    # get rid of the beginning thing
+    line = line.strip()
+    line = line.replace("> ", "")
+    # get rid of the level indicators
+    level = 0
+    while line[0] in [".", ":"]:
+        line = line[2:]
+        level += 1
+
+    return line, level
+
+# Functions for parsing the CFL violation things
+units_dict = {"Myr": u.Myr,
+              "K": u.K,
+              "cm^-3": u.cm**-3,
+              "cm/s": u.cm / u.s}
+
+def parse_simple_quan(value_string):
+    value, unit = value_string.split()
+    return float(value) * units_dict[unit]
+
+def parse_velocity(velocity_string):
+    vx, vy, vz, unit = velocity_string.split()
+    vx = float(vx) * units_dict[unit]
+    vy = float(vy) * units_dict[unit]
+    vz = float(vz) * units_dict[unit]
+    # the CFL reporting does not use the absolute value (which
+    # is dumb), but the timestep (correctly) does
+    return max(abs(vx), abs(vy), abs(vz))
 
 # ======================================================================
 # 
@@ -103,7 +149,10 @@ def get_timestep_that_succeeded(line):
 timestep_numbers = []  # the actual number
 # the level on which CFL violations happened in a given level. Will be -99 if there was
 # no CFL violation in that timestep
-cfl_violations_level = []
+timestep_successes = []
+cfl_violation_levels = []
+cfl_violation_reasons = []
+
 level_dts = {l:[] for l in range(20)}
 
 # first we need to know where we're starting
@@ -116,14 +165,15 @@ stdout = open(log_file, "r")
 looking_for_global_timestep = True
 looking_for_level_dt = False
 looking_for_timestep_success = False
-looking_for_cfl_level = False
+inside_cfl_info = False
 # We start by looking for the dts used for the first timestep
 for line in stdout:
     # get rid of spaces
     line = line.strip()
     
-    # we start by throwing out all lines that indicate work
-    if line.startswith("> "):
+    # we start by throwing out all lines that indicate work. We have to be careful
+    # since the CFL violation lines also start with "> "
+    if line.startswith("> ") and "timestep(" in line:
         continue
     
     # get the global timestep if we need to
@@ -182,22 +232,30 @@ for line in stdout:
     if looking_for_timestep_success:
         if is_timestep_success_line(line):
             # figure out what to do with the counters
-            success, value = get_timestep_that_succeeded(line)
-            if success:
+            if did_timestep_succeed(line):
+                this_timestep_number = get_successful_timestep_number(line)
                 # the IC is defined as a success, but we don't do anything with it.
-                if value != 0:
+                if this_timestep_number != 0:
                     # check that this matches what we think the current timestep is
-                    if not timestep_number == value:
-                        raise ValueError(f"Something is wrong with the timestep numbers at {value}!")
+                    if not timestep_number == this_timestep_number:
+                        raise ValueError(f"Something is wrong with the timestep numbers at {this_timestep_number}!")
                     # otherwise just increment it
                     timestep_number += 1
-                    cfl_violations_level.append(-99)
+                    # and att this info to our lists
+                    timestep_successes.append(True)
+                    cfl_violation_levels.append(None)
+                    cfl_violation_reasons.append("")
+
+                    # reset state variables
+                    looking_for_timestep_success = False
+                    looking_for_global_timestep = True
             else:  # CFL violation
-                cfl_violations_level.append(value)
-        
-            # reset state variables
-            looking_for_timestep_success = False
-            looking_for_global_timestep = True
+                # set up CFL info
+                this_violation = dict()
+                # reset state variables, we'll find the info later
+                looking_for_timestep_success = False
+                inside_cfl_info = True
+            continue  # go to next line
         else:  # was not this line
             # check for lines that shouldn't happen
             try:
@@ -207,22 +265,60 @@ for line in stdout:
                 continue
             except AssertionError:
                 raise RuntimeError(f"Expected timestep success line, found: \n{line}")
-        
-    
+
+    # if we need to get the CFL information
+    if inside_cfl_info:
+        # first check if we're done, as this line breaks the parsers
+        if is_end_of_cfl_violation_info(line):
+            # First figure out what caused the violation.
+            c_s = parse_simple_quan(this_violation["cs"])
+            bulk = parse_velocity(this_violation["v"])
+            # see if one is significantly bigger than the other
+            threshold = 1.25
+            if c_s > threshold * bulk:
+                this_reason = "sound"
+            elif bulk > threshold * c_s:
+                this_reason = "bulk"
+            else:
+                this_reason = "sound bulk"
+
+            # append the info we collected to the lists
+            timestep_successes.append(False)
+            cfl_violation_levels.append(this_violation["level"])
+            cfl_violation_reasons.append(this_reason)
+
+            # reset state variables
+            inside_cfl_info = False
+            looking_for_global_timestep = True
+            continue # go to next timestep
+
+        # otherwise parse what we have
+        line, level = get_rid_of_beginning_of_line(line)
+        this_violation["level"] = level
+
+        if line == "courant cell information:" or line.startswith("CFL tolerance"):
+            # dont' need this info
+            continue
+        else:
+            key, value = line.split("=")
+            this_violation[key.strip()] = value.strip()
+
 
 # close the file
 stdout.close()
 
 # there may be one extra dt available compared to the CFL levels if
 # the run died in the middle of a timestep (as it usually does). Check that
-if len(timestep_numbers) == len(cfl_violations_level) + 1:
+if len(timestep_numbers) == len(timestep_successes) + 1:
     # throw away the last timestep
     timestep_numbers = timestep_numbers[:-1]
     for level in level_dts:
         level_dts[level] = level_dts[level][:-1]
     
 # then they should all be equal
-assert len(timestep_numbers) == len(cfl_violations_level)
+assert len(timestep_numbers) == len(timestep_successes)
+assert len(timestep_numbers) == len(cfl_violation_levels)
+assert len(timestep_numbers) == len(cfl_violation_reasons)
 for level in level_dts:
     assert len(level_dts[level]) == len(timestep_numbers)
 
@@ -244,10 +340,12 @@ norm = colors.BoundaryNorm(boundaries, cmap.N)
 mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
 mappable.set_array([])
 
-def _plot_base(ax, xs, ys, cfl_violation_level, level):
+def _plot_base(ax, xs, ys, successes, cfl_violation_level, cfl_violation_reason, level):
     """
     Underlying function to plot the timesteps as points, with lines connecting
-    them. Points are filled if the timestep was successful, open if not.
+    them. Points are filled if the timestep was successful, open if not. There will also
+    be markers showing which level was responsible and which velocity (sound or bulk)
+    was the biggest contributor
     """
     color = mappable.to_rgba(level)
 
@@ -255,11 +353,15 @@ def _plot_base(ax, xs, ys, cfl_violation_level, level):
     
     # then plot the successes and failures as points separately
     good_idx = [idx for idx in range(len(cfl_violation_level))
-                if cfl_violation_level[idx] == -99]
+                if successes[idx]]
     bad_idx =  [idx for idx in range(len(cfl_violation_level))
-                if cfl_violation_level[idx] >= 0 and cfl_violation_level[idx] != level]
+                if (not successes[idx]) and cfl_violation_level[idx] != level]
     cfl_idx =  [idx for idx in range(len(cfl_violation_level))
-                if cfl_violation_level[idx] == level]
+                if (not successes[idx]) and cfl_violation_level[idx] == level]
+    cfl_bulk = [idx for idx in range(len(cfl_violation_level))
+                if idx in cfl_idx and "bulk" in cfl_violation_reason[idx]]
+    cfl_sound = [idx for idx in range(len(cfl_violation_level))
+                 if idx in cfl_idx and "sound" in cfl_violation_reason[idx]]
     
     x_good = [xs[idx] for idx in good_idx]
     y_good = [ys[idx] for idx in good_idx]
@@ -269,6 +371,12 @@ def _plot_base(ax, xs, ys, cfl_violation_level, level):
 
     x_cfl = [xs[idx] for idx in cfl_idx]
     y_cfl = [ys[idx] for idx in cfl_idx]
+
+    x_cfl_bulk = [xs[idx] for idx in cfl_bulk]
+    y_cfl_bulk = [ys[idx] for idx in cfl_bulk]
+
+    x_cfl_sound = [xs[idx] for idx in cfl_sound]
+    y_cfl_sound = [ys[idx] for idx in cfl_sound]
     
     # good points are filled circles, bad ones filled with white.
     # Make a list of colors (that are all the same) so scatter doesn't get
@@ -276,18 +384,26 @@ def _plot_base(ax, xs, ys, cfl_violation_level, level):
     colors_good = [color for _ in x_good]
     colors_bad = [color for _ in x_bad]
     colors_cfl = [color for _ in x_cfl]
+    colors_cfl_bulk = [color for _ in x_cfl_bulk]
+    colors_cfl_sound = [color for _ in x_cfl_sound]
 
-    common_circle = {"s":20, "lw":1, "zorder":2, "alpha":1.0}
+    common_circle = {"lw": 1, "alpha":1.0}
     # the CFL indicators should go behind the bad markers
-    common_x = {"lw":1, "zorder": 1, "alpha":1.0}
-    size_cfl = 130  # leave this separate since the X needs to be smaller than +
-    ax.scatter(x_good, y_good, edgecolors=colors_good, c=colors_good, **common_circle)
-    ax.scatter(x_bad,  y_bad,  edgecolors=colors_bad,  c=bpl.light_grey, **common_circle)
-    ax.scatter(x_cfl,  y_cfl,  edgecolors=colors_bad,  c="w", **common_circle)
-    ax.scatter(x_cfl,  y_cfl,  c=colors_cfl, marker="+", s=size_cfl, **common_x)
-    ax.scatter(x_cfl, y_cfl,   c=colors_cfl, marker="x", s=size_cfl*0.5, **common_x)
+    common_x = {"lw":1.5, "zorder": 2, "alpha":1.0}
+    size_cfl = 200  # leave this separate since the X needs to be smaller than +
+    ax.scatter(x_good, y_good, edgecolors=colors_good, c=colors_good,
+               s=30, zorder=3, **common_circle)
+    ax.scatter(x_bad,  y_bad,  edgecolors=colors_bad,  c=bpl.light_grey,
+               s=15, zorder=3, **common_circle)
+    ax.scatter(x_cfl,  y_cfl,  edgecolors=colors_cfl,  c="w",
+               s=30, zorder=4,  **common_circle)
+    ax.scatter(x_cfl_bulk,  y_cfl_bulk,  c=colors_cfl_bulk, marker="+",
+               s=size_cfl, **common_x)
+    ax.scatter(x_cfl_sound, y_cfl_sound,   c=colors_cfl_sound, marker="x",
+               s=size_cfl*0.5, **common_x)
 
-def plot_level(ax, cfl_violation_level, dts, level):
+def plot_level(ax, timestep_successes, cfl_violation_level, cfl_violation_reasons,
+               dts, level):
     # what we do here is go through the dts and break it into contiguous segments
     # where that level existed
     
@@ -301,31 +417,46 @@ def plot_level(ax, cfl_violation_level, dts, level):
     # we'll plot it and reset
     contiguous_xs = []
     contiguous_ys = []
+    contiguous_success = []
     contiguous_cfl_level = []
+    contiguous_cfl_reason = []
     
     for idx in range(len(xs)):
         y = dts[idx]
         if y > 0:
             contiguous_xs.append(xs[idx])
             contiguous_ys.append(y)
+            contiguous_success.append(timestep_successes[idx])
             contiguous_cfl_level.append(cfl_violation_level[idx])
+            contiguous_cfl_reason.append(cfl_violation_reasons[idx])
             
         else:
             if len(contiguous_xs) > 0:
-                _plot_base(ax, contiguous_xs, contiguous_ys, contiguous_cfl_level, level)
+                _plot_base(ax, contiguous_xs, contiguous_ys, contiguous_success,
+                           contiguous_cfl_level, contiguous_cfl_reason, level)
                 contiguous_xs = []
                 contiguous_ys = []
+                contiguous_success = []
                 contiguous_cfl_level = []
+                contiguous_cfl_reason = []
             
     # if we've reached the end, we may need to plot too
     if len(contiguous_xs) > 0:
-        _plot_base(ax, contiguous_xs, contiguous_ys, contiguous_cfl_level, level)
+        _plot_base(ax, contiguous_xs, contiguous_ys, contiguous_success,
+                   contiguous_cfl_level, contiguous_cfl_reason, level)
 
+
+# ======================================================================
+#
+# actual figure
+#
+# ======================================================================
 fig, ax = bpl.subplots(figsize=[4 + len(timestep_numbers) / 8, 7])
 ax.make_ax_dark()
 
 for level in range(get_max_level(level_dts)+1):
-    plot_level(ax, cfl_violations_level, level_dts[level], level)
+    plot_level(ax, timestep_successes, cfl_violation_levels, cfl_violation_reasons,
+               level_dts[level], level)
 
 ax.set_yscale("log")
 
@@ -336,7 +467,7 @@ plot_xs = list(range(len(timestep_numbers)))
 for label in x_labels:
     # find the right x_value to place this at
     for idx in range(len(timestep_numbers)):
-        if timestep_numbers[idx] == label and cfl_violations_level[idx] == -99:
+        if timestep_numbers[idx] == label and timestep_successes[idx]:
             x = plot_xs[idx]
             y = level_dts[0][idx]
             
