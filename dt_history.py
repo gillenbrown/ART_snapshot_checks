@@ -54,7 +54,7 @@ def is_end_of_level_timesteps(line):
 
 def is_timestep_success_line(line):
     return line.startswith("done with timestep") or \
-           "CFL" in line or \
+           line.strip().endswith("CFL CONDITION VIOLATED:") or \
            line.startswith("level=0 vFac(aexpv)/vFac(aexp0)")
            # This last one is only used for the intial condition
 
