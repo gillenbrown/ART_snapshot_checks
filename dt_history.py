@@ -427,13 +427,13 @@ def _plot_base(ax, xs, ys, successes, cfl_violation_level, cfl_violation_reason,
     common_circle = {"alpha":1.0}
     # the CFL indicators should go behind the bad markers
     common_x = {"lw":2, "zorder": 2, "alpha":1.0}
-    size_cfl = 220  # leave this separate since the X needs to be smaller than +
+    size_cfl = 150  # leave this separate since the X needs to be smaller than +
     ax.scatter(x_good, y_good, edgecolors=colors_good, c=colors_good,
-               s=50, zorder=3, lw=1, **common_circle)
+               s=30, zorder=3, lw=1, **common_circle)
     ax.scatter(x_bad,  y_bad,  edgecolors=colors_bad,  c=bpl.light_grey,
-               s=15, zorder=3, lw=1, **common_circle)
+               s=10, zorder=3, lw=1, **common_circle)
     ax.scatter(x_cfl,  y_cfl,  edgecolors=colors_cfl,  c="w",
-               s=50, zorder=4, lw=2, **common_circle)
+               s=30, zorder=4, lw=2, **common_circle)
     # My mnemonic is "P" for plus and for pressure (which relates to c_s)
     ax.scatter(x_cfl_sound,  y_cfl_sound,  c=colors_cfl_sound, marker="+",
                s=size_cfl, **common_x)
@@ -489,7 +489,7 @@ def plot_level(ax, timestep_successes, cfl_violation_level, cfl_violation_reason
 # actual figure
 #
 # ======================================================================
-fig, ax = bpl.subplots(figsize=[3 + len(timestep_numbers) / 5, 7])
+fig, ax = bpl.subplots(figsize=[3 + len(timestep_numbers) / 8, 7])
 ax.make_ax_dark()
 
 for level in range(get_max_level(level_dts)+1):
