@@ -6,6 +6,7 @@ from astropy import units as u
 from matplotlib import colors
 from matplotlib import cm
 import colorcet as cc
+from tqdm import tqdm
 
 import betterplotlib as bpl
 bpl.set_style()
@@ -14,8 +15,11 @@ bpl.set_style()
 log_dir = Path(sys.argv[1]).absolute()
 
 # parse the output file first
-# Always use the stdout_000 file, as it has the timestep info.
-log_file = log_dir / "stdout.000.log"
+# I used to use the stdout.000.log file, as it had the timestep info, but had the run
+# info (which we discard) from only one MPI rank. Now, since we're investigating the
+# CFL violations, we have to use the full output file. I need to copy this into the
+# log directory with this name so the code can find it.
+log_file = log_dir / "stdout.full.log"
 # To do this I'll go through the file. We start with a timestep. We'll get the 
 # timesteps on all the levels. This ends with "Spatial Resolution" appears.
 # Then the next thing is to figure out whether the timestep was successfull or 
@@ -28,6 +32,20 @@ log_file = log_dir / "stdout.000.log"
 # Convenience functions
 # 
 # ======================================================================
+def strip_mpi_rank_from_line(line):
+    # get rid of the beginning thing. First we get rid of the MPI rank number
+    line = line.strip()
+    while True:
+        try:
+            int(line[0])
+            line = line[1:]
+        except ValueError:
+            break
+
+    # also get rid of the colon and space
+    line = line[1:]
+    return line.strip()
+
 def find_first_timestep_number(log_file):
     """
     Find the timestep number the simulation started at.
@@ -37,6 +55,7 @@ def find_first_timestep_number(log_file):
     """
     with open(log_file, "r") as stdout:
         for line in stdout:
+            line = strip_mpi_rank_from_line(line)
             if line.startswith("done with timestep"):
                 return int(line.split()[3])
             
@@ -100,6 +119,9 @@ def did_timestep_succeed(line):
         # return False, int(line[idx_start:idx_end])
 
 def get_successful_timestep_number(line):
+    if not is_timestep_success_line(line):
+        raise ValueError("This is not a timestep success line!")
+
     if line.startswith("level=0 vFac(aexpv)/vFac(aexp0)"):
         return 0  # IC doesn't really count
     elif line.startswith("done with timestep"):
@@ -107,10 +129,7 @@ def get_successful_timestep_number(line):
     else:
         raise ValueError("Line not recognized!")
 
-
-def get_rid_of_beginning_of_line(line):
-    # get rid of the beginning thing
-    line = line.strip()
+def get_rid_of_level_indicators(line):
     line = line.replace("> ", "")
     # get rid of the level indicators
     level = 0
@@ -155,9 +174,14 @@ cfl_violation_reasons = []
 
 level_dts = {l:[] for l in range(20)}
 
+# count number of lines in the file
+with open(log_file, "r") as in_file:
+    for i, l in enumerate(in_file):
+        pass
+total_lines = i + 1
+
 # first we need to know where we're starting
 timestep_number = find_first_timestep_number(log_file)
-
 # open the file
 stdout = open(log_file, "r")
 
@@ -167,15 +191,14 @@ looking_for_level_dt = False
 looking_for_timestep_success = False
 inside_cfl_info = False
 # We start by looking for the dts used for the first timestep
-for line in stdout:
-    # get rid of spaces
-    line = line.strip()
+for line in tqdm(stdout, total=total_lines):
+    line = strip_mpi_rank_from_line(line)
     
     # we start by throwing out all lines that indicate work. We have to be careful
     # since the CFL violation lines also start with "> "
     if line.startswith("> ") and "timestep(" in line:
         continue
-    
+
     # get the global timestep if we need to
     if looking_for_global_timestep:
         if is_global_timestep_line(line):
@@ -191,10 +214,12 @@ for line in stdout:
             try:
                 assert not is_level_timestep_line(line)
                 assert not is_end_of_level_timesteps(line)
-                assert not is_timestep_success_line(line)
+                # timestep success can happen, since each MPI processor indicates that
+                # the timestep finished
+                # assert not is_timestep_success_line(line)
                 continue
             except AssertionError:
-                raise RuntimeError(f"Expected timestep success line, found: \n{line}")
+                raise RuntimeError(f"Expected global timestep line, found: \n{line}")
             
         
     # if we need to look for the level info, do that
@@ -224,8 +249,14 @@ for line in stdout:
             continue
             
         else:
-            # this shouldn't happen, something is wrong
-            raise RuntimeError(f"Was expecting timestep info, did not find in line:\n{line}")
+            try:
+                assert not is_global_timestep_line(line)
+                assert not is_end_of_level_timesteps(line)
+                assert not is_timestep_success_line(line)
+                continue
+            except AssertionError:
+                # this shouldn't happen, something is wrong
+                raise RuntimeError(f"Was expecting timestep info, did not find in line:\n{line}")
     
 
     # Figure out whether the timestep succeeded or not
@@ -299,7 +330,7 @@ for line in stdout:
             continue # go to next timestep
 
         # otherwise parse what we have
-        line, level = get_rid_of_beginning_of_line(line)
+        line, level = get_rid_of_level_indicators(line)
         this_violation["level"] = level
 
         if line == "courant cell information:" or line.startswith("CFL tolerance"):
@@ -393,16 +424,16 @@ def _plot_base(ax, xs, ys, successes, cfl_violation_level, cfl_violation_reason,
     colors_cfl_bulk = [color for _ in x_cfl_bulk]
     colors_cfl_sound = [color for _ in x_cfl_sound]
 
-    common_circle = {"lw": 1, "alpha":1.0}
+    common_circle = {"alpha":1.0}
     # the CFL indicators should go behind the bad markers
-    common_x = {"lw":1.5, "zorder": 2, "alpha":1.0}
-    size_cfl = 200  # leave this separate since the X needs to be smaller than +
+    common_x = {"lw":2, "zorder": 2, "alpha":1.0}
+    size_cfl = 220  # leave this separate since the X needs to be smaller than +
     ax.scatter(x_good, y_good, edgecolors=colors_good, c=colors_good,
-               s=30, zorder=3, **common_circle)
+               s=50, zorder=3, lw=1, **common_circle)
     ax.scatter(x_bad,  y_bad,  edgecolors=colors_bad,  c=bpl.light_grey,
-               s=15, zorder=3, **common_circle)
+               s=15, zorder=3, lw=1, **common_circle)
     ax.scatter(x_cfl,  y_cfl,  edgecolors=colors_cfl,  c="w",
-               s=30, zorder=4,  **common_circle)
+               s=50, zorder=4, lw=2, **common_circle)
     # My mnemonic is "P" for plus and for pressure (which relates to c_s)
     ax.scatter(x_cfl_sound,  y_cfl_sound,  c=colors_cfl_sound, marker="+",
                s=size_cfl, **common_x)
@@ -458,7 +489,7 @@ def plot_level(ax, timestep_successes, cfl_violation_level, cfl_violation_reason
 # actual figure
 #
 # ======================================================================
-fig, ax = bpl.subplots(figsize=[4 + len(timestep_numbers) / 8, 7])
+fig, ax = bpl.subplots(figsize=[3 + len(timestep_numbers) / 5, 7])
 ax.make_ax_dark()
 
 for level in range(get_max_level(level_dts)+1):
@@ -482,8 +513,9 @@ for label in x_labels:
             ax.plot([x, x], [y, y*1.2], c=mappable.to_rgba(0), lw=1, zorder=1)
             
 # Then add the colorbar
-cbar = fig.colorbar(mappable, ax=ax, ticks=list(level_dts.keys()))
+cbar = fig.colorbar(mappable, ax=ax, ticks=list(level_dts.keys()), pad=0)
 cbar.set_label("Level")
+cbar.ax.invert_yaxis()
 
 ax.set_limits(-2, max(plot_xs)+2)
 ax.add_labels("Timesteps Attempted This Run", "dt [years]")
