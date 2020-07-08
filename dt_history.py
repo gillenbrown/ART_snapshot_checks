@@ -270,7 +270,13 @@ for line in stdout:
     if inside_cfl_info:
         # first check if we're done, as this line breaks the parsers
         if is_end_of_cfl_violation_info(line):
-            # First figure out what caused the violation.
+            # First figure out what caused the violation. The simplest way to do this
+            # would be to just see which crossing times are smaller than the current
+            # timestep. But because the needed velocity is bulk + c_s, typically it
+            # will be hard for one to get there all by itself, unless it's drastiaclly
+            # higher than the other. I tried making this plot, and most of the time
+            # neither got there by myself. So instead we just determine which one is
+            # larger
             c_s = parse_simple_quan(this_violation["cs"])
             bulk = parse_velocity(this_violation["v"])
             # see if one is significantly bigger than the other
@@ -397,9 +403,10 @@ def _plot_base(ax, xs, ys, successes, cfl_violation_level, cfl_violation_reason,
                s=15, zorder=3, **common_circle)
     ax.scatter(x_cfl,  y_cfl,  edgecolors=colors_cfl,  c="w",
                s=30, zorder=4,  **common_circle)
-    ax.scatter(x_cfl_bulk,  y_cfl_bulk,  c=colors_cfl_bulk, marker="+",
+    # My mnemonic is "P" for plus and for pressure (which relates to c_s)
+    ax.scatter(x_cfl_sound,  y_cfl_sound,  c=colors_cfl_sound, marker="+",
                s=size_cfl, **common_x)
-    ax.scatter(x_cfl_sound, y_cfl_sound,   c=colors_cfl_sound, marker="x",
+    ax.scatter(x_cfl_bulk, y_cfl_bulk,   c=colors_cfl_bulk, marker="x",
                s=size_cfl*0.5, **common_x)
 
 def plot_level(ax, timestep_successes, cfl_violation_level, cfl_violation_reasons,
