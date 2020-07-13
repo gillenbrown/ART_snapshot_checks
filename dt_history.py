@@ -32,6 +32,21 @@ log_file = log_dir / "stdout.full.log"
 # Convenience functions
 # 
 # ======================================================================
+def need_to_examine_this_line(line):
+    """ Determine whether this line is interesting
+
+    Interesting is defined as anythink that's ART output but is not the individual
+    timestep progression indicators, which take up the vast majority of the file"""
+    # first check that this is an ART file
+    if line.strip() == "":
+        return False
+    if not line[0].isdigit():
+        return False
+    if ":" not in line[1:3]:
+        return False
+    # if we've gotten here, we either have an interesting line or a timestep line
+    return not (">" in line and "timestep(" in line)
+
 def strip_mpi_rank_from_line(line):
     # get rid of the beginning thing. First we get rid of the MPI rank number
     line = line.strip()
@@ -55,9 +70,10 @@ def find_first_timestep_number(log_file):
     """
     with open(log_file, "r") as stdout:
         for line in stdout:
-            line = strip_mpi_rank_from_line(line)
-            if line.startswith("done with timestep"):
-                return int(line.split()[3])
+            if need_to_examine_this_line(line):
+                line = strip_mpi_rank_from_line(line)
+                if line.startswith("done with timestep"):
+                    return int(line.split()[3])
 
 def is_dt_post_cfl_line(line):
     return "dtl_post_cfl" in line
@@ -209,12 +225,11 @@ looking_for_timestep_success = False
 inside_cfl_info = False
 # We start by looking for the dts used for the first timestep
 for line in tqdm(stdout, total=total_lines):
-    line = strip_mpi_rank_from_line(line)
-    
-    # we start by throwing out all lines that indicate work. We have to be careful
-    # since the CFL violation lines also start with "> "
-    if line.startswith("> ") and "timestep(" in line:
+    # skip the uninteresting lines
+    if not need_to_examine_this_line(line):
         continue
+
+    line = strip_mpi_rank_from_line(line)
 
     if looking_for_dt_post_cfl:
         if is_dt_post_cfl_line(line):
