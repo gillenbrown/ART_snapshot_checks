@@ -234,8 +234,12 @@ for line in tqdm(stdout, total=total_lines):
     if looking_for_dt_post_cfl:
         if is_dt_post_cfl_line(line):
             level, dt = get_post_cfl_dt(line)
-            # then we can add it
-            this_level_post_cfl_dt[level] = dt
+            # then we can add it. When we have multiple ranks, we'll get each level a
+            # few times, so double check that it's the same for all
+            if level in this_level_post_cfl_dt:
+                assert dt == this_level_post_cfl_dt[level]
+            else:
+                this_level_post_cfl_dt[level] = dt
             continue
 
         # the line to end is the global timestep line
