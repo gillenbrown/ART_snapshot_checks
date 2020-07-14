@@ -53,7 +53,7 @@ ifeq ($(machine),shangrila)
 	tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
 	tree_dir = /u/home/gillenb/code/not_mine/consistent-trees
 	halo_finding_script = ./run_rockstar.sh
-	timing_script = /u/home/gillenb/code/mine/art_cluster/utils/scripts/parse_timing2.pl
+	timing_script = /u/home/gillenb/code/mine/cart/utils/scripts/parse_timing2.pl
 endif
 ifeq ($(machine),lou)
 	tree_config_script = /u/gbrown12/code/rockstar/scripts/gen_merger_cfg.pl
@@ -71,7 +71,7 @@ ifeq ($(machine),stampede2)
 	tree_config_script = $(HOME)/code/rockstar-galaxies/scripts/gen_merger_cfg.pl
 	tree_dir = $(HOME)/code/consistent-trees
 	halo_finding_script = ./run_rockstar_stampede2.sh
-	timing_script = $(HOME)/code/art_cluster/utils/scripts/parse_timing2.pl
+	timing_script = $(HOME)/code/cart/utils/scripts/parse_timing2.pl
 endif
 
 # ------------------------------------------------------------------------------
@@ -79,8 +79,6 @@ endif
 #  Code locations that are relative to this file
 # 
 # ------------------------------------------------------------------------------
-halo_finding_py_file = ./halo_finding_rockstar.py
-rename_script = ./rename_halos.py
 debug_script = ./debug_output.py
 galaxies_script = ./galaxy_summaries.py
 nbody_single_halo_plots_script = ./plot_single_halo_nbody.py
@@ -92,6 +90,7 @@ halo_growth_comp_script = ./halo_growth_comparison.py
 sfh_plots_script = ./plot_sfh.py
 cimf_plots_script = ./plot_cimf.py
 dt_history_script = ./dt_history.py
+prep_for_merger_tree_script = ./merger_prep.py
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
 read_tree_src = $(read_tree_dir)/halo_history.c
@@ -105,12 +104,13 @@ comparison_plots_dir = ./comparison_plots
 ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs
 	sim_dirs_nbody = 
-	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_10 \
-	                 $(runs_home)/shangrila/hui/sfe_50 \
-	                 $(runs_home)/shangrila/hui/sfe_100 \
-	                 $(runs_home)/shangrila/hui/sfe_200 \
-	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
-	                 $(runs_home)/stampede2/production/sfe100
+	sim_dirs_hydro = $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run
+	#$(runs_home)/shangrila/old_ic_comparison/default/run \
+	                 #$(runs_home)/shangrila/hui/sfe_10 \
+	                 #$(runs_home)/shangrila/hui/sfe_50 \
+	                 #$(runs_home)/shangrila/hui/sfe_100 \
+	                 #$(runs_home)/shangrila/hui/sfe_200 \
+	                 #$(runs_home)/stampede2/production/sfe100
 endif
 
 ifeq ($(machine),lou)
@@ -168,10 +168,9 @@ sim_dirs = $(sim_dirs_nbody) $(sim_dirs_hydro)
 sim_out_dirs = $(foreach dir,$(sim_dirs),$(dir)/out)
 sim_out_dirs_hydro = $(foreach dir,$(sim_dirs_hydro),$(dir)/out)
 sim_rockstar_halos_dirs = $(foreach dir,$(sim_dirs),$(dir)/rockstar_halos)
-sim_human_halos_dirs = $(foreach dir,$(sim_dirs),$(dir)/halos)
 sim_checks_dirs = $(foreach dir,$(sim_dirs),$(dir)/checks)
 sim_plots_dirs = $(foreach dir,$(sim_dirs),$(dir)/plots)
-my_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos_dirs) $(sim_plots_dirs) $(comparison_plots_dir)
+my_directories = $(sim_checks_dirs) $(sim_rockstar_halos_dirs) $(sim_plots_dirs) $(comparison_plots_dir)
 
 # ------------------------------------------------------------------------------
 #
@@ -181,36 +180,15 @@ my_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos
 dir_to_sims = $(wildcard $(1)/*_a*.art)
 snapshots = $(foreach dir,$(sim_out_dirs),$(call dir_to_sims,$(dir)))
 snapshots_hydro = $(foreach dir,$(sim_out_dirs_hydro),$(wildcard $(dir)/*_a*.art))
-# Parse the snapshot names into halo catalogs 
-# replace the directory and suffix
-sim_to_halo = $(subst .art,.0.bin,$(subst out/continuous,halos/halos,$(1)))
-halos_catalogs = $(foreach snapshot,$(snapshots),$(call sim_to_halo,$(snapshot)))
-
-# ------------------------------------------------------------------------------
-#
-#  Rockstar sentinel files. 
-# 
-# ------------------------------------------------------------------------------
-# A sentinel file just shows that rockstar has run for a given set of 
-# simulation outputs. I do it this way since we run ROCKSTAR on all outputs
-# at once, and the sentinel file is an easier way to show that dependency
-rockstar_sentinels = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/sentinel.txt)
-# Function to get all simulations that are prerequisites to this sentinel
-sentinel_to_sims = $(wildcard $(subst rockstar_halos/sentinel.txt,out/,$(1))*_a*.art)
-sentinel_to_out_dir = $(subst rockstar_halos/sentinel.txt,out/,$(1))
-sentinel_to_rh_dir = $(subst rockstar_halos/sentinel.txt,rockstar_halos/,$(1))
-
-# Then some complex functions to find the rockstar sentinel file for a given 
-# halo catalog. This is hard and ugly since we have to mess around with
-# wildcards, which require $(patsubst), which requires words, not a path.
-empty :=
-space := $(empty) $(empty)
-path_to_words = $(subst /,$(space),$(1))
-words_to_path = /$(subst $(space),/,$(1))
-halo_words_to_rockstar_words = $(patsubst halos,rockstar_halos,$(1))
-rockstar_words_to_sentinel_words = $(patsubst %.0.bin,sentinel.txt,$(1))
-halo_words_to_sentinel_words = $(call halo_words_to_rockstar_words,$(call rockstar_words_to_sentinel_words,$(1)))
-halo_to_sentinel = $(call words_to_path,$(call halo_words_to_sentinel_words,$(call path_to_words,$(1))))
+# Parse the snapshot names into halo catalogs. These will all be in their
+# own special directory
+sim_to_halo_dir = $(subst .art,,$(subst out/continuous,rockstar_halos/halos,$(1)))
+halos_catalogs = $(foreach snapshot,$(snapshots),$(call sim_to_halo_dir,$(snapshot)/halos_0.0.bin))
+halos_dirs = $(foreach cat,$(halos_catalogs),$(dir $(cat)))
+# then some functions to go backwards to determine the simulation output
+halo_catalog_to_sim = $(subst /halos_0.0.bin,.art,$(subst rockstar_halos/halos,out/continuous,$(1)))
+# add these directories to what we need to create
+my_directories += $(halos_dirs)
 
 # ------------------------------------------------------------------------------
 #
@@ -228,7 +206,7 @@ debugs = $(foreach snapshot,$(snapshots),$(call sim_to_debug,$(snapshot)))
 # ------------------------------------------------------------------------------
 sim_to_galaxies = $(subst .art,.txt,$(subst out/continuous,checks/galaxy_summaries, $(1)))
 galaxies_to_sim = $(subst .txt,.art,$(subst checks/galaxy_summaries,out/continuous, $(1)))
-galaxies_to_halo = $(subst .txt,.0.bin,$(subst checks/galaxy_summaries,halos/halos, $(1)))
+galaxies_to_halo = $(subst .txt,/halos_0.0.bin,$(subst checks/galaxy_summaries,rockstar_halos/halos, $(1)))
 galaxies = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_galaxies,$(snapshot)))
 
 # ------------------------------------------------------------------------------
@@ -271,14 +249,14 @@ refined_split_to_sim = $(subst .png,.art,$(subst plots/n_body_split_refined,out/
 local_group_full_to_sim = $(subst .png,.art,$(subst plots/n_body_local_group,out/continuous, $(1)))
 local_group_split_to_sim = $(subst .png,.art,$(subst plots/n_body_split_local_group,out/continuous, $(1)))
 
-halo_1_full_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_halo_rank_1,halos/halos, $(1)))
-halo_2_full_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_halo_rank_2,halos/halos, $(1)))
-halo_1_split_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_split_halo_rank_1,halos/halos, $(1)))
-halo_2_split_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_split_halo_rank_2,halos/halos, $(1)))
-refined_full_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_refined,halos/halos, $(1)))
-refined_split_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_split_refined,halos/halos, $(1)))
-local_group_full_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_local_group,halos/halos, $(1)))
-local_group_split_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_split_local_group,halos/halos, $(1)))
+halo_1_full_to_halo = $(subst .png,/halos_0.0.bin,$(subst plots/n_body_halo_rank_1,rockstar_halos/halos, $(1)))
+halo_2_full_to_halo = $(subst .png,/halos_0.0.bin,$(subst plots/n_body_halo_rank_2,rockstar_halos/halos, $(1)))
+halo_1_split_to_halo = $(subst .png,/halos_0.0.bin,$(subst plots/n_body_split_halo_rank_1,rockstar_halos/halos, $(1)))
+halo_2_split_to_halo = $(subst .png,/halos_0.0.bin,$(subst plots/n_body_split_halo_rank_2,rockstar_halos/halos, $(1)))
+refined_full_to_halo = $(subst .png,/halos_0.0.bin,$(subst plots/n_body_refined,rockstar_halos/halos, $(1)))
+refined_split_to_halo = $(subst .png,/halos_0.0.bin,$(subst plots/n_body_split_refined,rockstar_halos/halos, $(1)))
+local_group_full_to_halo = $(subst .png,/halos_0.0.bin,$(subst plots/n_body_local_group,rockstar_halos/halos, $(1)))
+local_group_split_to_halo = $(subst .png,/halos_0.0.bin,$(subst plots/n_body_split_local_group,rockstar_halos/halos, $(1)))
 
 halo_1_full_plots = $(foreach snapshot,$(snapshots),$(call sim_to_halo_1_full,$(snapshot)))
 halo_2_full_plots = $(foreach snapshot,$(snapshots),$(call sim_to_halo_2_full,$(snapshot)))
@@ -296,10 +274,18 @@ nbody_plots = $(halo_1_full_plots) $(halo_2_full_plots) $(halo_1_split_plots) $(
 #  Consistent trees
 # 
 # ------------------------------------------------------------------------------
-# first are the config files
+# we need to get the correct rockstar config files
+rockstar_cfgs = $(foreach d,$(sim_rockstar_halos_dirs),$(d)/rockstar.cfg)
+# This is a bit tricky here, but we basically just use this to find all the 
+# subdirectories in the same directory as the rockstar config file
+rockstar_cfg_to_halos = $(foreach d,$(shell find $(dir $(1)) -mindepth 1 -maxdepth 1 -type d),$(d)/halos_0.0.bin)
+# ^ Here I use the .bin files, even though I really need the out_0.list files.
+# this is because I require the .bin files elsewhere, so use those as the 
+# proxies for the halo creation. 
+
+# then we use these to make the merger tree config files
 tree_cfgs = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/outputs/merger_tree.cfg)
 tree_cfg_to_rockstar_cfg = $(subst outputs/merger_tree.cfg,rockstar.cfg,$(1))
-tree_cfg_to_sentinel = $(subst outputs/merger_tree.cfg,sentinel.txt,$(1))
 
 # then the actual halo trees
 trees = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/trees/tree_0_0_0.dat)
@@ -357,7 +343,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(sfh_plots) $(cimf_plots) $(halo_growth_plot) $(debugs) $(galaxies) $(movies)
+all: $(my_directories) $(halo_growth_plot) # $(timings) $(dt_history_plots) $(sfh_plots) $(cimf_plots) $(debugs) $(galaxies) $(movies) $(halo_growth_plot)
 
 .PHONY: clean
 clean:
@@ -378,25 +364,18 @@ $(my_directories):
 .PHONY: movies
 movies: $(movies)
 
-# Rule to make the rockstar sentinel files
-# Phony target to allow us to make only the rockstar halos, for example on 
+# Phony target to allow us to make only the halos, for example on 
 # a PBS script where we don't want to waste computation on the serial aspects
 # that come later
 .PHONY: halos
-halos: $(rockstar_sentinels)
+halos: $(halos_catalogs)
 
-# Throughout I use Make's static pattern rules to parameterize over my different
-# outputs
-# We run the script with parameters to the output directory and rockstar halo 
-# directory
+# Do the halo finding. We do this on individual snapshots, rather than running
+# it on all of the halos at once, as it allows us to better manage the output
+# files and feed them to the merger tree code
 .SECONDEXPANSION:
-$(rockstar_sentinels): %: $$(call sentinel_to_sims, %) 
-	$(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@)
-
-# Rule to rename the halo catalogs into something more user-friendly
-.SECONDEXPANSION:
-$(halos_catalogs): %: | $(rename_script) $$(call halo_to_sentinel,%)
-	$(python) $(rename_script) $@
+$(halos_catalogs): %: $$(call halo_catalog_to_sim, %)
+	$(halo_finding_script) $(call halo_catalog_to_sim, $@) $(dir $@)
 
 # Make the debug files
 .SECONDEXPANSION:
@@ -469,9 +448,15 @@ SECONDEXPANSION:
 $(call movies_all,n_body_split_local_group): %: $$(call movie_to_plots,%,sim_to_local_group_split)
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_split_local_group,$@)/n_body_split_local_group*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
+# Get ready to make the merger trees by moving the files correctly. The 
+# rockstar config files will be used as the sentinel here
+.SECONDEXPANSION:
+$(rockstar_cfgs): %: $$(call rockstar_cfg_to_halos,%) $(prep_for_merger_tree_script)
+	$(python) $(prep_for_merger_tree_script) $@
+
 # Make the consistent trees config files
 .SECONDEXPANSION:
-$(tree_cfgs): %: $$(call tree_cfg_to_sentinel,%)
+$(tree_cfgs): %: $$(call tree_cfg_to_rockstar_cfg,%)
 	perl $(tree_config_script) $(call tree_cfg_to_rockstar_cfg,$@)
 
 # Then build the merger trees

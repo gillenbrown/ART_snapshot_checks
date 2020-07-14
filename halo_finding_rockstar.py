@@ -11,7 +11,6 @@ yt.enable_parallelism()
 # idx 0: name of script
 # ids 1: directory of simulation outputs to run halos on
 # idx 2: directory to store halo finding outputs in
-# idx 3: must be `silent` or not present
 
 # print function that always flushes
 import functools

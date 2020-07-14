@@ -46,13 +46,13 @@ all_ds = dict()
 all_halos = defaultdict(list)
 for directory in sys.argv[1:]:
     out_dir = os.path.join(directory, "out")
-    halos_dir = os.path.join(directory, "halos")
+    halos_dir = os.path.join(directory, "rockstar_halos")
 
     last_out = sorted([file for file in  os.listdir(out_dir)
                        if file.endswith(".art")
                        and file.startswith("continuous_a")])[-1]
 
-    last_halo = last_out.replace("continuous_", "halos_").replace(".art", ".0.bin")
+    last_halo = last_out.replace("continuous_", "halos_").replace(".art", "/halos_0.0.bin")
 
 
     ds = yt.load(os.path.join(out_dir, last_out))

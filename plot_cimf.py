@@ -40,7 +40,7 @@ def filename_to_scale_factor(filename):
 
 def get_ds_and_halos(ds_path):
     """ get the dataset and corresponding halo file """
-    halo_path = ds_path.replace("out/continuous_", "halos/halos_").replace(".art", ".0.bin")
+    halo_path = ds_path.replace("out/continuous_", "rockstar_halos/halos_").replace(".art", "/halos_0.0.bin")
 
     ds = yt.load(ds_path)
     halos_ds = yt.load(halo_path)

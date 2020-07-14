@@ -32,21 +32,6 @@ log_file = log_dir / "stdout.full.log"
 # Convenience functions
 # 
 # ======================================================================
-def need_to_examine_this_line(line):
-    """ Determine whether this line is interesting
-
-    Interesting is defined as anythink that's ART output but is not the individual
-    timestep progression indicators, which take up the vast majority of the file"""
-    # first check that this is an ART file
-    if line.strip() == "":
-        return False
-    if not line[0].isdigit():
-        return False
-    if ":" not in line[1:3]:
-        return False
-    # if we've gotten here, we either have an interesting line or a timestep line
-    return not (">" in line and "timestep(" in line)
-
 def strip_mpi_rank_from_line(line):
     # get rid of the beginning thing. First we get rid of the MPI rank number
     line = line.strip()
@@ -70,22 +55,9 @@ def find_first_timestep_number(log_file):
     """
     with open(log_file, "r") as stdout:
         for line in stdout:
-            if need_to_examine_this_line(line):
-                line = strip_mpi_rank_from_line(line)
-                if line.startswith("done with timestep"):
-                    return int(line.split()[3])
-
-def is_dt_post_cfl_line(line):
-    return "dtl_post_cfl" in line
-
-def get_post_cfl_dt(line):
-    timestep = float(line.split("=")[-1])
-
-    idx_start = line.find("[") + 1
-    idx_end = line.find("]")
-    level = int(line[idx_start:idx_end])
-
-    return level, timestep
+            line = strip_mpi_rank_from_line(line)
+            if line.startswith("done with timestep"):
+                return int(line.split()[3])
             
 def is_global_timestep_line(line):
     return line.startswith("chose") and line.endswith("Myr as our next global time-step")
@@ -201,10 +173,6 @@ cfl_violation_levels = []
 cfl_violation_reasons = []
 
 level_dts = {l:[] for l in range(20)}
-level_post_cfl_dts = {l:[] for l in range(20)}
-
-# initialize this outside, will be used later
-this_level_post_cfl_dt = dict()
 
 # count number of lines in the file
 with open(log_file, "r") as in_file:
@@ -218,47 +186,18 @@ timestep_number = find_first_timestep_number(log_file)
 stdout = open(log_file, "r")
 
 # Have state variables indicating where we are within the file
-looking_for_dt_post_cfl = True
-looking_for_global_timestep = False
+looking_for_global_timestep = True
 looking_for_level_dt = False
 looking_for_timestep_success = False
 inside_cfl_info = False
 # We start by looking for the dts used for the first timestep
 for line in tqdm(stdout, total=total_lines):
-    # skip the uninteresting lines
-    if not need_to_examine_this_line(line):
-        continue
-
     line = strip_mpi_rank_from_line(line)
-
-    if looking_for_dt_post_cfl:
-        if is_dt_post_cfl_line(line):
-            level, dt = get_post_cfl_dt(line)
-            # then we can add it. When we have multiple ranks, we'll get each level a
-            # few times, so double check that it's the same for all
-            if level in this_level_post_cfl_dt:
-                assert dt == this_level_post_cfl_dt[level]
-            else:
-                this_level_post_cfl_dt[level] = dt
-            continue
-
-        # the line to end is the global timestep line
-        elif is_global_timestep_line(line):
-            # store the info
-            for level in level_post_cfl_dts:
-                # if we have this level, add it
-                if level in this_level_post_cfl_dt:
-                    level_post_cfl_dts[level].append(this_level_post_cfl_dt[level])
-                # otherwise append zero
-                else:
-                    level_post_cfl_dts[level].append(0)
-            # reset the dictionary
-            this_level_post_cfl_dt = dict()
-
-            # and reset the state variables
-            looking_for_dt_post_cfl = False
-            looking_for_global_timestep = True
-            # but do not continue! We need the next if statement to catch this
+    
+    # we start by throwing out all lines that indicate work. We have to be careful
+    # since the CFL violation lines also start with "> "
+    if line.startswith("> ") and "timestep(" in line:
+        continue
 
     # get the global timestep if we need to
     if looking_for_global_timestep:
@@ -340,7 +279,7 @@ for line in tqdm(stdout, total=total_lines):
 
                 # reset state variables
                 looking_for_timestep_success = False
-                looking_for_dt_post_cfl = True
+                looking_for_global_timestep = True
             else:  # CFL violation
                 # set up CFL info
                 this_violation = dict()
@@ -387,7 +326,7 @@ for line in tqdm(stdout, total=total_lines):
 
             # reset state variables
             inside_cfl_info = False
-            looking_for_dt_post_cfl = True
+            looking_for_global_timestep = True
             continue # go to next timestep
 
         # otherwise parse what we have
@@ -412,9 +351,6 @@ if len(timestep_numbers) == len(timestep_successes) + 1:
     timestep_numbers = timestep_numbers[:-1]
     for level in level_dts:
         level_dts[level] = level_dts[level][:-1]
-    # and the last CFL dt
-    for level in level_post_cfl_dts:
-        level_post_cfl_dts[level] = level_post_cfl_dts[level][:-1]
     
 # then they should all be equal
 assert len(timestep_numbers) == len(timestep_successes)
@@ -422,21 +358,6 @@ assert len(timestep_numbers) == len(cfl_violation_levels)
 assert len(timestep_numbers) == len(cfl_violation_reasons)
 for level in level_dts:
     assert len(level_dts[level]) == len(timestep_numbers)
-for level in level_post_cfl_dts:
-    assert len(level_post_cfl_dts[level]) == len(timestep_numbers)
-
-# ======================================================================
-#
-# convert code units to years for post CFL violatin dts
-#
-# ======================================================================
-# For the highest level, the values of the dt and post_cfl_dt are equal, so we can use
-# that to convert to years. Note that the conversion changes with time, which is why
-# we need to do it for each timestep
-for idx in range(len(level_dts[0])):
-    to_years = level_dts[0][idx] / level_post_cfl_dts[0][idx]
-    for level in level_post_cfl_dts:
-        level_post_cfl_dts[level][idx] *= to_years
 
 # ======================================================================
 # 
@@ -575,26 +496,21 @@ for level in range(get_max_level(level_dts)+1):
     plot_level(ax, timestep_successes, cfl_violation_levels, cfl_violation_reasons,
                level_dts[level], level)
 
-    # the plotting of the post_cfl_dt is a lot easier, since it's guaranteed that
-    # each level will be defined all the time
-    ax.plot(range(len(level_post_cfl_dts[level])), level_post_cfl_dts[level],
-            c=mappable.to_rgba(level), ls=":", lw=1)
-
 ax.set_yscale("log")
 
-# label every 5 timesteps
-x_labels = [x for x in timestep_numbers
-            if x % 5 == 0]
+# # label every 5 timesteps
+# x_labels = [x for x in timestep_numbers
+#             if x % 5 == 0]
 plot_xs = list(range(len(timestep_numbers)))
-for label in x_labels:
-    # find the right x_value to place this at
-    for idx in range(len(timestep_numbers)):
-        if timestep_numbers[idx] == label and timestep_successes[idx]:
-            x = plot_xs[idx]
-            y = level_dts[0][idx]
-
-            ax.add_text(x, y*1.2, label, va="bottom", ha="center", fontsize=12)
-            ax.plot([x, x], [y, y*1.2], c=mappable.to_rgba(0), lw=1, zorder=1)
+# for label in x_labels:
+#     # find the right x_value to place this at
+#     for idx in range(len(timestep_numbers)):
+#         if timestep_numbers[idx] == label and timestep_successes[idx]:
+#             x = plot_xs[idx]
+#             y = level_dts[0][idx]
+            
+#             ax.add_text(x, y*1.2, label, va="bottom", ha="center", fontsize=12)
+#             ax.plot([x, x], [y, y*1.2], c=mappable.to_rgba(0), lw=1, zorder=1)
             
 # Then add the colorbar
 cbar = fig.colorbar(mappable, ax=ax, ticks=list(level_dts.keys()), pad=0)
