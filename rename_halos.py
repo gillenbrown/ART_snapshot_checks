@@ -10,25 +10,21 @@
 # all the individual files for one output written by different Rockstar threads)
 
 import sys
-import os
+from pathlib import Path
 import shutil
 
 # get the representative halo catalog, and parse it to get the directory to 
 # store our catalogs and the directory of the original rockstar outputs.
-halo_output_file = os.path.abspath(sys.argv[1])
-halo_output_dir = os.path.dirname(halo_output_file)
-rockstar_dir = halo_output_dir.replace("/halos", "/rockstar_halos")
-if not rockstar_dir.endswith(os.sep):
-    rockstar_dir += os.sep
-if not halo_output_dir.endswith(os.sep):
-    halo_output_dir += os.sep
+halo_output_file = Path(sys.argv[1]).resolve()
+halo_output_dir = halo_output_file.parent
+rockstar_dir = Path(str(halo_output_dir).replace("/halos", "/rockstar_halos"))
 
 # get the scale factor of the desired halo catalog
-target_a_str = halo_output_file[-12:-6]
+target_a_str = str(halo_output_file)[-12:-6]
 
 # create function to check a given halo catalog against the expected value
 def file_matches_scale_factor(input_file, target_a_str):
-    with open(rockstar_dir + file, "r") as halo:
+    with open(rockstar_dir / file, "r") as halo:
         # first line is not needed
         halo.readline()
         # second line has scale factor
@@ -44,16 +40,16 @@ def file_matches_scale_factor(input_file, target_a_str):
 # store the prefix for those files, so for now we'll set a sentinel value 
 # telling us we didn't find it.
 old_prefix = "not found"
-for file in os.listdir(rockstar_dir):
+for file in rockstar_dir.iterdir():
     # Each output has multiple halo files. Get only one of them to read in
     # and test. The ASCII files have the scale factor right in them
-    if "halos_" in file and ".0.ascii" in file:
-        if file_matches_scale_factor(file, target_a_str):
+    if "halos_" in file.name and ".0.ascii" in file.name:
+        if file_matches_scale_factor(file.name, target_a_str):
             # get everything up to the period. This will contain the file
             # index that matches what we want. We do want the period, though, so
             # that we don't include halos_80.0.ascii when we found 
             # halos_8.0.ascii as the match
-            old_prefix = file.split(".")[0] + "."
+            old_prefix = file.name.split(".")[0] + "."
             break
 
 # there is one pathological case where the rounding breaks.
@@ -69,12 +65,12 @@ if old_prefix == "not found":
     temp_target_str_up =   "{:.4f}".format(float(target_a_str) + 0.0001)
     temp_target_str_down = "{:.4f}".format(float(target_a_str) - 0.0001)
     # then do the same looking we did before
-    for file in os.listdir(rockstar_dir):
+    for file in rockstar_dir.iterdir():
         if "halos_" in file and ".0.ascii" in file:
             if file_matches_scale_factor(file, temp_target_str_up) or \
                file_matches_scale_factor(file, temp_target_str_down):
 
-                old_prefix = file.split(".")[0] + "."
+                old_prefix = file.name.split(".")[0] + "."
                 break
 
 # if we still can't find it, exit
@@ -83,10 +79,20 @@ if old_prefix == "not found":
                      "directory\n{}".format(halo_output_file, rockstar_dir))
 
 # now we have the right index and can copy all the files we need
-new_prefix = "halos_a{}.".format(target_a_str)
-for file in os.listdir(rockstar_dir):
-    if file.startswith(old_prefix):
-        old_path = rockstar_dir + os.sep + file
-        new_name = file.replace(old_prefix, new_prefix)
-        new_path = halo_output_dir + os.sep + new_name
+old_halo_prefix = old_prefix
+new_halo_prefix = "halos_a{}.".format(target_a_str)
+old_list = old_prefix.replace("halos_", "out_") + "list"
+new_list = "out_a{}.list".format(target_a_str)
+for file in rockstar_dir.iterdir():
+    old_path = rockstar_dir / file
+    if file.name.startswith(old_halo_prefix):
+        new_name = file.name.replace(old_halo_prefix, new_halo_prefix)
+        new_path = halo_output_dir / new_name
         shutil.copy2(old_path, new_path)
+        # copy2 keeps modification time, touch it
+        new_path.touch()
+    if file.name == old_list:
+        new_path = halo_output_dir / new_list
+        shutil.copy2(old_path, new_path)
+        # copy2 keeps modification time, touch it
+        new_path.touch()

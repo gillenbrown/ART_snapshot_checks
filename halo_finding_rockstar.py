@@ -11,7 +11,6 @@ yt.enable_parallelism()
 # idx 0: name of script
 # ids 1: directory of simulation outputs to run halos on
 # idx 2: directory to store halo finding outputs in
-# idx 3: must be `silent` or not present
 
 # print function that always flushes
 import functools
@@ -19,14 +18,8 @@ print = functools.partial(print, flush=True)
 
 # do error checking on root only.
 if yt.is_root():
-    if len(sys.argv) < 3:
+    if len(sys.argv) != 3:
         raise ValueError("Please provide the proper command line argument.")
-    elif len(sys.argv) == 4:
-        if sys.argv[3] != "silent":
-            raise ValueError("If present, the third command line "
-                             "argument can only be `silent`")
-    elif len(sys.argv) > 4:
-        raise ValueError("Extra command line arguments not recognized.")
 
 # turn the directories the user passes into the absolute path
 sim_dir = os.path.abspath(sys.argv[1])

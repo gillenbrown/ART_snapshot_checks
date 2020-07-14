@@ -81,6 +81,7 @@ endif
 # ------------------------------------------------------------------------------
 halo_finding_py_file = ./halo_finding_rockstar.py
 rename_script = ./rename_halos.py
+halo_management_script = ./manage_halos.py
 debug_script = ./debug_output.py
 galaxies_script = ./galaxy_summaries.py
 nbody_single_halo_plots_script = ./plot_single_halo_nbody.py
@@ -214,6 +215,19 @@ halo_to_sentinel = $(call words_to_path,$(call halo_words_to_sentinel_words,$(ca
 
 # ------------------------------------------------------------------------------
 #
+#  Halo directory management
+# 
+# ------------------------------------------------------------------------------
+# On stampede2 we need to move the files out of the directory and modify the
+# restart file, while on shangrila we do nothing. Use sentinels for this
+halo_management_sentinels = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/clean_sentinel.txt)
+# We will call this script once we are done with the halo renaming. This 
+# wildcard will be acceptable since all the renamed halos will be present
+# at the point when it's called.
+halo_management_sentinel_to_halos = $(foreach snapshot,$(wildcard $(subst rockstar_halos/clean_sentinel.txt,out/,$(1))*_a*.art),$(call sim_to_halo,$(snapshot)))
+
+# ------------------------------------------------------------------------------
+#
 #  Debug output files
 # 
 # ------------------------------------------------------------------------------
@@ -296,25 +310,32 @@ nbody_plots = $(halo_1_full_plots) $(halo_2_full_plots) $(halo_1_split_plots) $(
 #  Consistent trees
 # 
 # ------------------------------------------------------------------------------
-# first are the config files
+# first are the config files. We need these any any machine, since they'll need
+# to be copied over to be used before creating the merger trees
 tree_cfgs = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/outputs/merger_tree.cfg)
 tree_cfg_to_rockstar_cfg = $(subst outputs/merger_tree.cfg,rockstar.cfg,$(1))
 tree_cfg_to_sentinel = $(subst outputs/merger_tree.cfg,sentinel.txt,$(1))
 
-# then the actual halo trees
-trees = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/trees/tree_0_0_0.dat)
-tree_to_tree_cfg = $(subst trees/tree_0_0_0.dat,outputs/merger_tree.cfg,$(1))
+# we only do the actual merger tree creation on shangrila
+ifeq ($(machine),shangrila)
+	# then the actual halo trees
+	trees = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/trees/tree_0_0_0.dat)
+	tree_to_tree_cfg = $(subst trees/tree_0_0_0.dat,outputs/merger_tree.cfg,$(1))
 
-# ------------------------------------------------------------------------------
-#
-#  Parsing merger trees
-# 
-# ------------------------------------------------------------------------------
-# Here I again use a sentinel file, since there will be multiple files created
-# by the one C file:
-merger_sentinels = $(foreach dir,$(sim_checks_dirs),$(dir)/merger_sentinel.txt)
-# need to get the trees that the sim should parse
-merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_0_0.dat,$(1))
+	# ----------------------------------------------------------------------------
+	#
+	#  Parsing merger trees
+	# 
+	# ----------------------------------------------------------------------------
+	# Here I again use a sentinel file, since there will be multiple files created
+	# by the one C file:
+	merger_sentinels = $(foreach dir,$(sim_checks_dirs),$(dir)/merger_sentinel.txt)
+	# need to get the trees that the sim should parse
+	merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_0_0.dat,$(1))
+else
+	trees =
+	merger_sentinels = 
+endif
 
 # ------------------------------------------------------------------------------
 #
@@ -357,7 +378,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(sfh_plots) $(cimf_plots) $(halo_growth_plot) $(debugs) $(galaxies) $(movies)
+all: $(my_directories) $(halo_management_sentinels) $(timings) $(dt_history_plots) $(sfh_plots) $(cimf_plots) $(halo_growth_plot) $(debugs) $(galaxies) $(movies)
 
 .PHONY: clean
 clean:
@@ -395,8 +416,13 @@ $(rockstar_sentinels): %: $$(call sentinel_to_sims, %)
 
 # Rule to rename the halo catalogs into something more user-friendly
 .SECONDEXPANSION:
-$(halos_catalogs): %: | $(rename_script) $$(call halo_to_sentinel,%)
+$(halos_catalogs): %: $(rename_script) | $$(call halo_to_sentinel,%)
 	$(python) $(rename_script) $@
+
+# then clean up this mess
+.SECONDEXPANSION:
+$(halo_management_sentinels): %: $$(call halo_management_sentinel_to_halos,%) $(halo_management_script)
+	$(python) $(halo_management_script) $@ $(machine)
 
 # Make the debug files
 .SECONDEXPANSION:
