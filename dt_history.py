@@ -206,10 +206,14 @@ level_post_cfl_dts = {l:[] for l in range(20)}
 # initialize this outside, will be used later
 this_level_post_cfl_dt = dict()
 
-# count number of lines in the file
+# count number of lines in the file. See if we need to look for the dt_post_cfl
+# timestep indicators while we're at it
+need_post_cfl_lines = False
 with open(log_file, "r") as in_file:
     for i, l in enumerate(in_file):
-        pass
+        if not need_post_cfl_lines:
+            need_post_cfl_lines = is_dt_post_cfl_line(l)
+            # if this is true it won't get reset because of the conditional
 total_lines = i + 1
 
 # first we need to know where we're starting
@@ -232,6 +236,11 @@ for line in tqdm(stdout, total=total_lines):
     line = strip_mpi_rank_from_line(line)
 
     if looking_for_dt_post_cfl:
+        # some files don't have this information, don't even look for it
+        if not need_post_cfl_lines:
+            looking_for_dt_post_cfl = False
+            looking_for_global_timestep = True
+            # don't continue, since we didn't find anything with this line
         if is_dt_post_cfl_line(line):
             level, dt = get_post_cfl_dt(line)
             # then we can add it. When we have multiple ranks, we'll get each level a
@@ -413,8 +422,9 @@ if len(timestep_numbers) == len(timestep_successes) + 1:
     for level in level_dts:
         level_dts[level] = level_dts[level][:-1]
     # and the last CFL dt
-    for level in level_post_cfl_dts:
-        level_post_cfl_dts[level] = level_post_cfl_dts[level][:-1]
+    if need_post_cfl_lines:
+        for level in level_post_cfl_dts:
+            level_post_cfl_dts[level] = level_post_cfl_dts[level][:-1]
     
 # then they should all be equal
 assert len(timestep_numbers) == len(timestep_successes)
@@ -422,8 +432,9 @@ assert len(timestep_numbers) == len(cfl_violation_levels)
 assert len(timestep_numbers) == len(cfl_violation_reasons)
 for level in level_dts:
     assert len(level_dts[level]) == len(timestep_numbers)
-for level in level_post_cfl_dts:
-    assert len(level_post_cfl_dts[level]) == len(timestep_numbers)
+if need_post_cfl_lines:
+    for level in level_post_cfl_dts:
+        assert len(level_post_cfl_dts[level]) == len(timestep_numbers)
 
 # ======================================================================
 #
@@ -433,10 +444,11 @@ for level in level_post_cfl_dts:
 # For the highest level, the values of the dt and post_cfl_dt are equal, so we can use
 # that to convert to years. Note that the conversion changes with time, which is why
 # we need to do it for each timestep
-for idx in range(len(level_dts[0])):
-    to_years = level_dts[0][idx] / level_post_cfl_dts[0][idx]
-    for level in level_post_cfl_dts:
-        level_post_cfl_dts[level][idx] *= to_years
+if need_post_cfl_lines:
+    for idx in range(len(level_dts[0])):
+        to_years = level_dts[0][idx] / level_post_cfl_dts[0][idx]
+        for level in level_post_cfl_dts:
+            level_post_cfl_dts[level][idx] *= to_years
 
 # ======================================================================
 # 
@@ -577,8 +589,9 @@ for level in range(get_max_level(level_dts)+1):
 
     # the plotting of the post_cfl_dt is a lot easier, since it's guaranteed that
     # each level will be defined all the time
-    ax.plot(range(len(level_post_cfl_dts[level])), level_post_cfl_dts[level],
-            c=mappable.to_rgba(level), ls=":", lw=1)
+    if need_post_cfl_lines:
+        ax.plot(range(len(level_post_cfl_dts[level])), level_post_cfl_dts[level],
+                c=mappable.to_rgba(level), ls=":", lw=1)
 
 ax.set_yscale("log")
 
