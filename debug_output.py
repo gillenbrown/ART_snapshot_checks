@@ -279,6 +279,40 @@ for unit in ["code_mass", "Msun"]:
         out(refine_row_str.format(level, n_cell, *mass_percentiles))
     out("")  # for spacing
 
+# =========================================================================
+#         
+# Checking feedback caps
+# 
+# =========================================================================
+# Check the number of cells containing young stars with temperatures above
+# certain limits, to check how the feedback caps are behaving.
+out("\nTemperatures around young stars\n===============================")
+out("This shows the fraction of stars with temperatures above the given limit")
+star_ages = ad[('STAR', 'age')]
+star_positions = ad[('STAR', 'particle_position')]
+for max_age in [15, 40]:
+    out(f"\nMax age = {max_age} Myr")
+    # Get the young stars (defined as less than 15 Myr). This value is chosen to 
+    young_idxs = np.where(star_ages < 40  * yt.units.Myr)[0]
+    if len(young_idxs) == 0:
+        out("No stars!")
+    else:
+        out("Temperature    Fraction")
+        # cap the number at 1000
+        if len(young_idxs) > 1000:
+            np.random.shuffle(young_idxs)  # get a random 1000
+            young_idxs = young_idxs[:1000]
+        # then get the temperature at the positions of all these young stars
+        young_positions = star_positions[young_idxs]
+        young_temps = ds.find_field_values_at_points([('gas', 'temperature')], 
+                                                     young_positions)
+        # then see how many stars have temperatures above certain values
+        def find_fraction_above(temps, temp_max):
+            num_above = np.sum(temps > temp_max)
+            return 100 * num_above / len(temps)
+        temp_caps = [1E6, 1E7, 2E7, 4E7, 4.3E7, 5E7, 1E8, 1E9]
+        for cap in temp_caps:
+            out(f"{cap:11.2e}    {find_fraction_above(young_temps, cap):.2f}")
 
 # =========================================================================
 #         
