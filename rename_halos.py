@@ -66,9 +66,9 @@ if old_prefix == "not found":
     temp_target_str_down = "{:.4f}".format(float(target_a_str) - 0.0001)
     # then do the same looking we did before
     for file in rockstar_dir.iterdir():
-        if "halos_" in file and ".0.ascii" in file:
-            if file_matches_scale_factor(file, temp_target_str_up) or \
-               file_matches_scale_factor(file, temp_target_str_down):
+        if "halos_" in file.name and ".0.ascii" in file.name:
+            if file_matches_scale_factor(file.name, temp_target_str_up) or \
+               file_matches_scale_factor(file.name, temp_target_str_down):
 
                 old_prefix = file.name.split(".")[0] + "."
                 break

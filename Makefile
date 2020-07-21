@@ -53,7 +53,7 @@ ifeq ($(machine),shangrila)
 	tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
 	tree_dir = /u/home/gillenb/code/not_mine/consistent-trees
 	halo_finding_script = ./run_rockstar.sh
-	timing_script = /u/home/gillenb/code/mine/art_cluster/utils/scripts/parse_timing2.pl
+	timing_script = /u/home/gillenb/code/mine/cart/utils/scripts/parse_timing2.pl
 endif
 ifeq ($(machine),lou)
 	tree_config_script = /u/gbrown12/code/rockstar/scripts/gen_merger_cfg.pl
@@ -71,7 +71,7 @@ ifeq ($(machine),stampede2)
 	tree_config_script = $(HOME)/code/rockstar-galaxies/scripts/gen_merger_cfg.pl
 	tree_dir = $(HOME)/code/consistent-trees
 	halo_finding_script = ./run_rockstar_stampede2.sh
-	timing_script = $(HOME)/code/art_cluster/utils/scripts/parse_timing2.pl
+	timing_script = $(HOME)/code/cart/utils/scripts/parse_timing2.pl
 endif
 
 # ------------------------------------------------------------------------------
@@ -111,7 +111,8 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/shangrila/hui/sfe_100 \
 	                 $(runs_home)/shangrila/hui/sfe_200 \
 	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
-	                 $(runs_home)/stampede2/production/sfe100
+	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run 
+# 	                 $(runs_home)/stampede2/production/sfe100
 endif
 
 ifeq ($(machine),lou)
@@ -378,7 +379,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(halo_management_sentinels) $(timings) $(dt_history_plots) $(sfh_plots) $(cimf_plots) $(halo_growth_plot) $(debugs) $(galaxies) $(movies)
+all: $(my_directories) $(timings) $(dt_history_plots) $(sfh_plots) $(cimf_plots) $(halo_management_sentinels) $(halo_growth_plot) $(debugs) $(galaxies) $(movies)
 
 .PHONY: clean
 clean:

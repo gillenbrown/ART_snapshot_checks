@@ -25,6 +25,7 @@ def full_dir(partial_path):
     return base_dir / partial_path
 
 names = {full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 SFE100",
+         full_dir("shangrila/old_ic_comparison/default_1e7_temp_cap/run"): "ART 2.0 SFE100 Bad Caps",
          full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
          full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
          full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
