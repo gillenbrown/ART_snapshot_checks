@@ -278,17 +278,17 @@ endif
 # 
 # ------------------------------------------------------------------------------
 # Here we assume all log files are located as follows. Each `log` directory
-# has several subdirectories holding the logs for each run, starting with
-# `log_`. Any other directories will be ignored. We have to do this weird
-# thing we we get all items in each directory, then get the parent of each of
-# those, to ensure that what we got is really a directory. 
-log_dirs = $(foreach dir,$(sim_dirs),$(foreach item,$(wildcard $(dir)/log/log_*/*),$(dir $(item))))
+# has several subdirectories holding the runtime outputs for each run, starting
+# with `runtime_`. The log directories are inside that directory. Any other
+# directories will be ignored. We have to do this weird thing we we get all
+# items in each directory, then get the parent of each of those, to ensure that
+# what we got is really a directory.
+log_dirs = $(foreach dir,$(sim_dirs),$(foreach item,$(wildcard $(dir)/log/runtime_*/*),$(dir $(item))log))
 # sorting this removes any duplicates. Order doesn't matter to me anyway
 timing_dirs = $(sort $(log_dirs))
-# the output of $(dir ...) keeps the last slash, so don't include it here
-timings = $(foreach t_dir,$(timing_dirs),$(t_dir)timing_debug.txt)
-dt_history_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)timestep_history.png)
-cfl_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)cfl_cell_speeds.png)
+timings = $(foreach t_dir,$(timing_dirs),$(t_dir)/timing_debug.txt)
+dt_history_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)/timestep_history.png)
+cfl_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)/cfl_cell_speeds.png)
 
 # ------------------------------------------------------------------------------
 #
