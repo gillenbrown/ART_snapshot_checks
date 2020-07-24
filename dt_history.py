@@ -441,12 +441,18 @@ if need_post_cfl_lines:
 # convert code units to years for post CFL violatin dts
 #
 # ======================================================================
-# For the highest level, the values of the dt and post_cfl_dt are equal, so we can use
+# For the first timestep after a CFL violation on the highest level, the values of the
+# dt and post_cfl_dt are equal. (This can change later if the timestep of the highest
+# level is modified because of the max spacing between levels). We can use
 # that to convert to years. Note that the conversion changes with time, which is why
 # we need to do it for each timestep
 if need_post_cfl_lines:
+    # the first one will be correct
+    to_years = level_dts[0][0] / level_post_cfl_dts[0][0]
     for idx in range(len(level_dts[0])):
-        to_years = level_dts[0][idx] / level_post_cfl_dts[0][idx]
+        # update this for the timesteps after a successfull timestep
+        if idx > 0 and timestep_successes[idx -1]:
+            to_years = level_dts[0][idx] / level_post_cfl_dts[0][idx]
         for level in level_post_cfl_dts:
             level_post_cfl_dts[level][idx] *= to_years
 
@@ -468,7 +474,7 @@ norm = colors.BoundaryNorm(boundaries, cmap.N)
 mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
 mappable.set_array([])
 
-def _plot_base(ax, xs, ys, successes, cfl_violation_level, cfl_violation_reason, level):
+def _plot_base_dt(ax, xs, ys, successes, cfl_violation_level, cfl_violation_reason, level):
     """
     Underlying function to plot the timesteps as points, with lines connecting
     them. Points are filled if the timestep was successful, open if not. There will also
@@ -531,7 +537,7 @@ def _plot_base(ax, xs, ys, successes, cfl_violation_level, cfl_violation_reason,
     ax.scatter(x_cfl_bulk, y_cfl_bulk,   c=colors_cfl_bulk, marker="x",
                s=size_cfl*0.5, **common_x)
 
-def plot_level(ax, timestep_successes, cfl_violation_level, cfl_violation_reasons,
+def plot_level_dt(ax, timestep_successes, cfl_violation_level, cfl_violation_reasons,
                dts, level):
     # what we do here is go through the dts and break it into contiguous segments
     # where that level existed
@@ -561,8 +567,8 @@ def plot_level(ax, timestep_successes, cfl_violation_level, cfl_violation_reason
             
         else:
             if len(contiguous_xs) > 0:
-                _plot_base(ax, contiguous_xs, contiguous_ys, contiguous_success,
-                           contiguous_cfl_level, contiguous_cfl_reason, level)
+                _plot_base_dt(ax, contiguous_xs, contiguous_ys, contiguous_success,
+                              contiguous_cfl_level, contiguous_cfl_reason, level)
                 contiguous_xs = []
                 contiguous_ys = []
                 contiguous_success = []
@@ -571,8 +577,43 @@ def plot_level(ax, timestep_successes, cfl_violation_level, cfl_violation_reason
             
     # if we've reached the end, we may need to plot too
     if len(contiguous_xs) > 0:
-        _plot_base(ax, contiguous_xs, contiguous_ys, contiguous_success,
-                   contiguous_cfl_level, contiguous_cfl_reason, level)
+        _plot_base_dt(ax, contiguous_xs, contiguous_ys, contiguous_success,
+                      contiguous_cfl_level, contiguous_cfl_reason, level)
+
+def _plot_base_post_cfl_dt(ax, xs, ys, level):
+    ax.plot(xs, ys, c=mappable.to_rgba(level), ls="--", lw=1)
+
+def plot_level_post_cfl_dt(ax, timestep_successes, dts, post_cfl_dts, level):
+    # what we do here is go through the dts and break it into contiguous segments
+    # where that level existed
+
+    xs = list(range(len(post_cfl_dts)))
+
+    # check that they're the same length
+    assert len(xs) == len(post_cfl_dts)
+
+    # we'll keep a list of the contiguous points without a break.
+    # when we hit a zero in dt (indicating that level isn't present),
+    # we'll plot it and reset
+    contiguous_xs = []
+    contiguous_ys = []
+
+    for idx in range(len(xs)):
+        # we only plot the post CFL dt if a few conditions exist: the level exists,
+        # either the timestep was a failure or the previous timestep was a failure
+        if dts[idx] > 0 and (not timestep_successes[idx] or not timestep_successes[idx-1]):
+            contiguous_xs.append(xs[idx])
+            contiguous_ys.append(post_cfl_dts[idx])
+        # make the line end if the timestep was a success and the previous was a failur
+        if (timestep_successes[idx] and not timestep_successes[idx-1]):
+            if len(contiguous_xs) > 0:
+                _plot_base_post_cfl_dt(ax, contiguous_xs, contiguous_ys, level)
+                contiguous_xs = []
+                contiguous_ys = []
+
+    # if we've reached the end, we may need to plot too
+    if len(contiguous_xs) > 0:
+        _plot_base_post_cfl_dt(ax, contiguous_xs, contiguous_ys, level)
 
 
 # ======================================================================
@@ -584,14 +625,11 @@ fig, ax = bpl.subplots(figsize=[3 + len(timestep_numbers) / 8, 7])
 ax.make_ax_dark()
 
 for level in range(get_max_level(level_dts)+1):
-    plot_level(ax, timestep_successes, cfl_violation_levels, cfl_violation_reasons,
-               level_dts[level], level)
-
-    # the plotting of the post_cfl_dt is a lot easier, since it's guaranteed that
-    # each level will be defined all the time
+    plot_level_dt(ax, timestep_successes, cfl_violation_levels, cfl_violation_reasons,
+                  level_dts[level], level)
     if need_post_cfl_lines:
-        ax.plot(range(len(level_post_cfl_dts[level])), level_post_cfl_dts[level],
-                c=mappable.to_rgba(level), ls=":", lw=1)
+        plot_level_post_cfl_dt(ax, timestep_successes, level_dts[level],
+                               level_post_cfl_dts[level], level)
 
 ax.set_yscale("log")
 
