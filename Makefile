@@ -19,6 +19,18 @@ endif
 
 # ------------------------------------------------------------------------------
 #
+#  name of python executable - depends on the machine
+#
+# ------------------------------------------------------------------------------
+ifeq ($(machine),shangrila)
+	python=python
+endif
+ifeq ($(machine),stampede2)
+	python=python3
+endif
+
+# ------------------------------------------------------------------------------
+#
 #  Code locations - depend on the machine
 # 
 # ------------------------------------------------------------------------------
@@ -341,65 +353,65 @@ $(rockstar_sentinels): %: $$(call sentinel_to_sims, %)
 # Rule to rename the halo catalogs into something more user-friendly
 .SECONDEXPANSION:
 $(halos_catalogs): %: $(rename_script) | $$(call halo_to_sentinel,%)
-	python $(rename_script) $@
+	$(python) $(rename_script) $@
 
 # then clean up this mess
 .SECONDEXPANSION:
 $(halo_management_sentinels): %: $$(call halo_management_sentinel_to_halos,%) $(halo_management_script)
-	python $(halo_management_script) $@ $(machine)
+	$(python) $(halo_management_script) $@ $(machine)
 
 # Make the debug files
 .SECONDEXPANSION:
 $(debugs): %: $(debug_script)
-	python $(debug_script) $(call debug_to_sim, $@) clobber silent
+	$(python) $(debug_script) $(call debug_to_sim, $@) clobber silent
 
 # Make the summary files
 .SECONDEXPANSION:
 $(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
-	python $(galaxies_script) $(call galaxies_to_sim, $@) $(call galaxies_to_halo, $@) clobber silent
+	$(python) $(galaxies_script) $(call galaxies_to_sim, $@) $(call galaxies_to_halo, $@) clobber silent
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
 $(sfh_plots): $(snapshots_hydro) $(halos_catalogs)
-	python $(sfh_plots_script) $(sim_dirs_hydro)
+	$(python) $(sfh_plots_script) $(sim_dirs_hydro)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
 $(cimf_plots): $(snapshots_hydro) $(halos_catalogs)
-	python $(cimf_plots_script) $(sim_dirs_hydro)
+	$(python) $(cimf_plots_script) $(sim_dirs_hydro)
 
 # Make the individual nbody plots - several examples of very similar things here
 .SECONDEXPANSION:
 $(halo_1_full_plots): %: $$(call halo_1_full_to_halo, %) $(nbody_single_halo_plots_script) $(nbody_full_plot_script)
-	python $(nbody_single_halo_plots_script) $(call halo_1_full_to_sim, $@) $(call halo_1_full_to_halo, $@) 1 full
+	$(python) $(nbody_single_halo_plots_script) $(call halo_1_full_to_sim, $@) $(call halo_1_full_to_halo, $@) 1 full
 
 .SECONDEXPANSION:
 $(halo_2_full_plots): %: $$(call halo_2_full_to_halo, %) $(nbody_single_halo_plots_script) $(nbody_full_plot_script)
-	python $(nbody_single_halo_plots_script) $(call halo_2_full_to_sim, $@) $(call halo_2_full_to_halo, $@) 2 full
+	$(python) $(nbody_single_halo_plots_script) $(call halo_2_full_to_sim, $@) $(call halo_2_full_to_halo, $@) 2 full
 
 .SECONDEXPANSION:
 $(halo_1_split_plots): %: $$(call halo_1_split_to_halo, %) $(nbody_single_halo_plots_script) $(nbody_split_plot_script)
-	python $(nbody_single_halo_plots_script) $(call halo_1_split_to_sim, $@) $(call halo_1_split_to_halo, $@) 1 split
+	$(python) $(nbody_single_halo_plots_script) $(call halo_1_split_to_sim, $@) $(call halo_1_split_to_halo, $@) 1 split
 
 .SECONDEXPANSION:
 $(halo_2_split_plots): %: $$(call halo_2_split_to_halo, %) $(nbody_single_halo_plots_script) $(nbody_split_plot_script)
-	python $(nbody_single_halo_plots_script) $(call halo_2_split_to_sim, $@) $(call halo_2_split_to_halo, $@) 2 split
+	$(python) $(nbody_single_halo_plots_script) $(call halo_2_split_to_sim, $@) $(call halo_2_split_to_halo, $@) 2 split
 
 .SECONDEXPANSION:
 $(refined_full_plots): %: $$(call refined_full_to_halo, %) $(nbody_refined_plot_script) $(nbody_full_plot_script)
-	python $(nbody_refined_plot_script) $(call refined_full_to_sim, $@) $(call refined_full_to_halo, $@) full
+	$(python) $(nbody_refined_plot_script) $(call refined_full_to_sim, $@) $(call refined_full_to_halo, $@) full
 
 .SECONDEXPANSION:
 $(refined_split_plots): %: $$(call refined_split_to_halo, %) $(nbody_refined_plot_script) $(nbody_split_plot_script)
-	python $(nbody_refined_plot_script) $(call refined_split_to_sim, $@) $(call refined_split_to_halo, $@) split
+	$(python) $(nbody_refined_plot_script) $(call refined_split_to_sim, $@) $(call refined_split_to_halo, $@) split
 
 .SECONDEXPANSION:
 $(local_group_full_plots): %: $$(call local_group_full_to_halo, %) $(nbody_local_group_plot_script) $(nbody_full_plot_script)
-	python $(nbody_local_group_plot_script) $(call local_group_full_to_sim, $@) $(call local_group_full_to_halo, $@) full
+	$(python) $(nbody_local_group_plot_script) $(call local_group_full_to_sim, $@) $(call local_group_full_to_halo, $@) full
 
 .SECONDEXPANSION:
 $(local_group_split_plots): %: $$(call local_group_split_to_halo, %) $(nbody_local_group_plot_script) $(nbody_split_plot_script)
-	python $(nbody_local_group_plot_script) $(call local_group_split_to_sim, $@) $(call local_group_split_to_halo, $@) split
+	$(python) $(nbody_local_group_plot_script) $(call local_group_split_to_sim, $@) $(call local_group_split_to_halo, $@) split
 
 
 # Make the movies. We can't parametrize this all since there is no third expansion 
@@ -440,7 +452,7 @@ $(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 
 # Then use those to make the halo comparison plot
 $(halo_growth_plot): $(merger_sentinels) $(halo_growth_comp_script)
-	python  $(halo_growth_comp_script) $@
+	$(python)  $(halo_growth_comp_script) $@
 
 # timing output
 .PHONY: timing
@@ -454,7 +466,7 @@ $(timings): $(snapshots)
 	$(timing_script) $(dir $@) > $@ 
 
 $(dt_history_plots): $(snapshots) $(dt_history_script)
-	python $(dt_history_script) $(dir $@)
+	$(python) $(dt_history_script) $(dir $@)
 
 $(cfl_plots): $(snapshots) $(cfl_script)
-	python $(cfl_script) $(dir $@)
+	$(python) $(cfl_script) $(dir $@)
