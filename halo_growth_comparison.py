@@ -1,4 +1,5 @@
-import os
+import sys
+from pathlib import Path
 
 import numpy as np
 import yt
@@ -13,12 +14,28 @@ import betterplotlib as bpl
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
+plot_name = Path(sys.argv[1])
 # ==============================================================================
 # 
 # We need the time, so we need to load the dataset to get the cosmology info
 #
 # ==============================================================================
-ds = yt.load("/u/home/gillenb/art_runs/runs/stampede2/production/sfe100/out/continuous_a0.0703.art")
+out_dir = Path("/u/home/gillenb/art_runs/runs/stampede2/production/sfe100/out/")
+# first validate that this exists
+if not out_dir.exists():
+    plot_name.touch()
+    exit()
+# get a simulation from this path
+found_sims = []
+for item in out_dir.iterdir():
+    if item.name.endswith(".art"):
+        found_sims.append(item)
+# if we didn't find anything, exit
+if len(found_sims) == 0:
+    plot_name.touch()
+    exit()
+# get the earliest one so there are less stars and it loads quicker
+ds = yt.load(sorted(found_sims)[0])
 H0 = ds.artio_parameters["hubble"][0]*100
 omega_m = ds.artio_parameters["OmegaM"][0]
 cosmo = cosmology.FlatLambdaCDM(H0, omega_m, Tcmb0=2.725)
@@ -112,12 +129,12 @@ class Halo(object):
 # ==============================================================================
 class Simulation(object):
     def __init__(self, output_dir, name_base):
-        self.dirname = os.path.abspath(output_dir)
-        mergers_thelma = self.dirname + os.sep + "mergers_1.txt"
-        mergers_louise = self.dirname + os.sep + "mergers_2.txt"
+        self.dirname = Path(output_dir).resolve()
+        mergers_thelma = self.dirname / "mergers_1.txt"
+        mergers_louise = self.dirname / "mergers_2.txt"
         
-        growth_thelma = self.dirname + os.sep + "growth_1.txt"
-        growth_louise = self.dirname + os.sep + "growth_2.txt"
+        growth_thelma = self.dirname / "growth_1.txt"
+        growth_louise = self.dirname / "growth_2.txt"
         
         self.thelma = Halo(mergers_thelma, growth_thelma, name_base)
         self.louise = Halo(mergers_louise, growth_louise, name_base)
@@ -257,4 +274,4 @@ plot_merger_marker(ax_l, [x_fake], [6.24E9], c1, m1)
 plot_merger_marker(ax_l, [x_fake], [3.49E9], c2, m2) # 3.48 to 3.5
 plot_merger_marker(ax_l, [x_fake], [1.97E9], c3, m3)
     
-fig.savefig("./comparison_plots/halo_growth.png", bbox_inches="tight")
+fig.savefig(plot_name, bbox_inches="tight")
