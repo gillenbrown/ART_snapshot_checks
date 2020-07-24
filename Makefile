@@ -93,6 +93,7 @@ halo_growth_comp_script = ./halo_growth_comparison.py
 sfh_plots_script = ./plot_sfh.py
 cimf_plots_script = ./plot_cimf.py
 dt_history_script = ./dt_history.py
+cfl_script = ./cfl_violations.py
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
 read_tree_src = $(read_tree_dir)/halo_history.c
@@ -354,6 +355,7 @@ timing_dirs = $(sort $(log_dirs))
 # the output of $(dir ...) keeps the last slash, so don't include it here
 timings = $(foreach t_dir,$(timing_dirs),$(t_dir)timing_debug.txt)
 dt_history_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)timestep_history.png)
+cfl_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)cfl_cell_speeds.png)
 
 # ------------------------------------------------------------------------------
 #
@@ -379,7 +381,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(sfh_plots) $(cimf_plots) $(halo_management_sentinels) $(halo_growth_plot) $(debugs) $(galaxies) $(movies)
+all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_plots) $(cimf_plots) $(halo_management_sentinels) $(halo_growth_plot) $(debugs) $(galaxies) $(movies)
 
 .PHONY: clean
 clean:
@@ -533,3 +535,5 @@ $(timings): $(snapshots)
 $(dt_history_plots): $(snapshots) $(dt_history_script)
 	$(python) $(dt_history_script) $(dir $@)
 
+$(cfl_plots): $(snapshots) $(cfl_script)
+	$(python) $(cfl_script) $(dir $@)
