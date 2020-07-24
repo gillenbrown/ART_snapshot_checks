@@ -19,8 +19,9 @@ module load remora python3/3.7.0
 # go to the directory I submitted the job from
 cd $SLURM_SUBMIT_DIR
 
-# so far I have one production run. I'll need 5 cores for that halo finding.
-# that leaves the rest for other things, so I can use 64 parallel ranks
+# halos uses all the cores, so it needs to be done one at a time. The number
+# used thereafter depends on the memory, it's just empirical
 make dirs
-remora make -j64
+remora make halos
+remora make -j34
 # &>> $SLURM_JOB_NAME.stdout.$SLURM_JOB_ID

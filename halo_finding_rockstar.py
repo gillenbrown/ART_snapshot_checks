@@ -18,12 +18,13 @@ print = functools.partial(print, flush=True)
 
 # do error checking on root only.
 if yt.is_root():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         raise ValueError("Please provide the proper command line argument.")
 
 # turn the directories the user passes into the absolute path
 sim_dir = os.path.abspath(sys.argv[1])
 out_dir = os.path.abspath(sys.argv[2])
+cores_to_use = int(sys.argv[3])
 if not sim_dir.endswith(os.sep):
     sim_dir += os.sep
 if not out_dir.endswith(os.sep):
@@ -48,12 +49,17 @@ if ('N-BODY_0', 'MASS') in ts[0].derived_field_list:
 else:
     particle_type = "N-BODY"
 
-# Lou analysis machines have Skylake nodes with 20 cores. We have one master
-# process too. I use 1 reader since reading is quicker than analysis. 
-# I want to minimize the number of writers since there is one output file per 
-# writer, and Lou has a cap on file number. Using 2 gives 4 total cores per
-# process, which means we can run 5 at once on the LDANs
-rh = RockstarHaloFinder(ts, num_readers=1, num_writers=2, outbase=out_dir,
+# determine how many readers and writers to use, depending on what machine we're on. We
+# have one master process, plus the number of readers and writers. Reading is quicker
+# then analysis, so we typically have fewer readers
+processing_cores = cores_to_use - 1
+if processing_cores < 5:
+    readers = 1
+    writers = processing_cores - 1
+else:
+    readers = int(0.2 * processing_cores)
+    writers = processing_cores - readers
+rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers, outbase=out_dir,
                         particle_type=particle_type)
 rh.run(restart=restart)
 
