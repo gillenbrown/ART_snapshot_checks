@@ -3,7 +3,6 @@ import os
 import pathlib
 import yt
 from yt.extensions.astro_analysis.halo_finding.rockstar.api import RockstarHaloFinder
-from yt.data_objects.particle_filters import add_particle_filter
 yt.funcs.mylog.setLevel(0)  # ignore yt's output
 yt.enable_parallelism()
 
@@ -55,10 +54,11 @@ else:
 processing_cores = cores_to_use - 1
 if processing_cores < 5:
     readers = 1
-    writers = processing_cores - 1
+elif processing_cores > 30:
+    readers = 16
 else:
-    readers = int(0.2 * processing_cores)
-    writers = processing_cores - readers
+    raise NotImplementedError("Choose writers for 5 < cores < 30")
+writers = processing_cores - readers
 rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers, outbase=out_dir,
                         particle_type=particle_type)
 rh.run(restart=restart)
