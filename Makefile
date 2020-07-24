@@ -13,15 +13,6 @@ hostname = $(shell hostname)
 ifneq (,$(findstring shangrila,$(hostname)))
 	machine = shangrila
 endif
-ifneq (,$(findstring ldan,$(hostname)))
-	machine = lou
-endif
-ifneq (,$(findstring lfe,$(hostname)))
-	machine = lou
-endif
-ifneq (,$(findstring gl-login,$(hostname)))
-	machine = great_lakes
-endif
 ifneq (,$(findstring stampede2,$(hostname)))
 	machine = stampede2
 endif
@@ -32,12 +23,6 @@ endif
 #
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
-	python=python
-endif
-ifeq ($(machine),lou)
-	python=python
-endif
-ifeq ($(machine),great_lakes)
 	python=python
 endif
 ifeq ($(machine),stampede2)
@@ -54,18 +39,6 @@ ifeq ($(machine),shangrila)
 	tree_dir = /u/home/gillenb/code/not_mine/consistent-trees
 	halo_finding_script = ./run_rockstar.sh
 	timing_script = /u/home/gillenb/code/mine/cart/utils/scripts/parse_timing2.pl
-endif
-ifeq ($(machine),lou)
-	tree_config_script = /u/gbrown12/code/rockstar/scripts/gen_merger_cfg.pl
-	tree_dir = /u/gbrown12/code/consistent-trees
-	halo_finding_script = ./run_rockstar_ldan.sh
-	timing_script = /u/gbrown12/code/parse_timing2.pl
-endif
-ifeq ($(machine),great_lakes)
-	tree_config_script = /home/gillenb/code/rockstar/scripts/gen_merger_cfg.pl
-	tree_dir = /home/gillenb/code/consistent-trees
-	halo_finding_script = ./run_rockstar_gl.sh
-	timing_script = /home/gillenb/code/art_cluster/utils/scripts/parse_timing2.pl
 endif
 ifeq ($(machine),stampede2)
 	tree_config_script = $(HOME)/code/rockstar-galaxies/scripts/gen_merger_cfg.pl
@@ -115,46 +88,6 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run 
 # 	                 $(runs_home)/stampede2/production/sfe100
 endif
-
-ifeq ($(machine),lou)
-	runs_home = /u/gbrown12/art_runs/runs
-	sim_dirs_nbody = $(runs_home)/nbody/new_ic_trim_12.5mpc/root_05/run/outputs/fix_vel \
-	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_06/run/outputs/fix_vel \
-	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_07/run/outputs/fix_vel \
-	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_08/run/outputs/fix_vel \
-	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_05/run/outputs/vel_offset \
-	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_06/run/outputs/vel_offset \
-	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_07/run/outputs/vel_offset \
-	                 $(runs_home)/nbody/new_ic_trim_12.5mpc/root_08/run/outputs/vel_offset \
-	                 $(runs_home)/nbody/new_ic_trim_25mpc/root_06/run/outputs/vel_offset \
-	                 $(runs_home)/nbody/new_ic_trim_25mpc/root_07/run/outputs/vel_offset \
-	                 $(runs_home)/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset \
-	                 $(runs_home)/nbody/new_ic_50mpc/root_07/run/outputs/fix_vel
-	sim_dirs_hydro = $(runs_home)/hydro/new_ic_50mpc/root_07/run/outputs/first \
-	                 $(runs_home)/hydro/new_ic_trim_12.5mpc/root_05/run/outputs/first \
-	                 $(runs_home)/hydro/new_ic_trim_12.5mpc/root_06/run/outputs/first \
-	                 $(runs_home)/hydro/new_ic_trim_12.5mpc/root_07/run/outputs/first \
-	                 $(runs_home)/hydro/new_ic_trim_12.5mpc/root_08/run/outputs/first \
-	                 $(runs_home)/hydro/old_ic/default/run/outputs/run_1 \
-	                 $(runs_home)/hydro/old_ic/no_hn/run/outputs/run_1
-	                 #$(runs_home)/hydro/old_ic/continuous/run/outputs/run_1 \
-	                 #$(runs_home)/hydro/old_ic/continuous_no_hn/run/outputs/run_1 \
-	                 #$(runs_home)/hydro/old_ic/no_changes/run/outputs/run_1 \
-	                 #$(runs_home)/hydro/old_ic/no_alpha/run/outputs/run_1
-endif
-
-ifeq ($(machine),great_lakes)                
-	runs_home = /home/gillenb/art_runs/runs
-	sim_dirs_nbody = 
-	sim_dirs_hydro = $(runs_home)/hydro_test/discrete_128/run/outputs/first \
-	                 $(runs_home)/hydro_test/discrete_256/run/outputs/first \
-	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/1_cores \
-	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/2_cores \
-	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/4_cores \
-	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/6_cores \
-	                 $(runs_home)/hydro_test/scaling_discrete_256/run/outputs/8_cores 
-endif
-
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
 	sim_dirs_nbody =
