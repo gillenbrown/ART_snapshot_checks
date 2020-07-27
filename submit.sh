@@ -17,15 +17,23 @@
 # activate the correct env
 module load remora
 source ~/.bashrc
+# Make sure the system python is not accessible
+unset PYTHONPATH
+
+# double check these variables
+echo $(which python)
+echo $PYTHONPATH
 
 # go to the directory I submitted the job from
 cd $SLURM_SUBMIT_DIR
 
+
 # halos uses all the cores, so it needs to be done one at a time. The number
 # used thereafter depends on the memory, it's just empirical. For halos we have
 # one master process for make. The halo finding script will use ibrun to spawn
-# processes on the rest of the cores
+# processes on the rest of the cores, although we have to restrict based on
+# memory considerations
 make dirs
 remora ibrun -n 1 -o 0 make halos
-remora make -j48
+remora make -j10
 # &>> $SLURM_JOB_NAME.stdout.$SLURM_JOB_ID
