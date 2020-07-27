@@ -59,6 +59,12 @@ elif processing_cores > 30:
 else:
     raise NotImplementedError("Choose writers for 5 < cores < 30")
 writers = processing_cores - readers
+if yt.is_root():
+    print("Rockstar will be running with:")
+    print(f"\t- {cores_to_use} total cores")
+    print(f"\t- 1 master process")
+    print(f"\t- {readers} readers")
+    print(f"\t- {writers} writers")
 rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers, outbase=out_dir,
                         particle_type=particle_type)
 rh.run(restart=restart)

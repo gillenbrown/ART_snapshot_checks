@@ -11,10 +11,12 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --output=stdout_%x_%j
 
+# This took a lot of messing with to get right. Do NOT use `module reset`. This
+# will stop conda from recognizing my distribution somehow.
+# We do need to source bashrc, as it holds the code to activate conda and
+# activate the correct env
+module load remora
 source ~/.bashrc
-
-module reset
-module load remora python3/3.7.0
 
 # go to the directory I submitted the job from
 cd $SLURM_SUBMIT_DIR
