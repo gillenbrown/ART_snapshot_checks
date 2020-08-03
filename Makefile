@@ -73,8 +73,9 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/shangrila/hui/sfe_100 \
 	                 $(runs_home)/shangrila/hui/sfe_200 \
 	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
-	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run 
-# 	                 $(runs_home)/stampede2/production/sfe100
+	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run \
+	                 $(runs_home)/stampede2/production/sfe100 \
+	                 $(runs_home)/stampede2/production/first_sfe_100_1e7_temp_cap
 endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
@@ -123,6 +124,7 @@ rockstar_sentinels = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/sentinel.tx
 sentinel_to_sims = $(wildcard $(subst rockstar_halos/sentinel.txt,out/,$(1))*_a*.art)
 sentinel_to_out_dir = $(subst rockstar_halos/sentinel.txt,out/,$(1))
 sentinel_to_rh_dir = $(subst rockstar_halos/sentinel.txt,rockstar_halos/,$(1))
+sentinel_to_halo_dir = $(subst rockstar_halos/sentinel.txt,halos/,$(1))
 
 # Then some complex functions to find the rockstar sentinel file for a given 
 # halo catalog. This is hard and ugly since we have to mess around with
@@ -336,7 +338,7 @@ halos: $(rockstar_sentinels)
 # directory
 .SECONDEXPANSION:
 $(rockstar_sentinels): %: $$(call sentinel_to_sims, %) 
-	$(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@)
+	$(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@) $(call sentinel_to_halo_dir, $@)
 
 # Rule to rename the halo catalogs into something more user-friendly
 .SECONDEXPANSION:
