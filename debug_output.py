@@ -284,8 +284,8 @@ for unit in ["code_mass", "Msun"]:
 # Checking feedback caps
 # 
 # =========================================================================
-Check the number of cells containing young stars with temperatures above
-certain limits, to check how the feedback caps are behaving.
+# Check the number of cells containing young stars with temperatures above
+# certain limits, to check how the feedback caps are behaving.
 out("\nTemperatures around young stars\n===============================")
 out("This shows the fraction of stars with temperatures above the given limit")
 star_ages = ad[('STAR', 'age')]
