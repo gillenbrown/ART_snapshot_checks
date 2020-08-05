@@ -284,8 +284,8 @@ for unit in ["code_mass", "Msun"]:
 # Checking feedback caps
 # 
 # =========================================================================
-# Check the number of cells containing young stars with temperatures above
-# certain limits, to check how the feedback caps are behaving.
+Check the number of cells containing young stars with temperatures above
+certain limits, to check how the feedback caps are behaving.
 out("\nTemperatures around young stars\n===============================")
 out("This shows the fraction of stars with temperatures above the given limit")
 star_ages = ad[('STAR', 'age')]
@@ -368,15 +368,15 @@ levels_dm   = ds.find_field_values_at_points([('index', 'grid_level')],
 # print the max velocities in each level
 # We have to have this ugly code to handle what happens when there are no stars
 # or DM on a given level. This is all for the string that gets printed
-header_str = "{:<12s} {:>12s}" + 7 * "{:>12s}"
+header_str = "{:<12s} {:>12s}" + 8 * "{:>12s}"
 level_str = "{:<12.0f} {:>12,.0f}"
 not_empty = "{:>12.2f}"
 empty = "{:>12s}".format("---")
 time = "{:>12.2E}"
 row_str = level_str + 6 * not_empty + time
-row_str_no_star = level_str + 4 * not_empty + empty + not_empty + time
-row_str_no_dm = level_str + empty + 5 * not_empty + time
-row_str_no_both = level_str + empty + 3 * not_empty + empty + not_empty + time
+row_str_no_star = level_str + 5 * not_empty + empty + not_empty + time
+row_str_no_dm = level_str + empty + 6 * not_empty + time
+row_str_no_both = level_str + empty + 4 * not_empty + empty + not_empty + time
 
 out("- This shows the highest velocity present in the following components \n" 
     "  at each level.\n"
@@ -391,7 +391,7 @@ out("- This shows the highest velocity present in the following components \n"
     "- Only the fastest {} DM and star particles in the entire simulation box\n"
     "  are selected, so some levels may have no DM or stars listed.\n"
     "".format(n_vels))
-out(header_str.format("Level", "num_cells", "DM", "Gas bulk", "Gas c_s", "Gas v_tot", 
+out(header_str.format("Level", "num_cells", "DM", "Gas bulk", "Gas c_s", "Gas v_tot", "Fast %",
                       "Stars", "Cell Size", "dt"))
 
 for level, cell_size, n_cells in zip(grid_levels, cell_sizes, num_in_grid):
@@ -405,6 +405,10 @@ for level, cell_size, n_cells in zip(grid_levels, cell_sizes, num_in_grid):
     vel_max_gas_tot = v_tot_gas[idx_gas][vel_max_gas_tot_idx]
     vel_max_gas_bulk = velocity_bulk_gas[idx_gas][vel_max_gas_tot_idx]
     vel_max_gas_cs   = sound_speed_gas[idx_gas][vel_max_gas_tot_idx]
+
+    # Calculate the fraction of cells above 1000 km/s
+    fast_mask = velocity_bulk_gas[idx_gas] > 975 * yt.units.km / yt.units.s
+    fast_percent = 100 * np.sum(fast_mask) / len(idx_gas[0])
 
     # the timestep ART chooses only depends on the gas
     dt = 0.5 * cell_size / (vel_max_gas_tot * yt.units.km / yt.units.s)
@@ -420,22 +424,23 @@ for level, cell_size, n_cells in zip(grid_levels, cell_sizes, num_in_grid):
     if len(idx_star[0]) > 0:  # stars 
         if len(idx_dm[0]) > 0:  # stars and DM 
             out_str = row_str.format(level, n_cells, vel_max_dm, vel_max_gas_bulk, 
-                                     vel_max_gas_cs, vel_max_gas_tot, 
+                                     vel_max_gas_cs, vel_max_gas_tot, fast_percent,
                                      vel_max_star, cell_size.to("pc").value, dt)
         else:  # stars, no DM
             out_str = row_str_no_dm.format(level, n_cells, vel_max_gas_bulk, 
                                            vel_max_gas_cs, vel_max_gas_tot, 
-                                           vel_max_star, 
+                                           fast_percent, vel_max_star, 
                                            cell_size.to("pc").value, dt)
     else:  # no stars
         if len(idx_dm[0]) > 0:  # no stars, but DM 
             out_str = row_str_no_star.format(level, n_cells, vel_max_dm, 
                                              vel_max_gas_bulk, vel_max_gas_cs, 
-                                             vel_max_gas_tot, 
+                                             vel_max_gas_tot, fast_percent,
                                              cell_size.to("pc").value, dt)
         else:  # no stars, no dm
             out_str = row_str_no_both.format(level, n_cells, vel_max_gas_bulk, 
                                              vel_max_gas_cs, vel_max_gas_tot, 
+                                             fast_percent, 
                                              cell_size.to("pc").value, dt)
         
     out(out_str)
