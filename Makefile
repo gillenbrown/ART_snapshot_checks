@@ -53,6 +53,7 @@ nbody_split_plot_script = ./utils/nbody_projection_split_species.py
 halo_growth_comp_script = ./halo_growth_comparison.py
 sfh_plots_script = ./plot_sfh.py
 cimf_plots_script = ./plot_cimf.py
+age_plot_script = ./plot_age_spread.py
 dt_history_script = ./dt_history.py
 cfl_script = ./cfl_violations.py
 read_tree_dir = ./read_tree
@@ -73,8 +74,9 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/shangrila/hui/sfe_100 \
 	                 $(runs_home)/shangrila/hui/sfe_200 \
 	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
-	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run 
-# 	                 $(runs_home)/stampede2/production/sfe100
+	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run \
+	                 $(runs_home)/stampede2/production/sfe100 \
+	                 $(runs_home)/stampede2/production/first_sfe_100_1e7_temp_cap
 endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
@@ -179,10 +181,13 @@ ifeq ($(machine),shangrila)
 	cimf_plots = $(comparison_plots_dir)/cimf_common.png \
 				 $(comparison_plots_dir)/cimf_last.png
 	halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
+	age_spread_plots = $(comparison_plots_dir)/age_spread_common.png \
+	                   $(comparison_plots_dir)/age_spread_last.png
 else
 	sfh_plots =
 	cimf_plots =
 	halo_growth_plot =
+	age_spread_plot = 
 endif
 
 # ------------------------------------------------------------------------------
@@ -302,7 +307,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(halo_management_sentinels) $(sfh_plots) $(cimf_plots) $(halo_growth_plot) $(debugs) $(galaxies) $(movies)
+all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(halo_management_sentinels) $(sfh_plots) $(cimf_plots) $(age_spread_plots) $(halo_growth_plot) $(debugs) $(galaxies) $(movies)
 
 .PHONY: clean
 clean:
@@ -360,13 +365,17 @@ $(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(sfh_plots): $(snapshots_hydro) $(halos_catalogs)
+$(sfh_plots): $(sfh_plots_script) $(snapshots_hydro) $(halos_catalogs)
 	python $(sfh_plots_script) $(sim_dirs_hydro)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(cimf_plots): $(snapshots_hydro) $(halos_catalogs)
+$(cimf_plots): $(cimf_plots_script) $(snapshots_hydro) $(halos_catalogs)
 	python $(cimf_plots_script) $(sim_dirs_hydro)
+
+# Make the age spread plots. 
+$(age_spread_plots): $(age_plot_script) $(snapshots_hydro) $(halos_catalogs)
+	python $(age_plot_script) $(sim_dirs_hydro)
 
 # Make the individual nbody plots - several examples of very similar things here
 .SECONDEXPANSION:
