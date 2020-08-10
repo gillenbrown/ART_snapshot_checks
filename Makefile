@@ -76,7 +76,11 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
 	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run \
 	                 $(runs_home)/stampede2/production/sfe100 \
-	                 $(runs_home)/stampede2/production/first_sfe_100_1e7_temp_cap
+	                 $(runs_home)/stampede2/production/first_sfe_100_1e7_temp_cap \
+	                 $(runs_home)/stampede2/old_ic_comparison/default/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/no_hn/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/no_virial/run 
 endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
