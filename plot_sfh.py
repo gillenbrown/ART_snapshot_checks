@@ -30,23 +30,34 @@ def full_dir(partial_path):
     base_dir = "/u/home/gillenb/art_runs/runs/"
     return os.path.join(base_dir, partial_path)
 
-names = {full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 SFE100",
-         full_dir("shangrila/old_ic_comparison/default_1e7_temp_cap/run"): "ART 2.0 SFE100 Bad Caps",
-         full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
-         full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
+names = {
+         full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 SFE100 Shangrila",
+         full_dir("shangrila/old_ic_comparison/default_1e7_temp_cap/run"): "ART 2.0 SFE100 Shangrila Bad Caps",
+         # full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
+         # full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
          full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
-         full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
-         full_dir("stampede2/production/sfe100"): "T&L SFE100",
-         full_dir("stampede2/production/first_sfe_100_1e7_temp_cap"): "T&L SFE100 Bad Caps",
-         full_dir("stampede2/ic_timing_tests/original_50_128"): "T&L - Original",
-         full_dir("stampede2/ic_timing_tests/trim_12_128"): "T&L - 4x Trim 128",
-         full_dir("stampede2/ic_timing_tests/trim_12_256"): "T&L - 4x Trim 256",
-         full_dir("stampede2/ic_timing_tests/trim_25_256"): "T&L - 2x Trim 256"}
-    
+         # full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
+         # full_dir("stampede2/production/sfe100"): "T&L SFE100",
+         # full_dir("stampede2/production/first_sfe_100_1e7_temp_cap"): "T&L SFE100 Bad Caps",
+         full_dir("stampede2/old_ic_comparison/default/run"): "ART 2.0 SFE100 Stampede2",
+         full_dir("stampede2/old_ic_comparison/default_5000kms_cap/run"): "ART 2.0 SFE100 Stampede2 v$_{max}$=5000km/s",
+         full_dir("stampede2/old_ic_comparison/no_hn/run"): "ART 2.0 SFE100 Stampede2 No HN",
+         full_dir("stampede2/old_ic_comparison/no_virial/run"): "ART 2.0 SFE100 Stampede2 No Virial",
+         # full_dir("stampede2/ic_timing_tests/original_50_128"): "T&L - Original",
+         # full_dir("stampede2/ic_timing_tests/trim_12_128"): "T&L - 4x Trim 128",
+         # full_dir("stampede2/ic_timing_tests/trim_12_256"): "T&L - 4x Trim 256",
+         # full_dir("stampede2/ic_timing_tests/trim_25_256"): "T&L - 2x Trim 256",
+         }
+
+
 # make dictionary to store the resulting datasets
 all_ds = dict()
 all_halos = defaultdict(list)
 for directory in sys.argv[1:]:
+    if directory not in names:
+        print(f"Skipping {directory}")
+        continue
+
     out_dir = os.path.join(directory, "out")
     halos_dir = os.path.join(directory, "halos")
 
