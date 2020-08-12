@@ -223,12 +223,35 @@ for halo in halos[:n_halos]:
         out("\nTotal DM particle mass within the virial radius = {:.3e} Msun".format(total_mass))
 
     # print the stellar mass 
-    
     stellar_mass_30kpc = np.sum(sphere_30_kpc[('STAR', 'MASS')].to("Msun").value)
     stellar_mass_virial = np.sum(sphere_virial[('STAR', 'MASS')].to("Msun").value)
     out("")
     out("Stellar Mass within 30 kpc: {:.2e} Msun".format(stellar_mass_30kpc))
     out("Stellar Mass within the virial radius: {:.2e} Msun".format(stellar_mass_virial))
+
+    # Metallicity
+    metallicity = sphere_30_kpc[('STAR', 'METALLICITY_SNII')].value
+    metallicity += sphere_30_kpc[('STAR', 'METALLICITY_SNIa')].value
+    if ('STAR', 'METALLICITY_AGB') in ds.field_list:
+        metallicity += sphere_30_kpc[('STAR', 'METALLICITY_AGB')].value
+    # get the masses so we can mass-weight it
+    masses = sphere_30_kpc[('STAR', 'MASS')].to("Msun").value
+    metal_mass = masses * metallicity
+
+    out("")
+    out("Mass-weighted mean metallicity of:")
+    for max_age in [np.inf, 40]:
+        star_mask = sphere_30_kpc[('STAR', 'age')].to("Myr").value < max_age
+        # get the mass-weighted metallicity
+        mean_metallicity = np.sum(metal_mass[star_mask]) / np.sum(masses[star_mask])
+
+        if np.isinf(max_age):
+            descriptor = "all stars"
+        else:
+            descriptor = f"stars younger than {max_age} Myr"
+
+        out(f"{descriptor:>25} = {mean_metallicity:.2e} -> log(Z/Z_sun) = {np.log10(mean_metallicity/0.02):.2f}")
+
         
 out("\n==================================\n")
         
