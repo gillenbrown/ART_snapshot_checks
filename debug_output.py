@@ -112,14 +112,20 @@ out("\nGrid Structure\n==============")
 out("box size: {:.3f}".format(box_size))
 out("base grid size: {:.3f}".format(base_grid_size))
 out("total cells: {:,}".format(total_cells))
-grid_out_str = "{:<5d}    {:>13,}    {:>12.3f}"
-grid_header_str = "{:<5}    {:>13}    {:>16}"
-out(grid_header_str.format("Level", "Num Cells", "Cell Size [pc]"))
+grid_out_str = "{:<5d}    {:>13,}    {:>16.3f}    {:>16}    {:>16,}"
+grid_header_str = "{:<5}    {:>13}    {:>16}    {:>16}    {:>16}"
+out(grid_header_str.format("Level", "Num Cells", "Cell Size [pc]", 
+                           "Time Refinement", "Num Timesteps"))
 for level in grid_levels:
     level = int(level)
     num_cells = num_in_grid[level]
     cell_size = cell_sizes[level]
-    out(grid_out_str.format(level, num_cells, cell_size.to("pc").value))
+    refinement_factor = 1
+    for factor in ds.artio_parameters["time_refinement_factor"][:level+1]:
+        refinement_factor *= factor
+    num_timesteps = num_cells * refinement_factor
+    out(grid_out_str.format(level, num_cells, cell_size.to("pc").value, 
+                            refinement_factor, num_timesteps))
 
 # =============================================================================
 #         
