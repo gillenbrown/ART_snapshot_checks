@@ -52,10 +52,10 @@ if yt.is_root():
     print(f"\t- {readers} readers")
     print(f"\t- {writers} writers")
 
-def move_all_simulation_files(stem, old_dir, new_dir):
+def move_all_simulation_files(art_file, old_dir, new_dir):
     if yt.is_root():
         for file in old_dir.iterdir():
-            if file.stem == stem:
+            if file.stem == art_file.stem:
                 file.replace(new_dir / file.name)
 
 def rockstar_iteration():
@@ -108,7 +108,7 @@ if yt.is_root():
 move_all_simulation_files(art_files[0].stem, sim_dir, temp_dir)
 # Then loop through all the rest of the files
 for art_file_idx_second in range(1, len(art_files)):
-    print("\n", art_file_idx_second, "\n")
+    print("\n", art_file_idx_second, art_files[art_file_idx_second], "\n")
     # move this file to the temporary directory
     move_all_simulation_files(art_files[art_file_idx_second], sim_dir, temp_dir)
     print_temp_dir()
