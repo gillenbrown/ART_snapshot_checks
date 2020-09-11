@@ -53,9 +53,10 @@ if yt.is_root():
     print(f"\t- {writers} writers")
 
 def move_all_simulation_files(stem, old_dir, new_dir):
-    for file in old_dir.iterdir():
-        if file.stem == stem:
-            file.replace(new_dir / file.name)
+    if yt.is_root():
+        for file in old_dir.iterdir():
+            if file.stem == stem:
+                file.replace(new_dir / file.name)
 
 def rockstar_iteration():
     """
@@ -94,9 +95,9 @@ def rockstar_iteration():
 #
 # ==============================================================================
 def print_temp_dir():
-    print("\nState of temp dir:")
-    for file in temp_dir.iterdir():
-        if yt.is_root():
+    if yt.is_root():
+        print("\nState of temp dir:")
+        for file in temp_dir.iterdir():
             print(file)
 
 # first get all the output files
