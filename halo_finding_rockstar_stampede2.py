@@ -107,7 +107,8 @@ if yt.is_root():
 # start by moving the first file there
 move_all_simulation_files(art_files[0].stem, sim_dir, temp_dir)
 # Then loop through all the rest of the files
-for art_file_idx_second in range(len(art_files) - 1):
+for art_file_idx_second in range(1, len(art_files)):
+    print("\n", art_file_idx_second, "\n")
     # move this file to the temporary directory
     move_all_simulation_files(art_files[art_file_idx_second], sim_dir, temp_dir)
     print_temp_dir()
