@@ -54,7 +54,9 @@ if yt.is_root():
 
 def move_all_simulation_files(art_file, old_dir, new_dir):
     if yt.is_root():
+        print("art stem:", art_file.stem)
         for file in old_dir.iterdir():
+            print("file stem:" file.stem)
             if file.stem == art_file.stem:
                 file.replace(new_dir / file.name)
 
@@ -108,7 +110,8 @@ if yt.is_root():
 move_all_simulation_files(art_files[0].stem, sim_dir, temp_dir)
 # Then loop through all the rest of the files
 for art_file_idx_second in range(1, len(art_files)):
-    print("\n", art_file_idx_second, art_files[art_file_idx_second], "\n")
+    if yt.is_root():
+        print("\n", art_file_idx_second, art_files[art_file_idx_second], "\n")
     # move this file to the temporary directory
     move_all_simulation_files(art_files[art_file_idx_second], sim_dir, temp_dir)
     print_temp_dir()
