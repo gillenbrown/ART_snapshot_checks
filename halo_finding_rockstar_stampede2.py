@@ -88,7 +88,7 @@ def rockstar_iteration():
         particle_type = "N-BODY"
 
     rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers,
-                            outbase=rockstar_dir, particle_type=particle_type)
+                            outbase=str(rockstar_dir), particle_type=particle_type)
     rh.run(restart=restart)
 
     # then make sure to clean up the memory. We do this explicitly just to be sure
@@ -108,8 +108,6 @@ if yt.is_root():
 move_all_simulation_files(art_files[0], sim_dir, temp_dir)
 # Then loop through all the rest of the files
 for art_file_idx_second in range(1, len(art_files)):
-    if yt.is_root():
-        print("\n", art_file_idx_second, art_files[art_file_idx_second], "\n")
     # move this file to the temporary directory
     move_all_simulation_files(art_files[art_file_idx_second], sim_dir, temp_dir)
     # Do the halo analysis
