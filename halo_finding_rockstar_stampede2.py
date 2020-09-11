@@ -102,14 +102,15 @@ def rockstar_iteration():
 # ==============================================================================
 # first get all the output files
 art_files = sorted([file for file in sim_dir.iterdir() if file.suffix == ".art"])
-if yt.is_root():
-    print(art_files)
 # start by moving the first file there
 move_all_simulation_files(art_files[0], sim_dir, temp_dir)
 # Then loop through all the rest of the files
+from yt.config import ytcfg
 for art_file_idx_second in range(1, len(art_files)):
     # move this file to the temporary directory
     move_all_simulation_files(art_files[art_file_idx_second], sim_dir, temp_dir)
+    # have each processor print its processor number
+    print(ytcfg.getint("yt", "__topcomm_parallel_rank"))
     # Do the halo analysis
     rockstar_iteration()
     # Then need to handle the existing files to prepare for the next iteration
