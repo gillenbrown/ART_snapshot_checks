@@ -78,7 +78,7 @@ def rockstar_iteration():
         restart = False
     print("=== able to restart:", restart)
 
-    ts = yt.load(str(temp_dir) + 'continuous_a?.????.art')
+    ts = yt.load(str(temp_dir) + '/continuous_a?.????.art')
 
     # check what kind of particles are present
     if ('N-BODY_0', 'MASS') in ts[0].derived_field_list:
