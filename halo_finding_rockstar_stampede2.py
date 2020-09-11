@@ -96,11 +96,13 @@ def rockstar_iteration():
 def print_temp_dir():
     print("\nState of temp dir:")
     for file in temp_dir.iterdir():
-        print(file)
+        if yt.is_root():
+            print(file)
 
 # first get all the output files
-art_files = sorted([file.name for file in sim_dir.iterdir() if file.suffix == ".art"])
-print(art_files)
+art_files = sorted([file for file in sim_dir.iterdir() if file.suffix == ".art"])
+if yt.is_root():
+    print(art_files)
 # start by moving the first file there
 move_all_simulation_files(art_files[0].stem, sim_dir, temp_dir)
 # Then loop through all the rest of the files
