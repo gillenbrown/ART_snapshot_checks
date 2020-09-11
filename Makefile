@@ -40,7 +40,6 @@ endif
 #  Code locations that are relative to this file
 # 
 # ------------------------------------------------------------------------------
-halo_finding_py_file = ./halo_finding_rockstar.py
 rename_script = ./rename_halos.py
 halo_management_script = ./manage_halos.py
 debug_script = ./debug_output.py
@@ -85,7 +84,7 @@ endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
 	sim_dirs_nbody =
-	sim_dirs_hydro = $(runs_home)/production/sfe_100/run
+	sim_dirs_hydro = $(runs_home)/old_ic_comparison/test/run
 endif
 
 # combine the N-Body and Hydro into one big list
