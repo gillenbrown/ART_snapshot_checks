@@ -27,7 +27,7 @@ rockstar_dir = Path(sys.argv[2]).resolve()
 cores_to_use = int(sys.argv[3])
 # Create the subdirectory where we'll do the actual halo finding
 temp_dir = sim_dir / "temp_output_dir_for_halo_finding"
-if not temp_dir.is_dir():
+if not temp_dir.is_dir() and yt.is_root():
     temp_dir.mkdir()
 
 if yt.is_root():
@@ -125,11 +125,11 @@ for art_file_idx_second in range(len(art_files) - 1):
 #
 # ==============================================================================
 # move the files out of the temporary directory, then delete it
-for out_file in temp_dir.iterdir():
-    new_file = sim_dir / out_file.name
-    out_file.replace(new_file)
-temp_dir.rmdir()
-
-# update the sentinel file
 if yt.is_root():
-    (out_dir / "sentinel.txt").touch()
+    for out_file in temp_dir.iterdir():
+        new_file = sim_dir / out_file.name
+        out_file.replace(new_file)
+    temp_dir.rmdir()
+
+#     # update the sentinel file
+#     (rockstar_dir / "sentinel.txt").touch()
