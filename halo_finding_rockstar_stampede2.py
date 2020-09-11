@@ -54,12 +54,15 @@ if yt.is_root():
 
 def move_all_simulation_files(art_file, old_dir, new_dir):
     if yt.is_root():
-        print("art stem:", art_file.stem)
         for file in old_dir.iterdir():
-            print("file stem:", file.stem)
             if file.stem == art_file.stem:
                 file.replace(new_dir / file.name)
 
+# ==============================================================================
+#
+# Key functions to be used later
+#
+# ==============================================================================
 def rockstar_iteration():
     """
     Run rockstar on two outputs in the directory. This is the function
@@ -75,7 +78,7 @@ def rockstar_iteration():
         restart = False
     print(restart)
 
-    ts = yt.load(sim_dir + 'continuous_a?.????.art')
+    ts = yt.load(str(temp_dir / 'continuous_a?.????.art'))
 
     # check what kind of particles are present
     if ('N-BODY_0', 'MASS') in ts[0].derived_field_list:
@@ -116,7 +119,9 @@ for art_file_idx_second in range(1, len(art_files)):
     move_all_simulation_files(art_files[art_file_idx_second], sim_dir, temp_dir)
     print_temp_dir()
     # Do the halo analysis
-    # rockstar_iteration()
+    rockstar_iteration()
+    # Then need to handle the existing files to prepare for the next iteration
+    # handle_halo_files()
 
     # then move the first file out. We'll move the next file in at the start
     # of the next loop
