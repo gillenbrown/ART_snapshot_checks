@@ -1,6 +1,7 @@
 import sys
 import os
-import pathlib
+import gc
+from pathlib import Path
 import yt
 from yt.extensions.astro_analysis.halo_finding.rockstar.api import RockstarHaloFinder
 yt.funcs.mylog.setLevel(0)  # ignore yt's output
@@ -21,32 +22,17 @@ if yt.is_root():
         raise ValueError("Please provide the proper command line argument.")
 
 # turn the directories the user passes into the absolute path
-sim_dir = os.path.abspath(sys.argv[1])
-out_dir = os.path.abspath(sys.argv[2])
+sim_dir = Path(sys.argv[1]).resolve()
+rockstar_dir = Path(sys.argv[2]).resolve()
 cores_to_use = int(sys.argv[3])
-if not sim_dir.endswith(os.sep):
-    sim_dir += os.sep
-if not out_dir.endswith(os.sep):
-    out_dir += os.sep
-
-# check to see if there is a currently existing halo catalog already here
-# to restart from. 
-if os.path.exists(out_dir + "restart.cfg"):
-    restart = True
-else:
-    restart = False
+# Create the subdirectory where we'll do the actual halo finding
+temp_dir = sim_dir / "temp_output_dir_for_halo_finding"
+if not temp_dir.is_dir():
+    temp_dir.mkdir()
 
 if yt.is_root():
     print("Reading simulations from: {}".format(sim_dir))
-    print("Writing halo catalogs to: {}".format(out_dir))
-
-ts = yt.load(sim_dir + 'continuous_a?.????.art')
-
-# check what kind of particles are present
-if ('N-BODY_0', 'MASS') in ts[0].derived_field_list:
-    particle_type = "N-BODY_0"
-else:
-    particle_type = "N-BODY"
+    print("Writing halo catalogs to: {}".format(rockstar_dir))
 
 # determine how many readers and writers to use, depending on what machine we're on. We
 # have one master process, plus the number of readers and writers. Reading is quicker
@@ -65,10 +51,82 @@ if yt.is_root():
     print(f"\t- 1 master process")
     print(f"\t- {readers} readers")
     print(f"\t- {writers} writers")
-rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers, outbase=out_dir,
-                        particle_type=particle_type)
-rh.run(restart=restart)
+
+def move_all_simulation_files(stem, old_dir, new_dir):
+    for file in old_dir.iterdir():
+        if file.stem == stem:
+            file.replace(new_dir / file.name)
+
+def rockstar_iteration():
+    """
+    Run rockstar on two outputs in the directory. This is the function
+
+    We do this in a function to make sure that there are not many datasets loaded at
+    once, which will overload the memory
+    """
+    # check to see if there is a currently existing halo catalog already here
+    # to restart from.
+    if (rockstar_dir / "restart.cfg").is_file():
+        restart = True
+    else:
+        restart = False
+    print(restart)
+
+    ts = yt.load(sim_dir + 'continuous_a?.????.art')
+
+    # check what kind of particles are present
+    if ('N-BODY_0', 'MASS') in ts[0].derived_field_list:
+        particle_type = "N-BODY_0"
+    else:
+        particle_type = "N-BODY"
+
+    rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers, outbase=out_dir,
+                            particle_type=particle_type)
+    rh.run(restart=restart)
+
+    # then make sure to clean up the memory. We do this explicitly just to be sure
+    del ts
+    gc.collect()
+
+# ==============================================================================
+#
+# Do the main loop of moving files to the temporary directory for analysis
+#
+# ==============================================================================
+def print_temp_dir():
+    print("\nState of temp dir:")
+    for file in temp_dir.iterdir():
+        print(file)
+
+# first get all the output files
+art_files = sorted([file.name for file in sim_dir.iterdir() if file.suffix == ".art"])
+print(art_files)
+# start by moving the first file there
+move_all_simulation_files(art_files[0].stem, sim_dir, temp_dir)
+# Then loop through all the rest of the files
+for art_file_idx_second in range(len(art_files) - 1):
+    # move this file to the temporary directory
+    move_all_simulation_files(art_files[art_file_idx_second], sim_dir, temp_dir)
+    print_temp_dir()
+    # Do the halo analysis
+    # rockstar_iteration()
+
+    # then move the first file out. We'll move the next file in at the start
+    # of the next loop
+    move_all_simulation_files(art_files[art_file_idx_second - 1], temp_dir, sim_dir)
+    print_temp_dir()
+
+# ==============================================================================
+#
+# Final cleanup
+#
+# ==============================================================================
+# move the files out of the temporary directory, then delete it
+for out_file in temp_dir.iterdir():
+    new_file = sim_dir / out_file.name
+    out_file.replace(new_file)
+temp_dir.rmdir()
 
 # update the sentinel file
 if yt.is_root():
-    pathlib.Path(out_dir + "sentinel.txt").touch()
+    (out_dir / "sentinel.txt").touch()
