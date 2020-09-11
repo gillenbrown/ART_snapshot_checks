@@ -87,8 +87,8 @@ def rockstar_iteration():
     else:
         particle_type = "N-BODY"
 
-    rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers, outbase=out_dir,
-                            particle_type=particle_type)
+    rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers,
+                            outbase=rockstar_dir, particle_type=particle_type)
     rh.run(restart=restart)
 
     # then make sure to clean up the memory. We do this explicitly just to be sure
