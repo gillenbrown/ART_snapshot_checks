@@ -56,7 +56,7 @@ def move_all_simulation_files(art_file, old_dir, new_dir):
     if yt.is_root():
         print("art stem:", art_file.stem)
         for file in old_dir.iterdir():
-            print("file stem:" file.stem)
+            print("file stem:", file.stem)
             if file.stem == art_file.stem:
                 file.replace(new_dir / file.name)
 
@@ -107,7 +107,7 @@ art_files = sorted([file for file in sim_dir.iterdir() if file.suffix == ".art"]
 if yt.is_root():
     print(art_files)
 # start by moving the first file there
-move_all_simulation_files(art_files[0].stem, sim_dir, temp_dir)
+move_all_simulation_files(art_files[0], sim_dir, temp_dir)
 # Then loop through all the rest of the files
 for art_file_idx_second in range(1, len(art_files)):
     if yt.is_root():
