@@ -1,5 +1,5 @@
 import sys
-import os
+import time
 import gc
 from pathlib import Path
 import yt
@@ -57,6 +57,8 @@ def move_all_simulation_files(art_file, old_dir, new_dir):
         for file in old_dir.iterdir():
             if file.stem == art_file.stem:
                 file.replace(new_dir / file.name)
+    else:
+        time.sleep(10)  # ensure race conditions are taken care of
 
 # ==============================================================================
 #
@@ -76,7 +78,6 @@ def rockstar_iteration():
         restart = True
     else:
         restart = False
-    print("=== able to restart:", restart)
 
     ts = yt.load(str(temp_dir) + '/continuous_a?.????.art')
 
@@ -99,13 +100,6 @@ def rockstar_iteration():
 # Do the main loop of moving files to the temporary directory for analysis
 #
 # ==============================================================================
-def print_temp_dir():
-    if yt.is_root():
-        print("\n===\nState of temp dir:")
-        for file in temp_dir.iterdir():
-            print(file)
-        print("===")
-
 # first get all the output files
 art_files = sorted([file for file in sim_dir.iterdir() if file.suffix == ".art"])
 if yt.is_root():
@@ -118,7 +112,6 @@ for art_file_idx_second in range(1, len(art_files)):
         print("\n", art_file_idx_second, art_files[art_file_idx_second], "\n")
     # move this file to the temporary directory
     move_all_simulation_files(art_files[art_file_idx_second], sim_dir, temp_dir)
-    print_temp_dir()
     # Do the halo analysis
     rockstar_iteration()
     # Then need to handle the existing files to prepare for the next iteration
@@ -127,7 +120,6 @@ for art_file_idx_second in range(1, len(art_files)):
     # then move the first file out. We'll move the next file in at the start
     # of the next loop
     move_all_simulation_files(art_files[art_file_idx_second - 1], temp_dir, sim_dir)
-    print_temp_dir()
 
 # ==============================================================================
 #
