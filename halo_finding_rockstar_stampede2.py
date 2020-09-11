@@ -76,9 +76,9 @@ def rockstar_iteration():
         restart = True
     else:
         restart = False
-    print(restart)
+    print("=== able to restart:", restart)
 
-    ts = yt.load(str(temp_dir / 'continuous_a?.????.art'))
+    ts = yt.load(str(temp_dir) + 'continuous_a?.????.art')
 
     # check what kind of particles are present
     if ('N-BODY_0', 'MASS') in ts[0].derived_field_list:
@@ -101,9 +101,10 @@ def rockstar_iteration():
 # ==============================================================================
 def print_temp_dir():
     if yt.is_root():
-        print("\nState of temp dir:")
+        print("\n===\nState of temp dir:")
         for file in temp_dir.iterdir():
             print(file)
+        print("===")
 
 # first get all the output files
 art_files = sorted([file for file in sim_dir.iterdir() if file.suffix == ".art"])
