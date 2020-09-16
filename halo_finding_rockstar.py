@@ -1,5 +1,5 @@
 import sys
-import os
+from pathlib import Path
 import pathlib
 import yt
 from yt.extensions.astro_analysis.halo_finding.rockstar.api import RockstarHaloFinder
@@ -10,6 +10,7 @@ yt.enable_parallelism()
 # idx 0: name of script
 # ids 1: directory of simulation outputs to run halos on
 # idx 2: directory to store halo finding outputs in
+# idx 3: how many cores to use
 
 # print function that always flushes
 import functools
@@ -21,24 +22,16 @@ if yt.is_root():
         raise ValueError("Please provide the proper command line argument.")
 
 # turn the directories the user passes into the absolute path
-sim_dir = os.path.abspath(sys.argv[1])
-out_dir = os.path.abspath(sys.argv[2])
+sim_dir = Path(sys.argv[1]).resolve()
+rockstar_dir = Path(sys.argv[2]).resolve()
 cores_to_use = int(sys.argv[3])
-if not sim_dir.endswith(os.sep):
-    sim_dir += os.sep
-if not out_dir.endswith(os.sep):
-    out_dir += os.sep
 
 # check to see if there is a currently existing halo catalog already here
 # to restart from. 
-if os.path.exists(out_dir + "restart.cfg"):
+if (rockstar_dir / "restart.cfg").is_file():
     restart = True
 else:
     restart = False
-
-if yt.is_root():
-    print("Reading simulations from: {}".format(sim_dir))
-    print("Writing halo catalogs to: {}".format(out_dir))
 
 ts = yt.load(sim_dir + 'continuous_a?.????.art')
 
@@ -65,10 +58,7 @@ if yt.is_root():
     print(f"\t- 1 master process")
     print(f"\t- {readers} readers")
     print(f"\t- {writers} writers")
-rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers, outbase=out_dir,
-                        particle_type=particle_type)
-rh.run(restart=restart)
 
-# update the sentinel file
-if yt.is_root():
-    pathlib.Path(out_dir + "sentinel.txt").touch()
+rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers,
+                        outbase=rockstar_dir, particle_type=particle_type)
+rh.run(restart=restart)

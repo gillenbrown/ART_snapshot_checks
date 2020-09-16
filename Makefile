@@ -25,13 +25,11 @@ endif
 ifeq ($(machine),shangrila)
 	tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
 	tree_dir = /u/home/gillenb/code/not_mine/consistent-trees
-	halo_finding_script = ./run_rockstar.sh
 	timing_script = /u/home/gillenb/code/mine/cart/utils/scripts/parse_timing2.pl
 endif
 ifeq ($(machine),stampede2)
 	tree_config_script = $(HOME)/code/rockstar-galaxies/scripts/gen_merger_cfg.pl
 	tree_dir = $(HOME)/code/consistent-trees
-	halo_finding_script = ./run_rockstar_stampede2.sh
 	timing_script = $(HOME)/code/cart/utils/scripts/parse_timing2.pl
 endif
 
@@ -40,6 +38,7 @@ endif
 #  Code locations that are relative to this file
 # 
 # ------------------------------------------------------------------------------
+halo_finding_script = ./run_rockstar.py
 rename_script = ./rename_halos.py
 halo_management_script = ./manage_halos.py
 debug_script = ./debug_output.py
@@ -128,6 +127,7 @@ rockstar_sentinels = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/sentinel.tx
 sentinel_to_sims = $(wildcard $(subst rockstar_halos/sentinel.txt,out/,$(1))*_a*.art)
 sentinel_to_out_dir = $(subst rockstar_halos/sentinel.txt,out/,$(1))
 sentinel_to_rh_dir = $(subst rockstar_halos/sentinel.txt,rockstar_halos/,$(1))
+sentinel_to_halos_dir = $(subst rockstar_halos/sentinel.txt,halos/,$(1))
 
 # Then some complex functions to find the rockstar sentinel file for a given 
 # halo catalog. This is hard and ugly since we have to mess around with
@@ -344,7 +344,7 @@ halos: $(rockstar_sentinels)
 # directory
 .SECONDEXPANSION:
 $(rockstar_sentinels): %: $$(call sentinel_to_sims, %) 
-	$(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@)
+	python $(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@) $(call sentinel_to_halos_dir, $@) $(machine)
 
 # Rule to rename the halo catalogs into something more user-friendly
 .SECONDEXPANSION:
