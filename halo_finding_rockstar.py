@@ -3,7 +3,7 @@ from pathlib import Path
 import pathlib
 import yt
 from yt.extensions.astro_analysis.halo_finding.rockstar.api import RockstarHaloFinder
-yt.funcs.mylog.setLevel(0)  # ignore yt's output
+yt.funcs.mylog.setLevel(50)  # ignore yt's output - only show rockstar
 yt.enable_parallelism()
 
 # format of sys.argv:

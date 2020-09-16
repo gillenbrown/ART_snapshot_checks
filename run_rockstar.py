@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import os
+import shutil
 import yt
 yt.funcs.mylog.setLevel(0)  # ignore yt's output
 
@@ -43,6 +44,63 @@ def move_all_simulation_files(art_file, old_dir, new_dir):
         if file.stem == art_file.stem:
             file.replace(new_dir / file.name)
 
+def scale_factor_from_art_file(art_file):
+    return art_file.stem[-6:]
+
+def make_human_readable_halo_files(rockstar_idx, scale_factor, method="copy"):
+    """
+    This moves one set of halo files to the halos directory with nicer names
+
+    :param rockstar_idx: The index Rockstar has assigned to this set of outputs
+    :param scale_factor: the scale factor to use in the nicely formatted name
+    :param method: Whether to copy or move the files. It must be either "copy" or "move"
+    """
+    if method not in ["copy", "move"]:
+        raise ValueError("Incorrect method in rename_halo_files()")
+
+    old_halo_prefix = f"halos_{rockstar_idx}."
+    new_halo_prefix = f"halos_a{scale_factor}."
+    old_list = f"out_{rockstar_idx}.list"
+    new_list = f"out_a{scale_factor}.list"
+    for file in rockstar_dir.iterdir():
+        if file.name.startswith(old_halo_prefix):
+            new_name = file.name.replace(old_halo_prefix, new_halo_prefix)
+            new_path = halos_dir / new_name
+            if method == "move":
+                file.replace(new_path)
+            else:
+                shutil.copy2(file, new_path)
+        if file.name == old_list:
+            new_path = halos_dir / new_list
+            if method == "move":
+                file.replace(new_path)
+            else:
+                shutil.copy2(file, new_path)
+
+def shift_halo_output_index():
+    """
+    This moves the set of halo files with index 1 to index 0
+
+    This lets them be the start of the next output
+    """
+    old_halo_prefix = f"halos_1."
+    new_halo_prefix = f"halos_0."
+    old_list = f"out_1.list"
+    new_list = f"out_0.list"
+    for file in rockstar_dir.iterdir():
+        if file.name.startswith(old_halo_prefix):
+            new_name = file.name.replace(old_halo_prefix, new_halo_prefix)
+            new_path = halos_dir / new_name
+            # check that this file isn't already there - it should never be!
+            assert not new_path.is_file()
+            file.replace(new_path)
+        if file.name == old_list:
+            new_path = halos_dir / new_list
+            # check that this file isn't already there - it should never be!
+            assert not new_path.is_file()
+            file.replace(new_path)
+
+
 # ==============================================================================
 #
 # Do the main loop of moving files to the temporary directory for analysis
@@ -64,7 +122,13 @@ for art_file_idx_second in range(1, len(art_files)):
         os.system(f"ibrun -n 47 -o 1 python ./halo_finding_rockstar.py {temp_dir} {rockstar_dir} 47")
 
     # Then need to handle the existing files to prepare for the next iteration
-    # handle_halo_files()
+    # First we get the oldest outputs out to the other directory. These have index 0
+    # be definition
+    first_scale = scale_factor_from_art_file(art_files[art_file_idx_second - 1])
+    make_human_readable_halo_files(0, first_scale, "move")
+    # Then move the ones with index 1 to be index 0, since those will be the starting
+    # point for the next iteration of halo finding
+    shift_halo_output_index()
 
     # then move the first file out. We'll move the next file in at the start
     # of the next loop
@@ -75,6 +139,10 @@ for art_file_idx_second in range(1, len(art_files)):
 # Final cleanup
 #
 # ==============================================================================
+# copy the outputs of the last halo run to the human directory. Copy, not move, them
+# so they can be the start of the next set of halo finding
+make_human_readable_halo_files(1, scale_factor_from_art_file(art_files[-1]), "copy")
+
 # move the files out of the temporary directory, then delete it
 for out_file in temp_dir.iterdir():
     new_file = sim_dir / out_file.name
