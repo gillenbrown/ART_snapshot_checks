@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-import pathlib
+import gc
 import yt
 from yt.extensions.astro_analysis.halo_finding.rockstar.api import RockstarHaloFinder
 yt.funcs.mylog.setLevel(50)  # ignore yt's output - only show rockstar
@@ -62,3 +62,8 @@ if yt.is_root():
 rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers,
                         outbase=str(rockstar_dir), particle_type=particle_type)
 rh.run(restart=restart)
+
+# then make sure to clean up the memory. We do this explicitly just to be sure
+del ts
+del rh
+gc.collect()
