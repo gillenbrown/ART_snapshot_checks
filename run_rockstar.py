@@ -130,6 +130,19 @@ def modify_parameter_file(scale_of_last_completed_output):
     # then copy the file over
     restart_old.replace(restart_new)
 
+def clean_up_rockstar_files():
+    # Remove some of the files not needed to restart. They'll be regenerated
+    # in the next loop of the rockstar finding
+    for file in rockstar_dir.iterdir():
+        if (
+            file.name not in ["restart.cfg", "sentinel.txt"] and
+            not file.name.startswith("halos_0.") and
+            not file.is_dir()
+        ):
+            file.unlink()
+        elif file.name == "profiling" and file.is_dir():
+            shutil.rmtree(file)
+
 # ==============================================================================
 #
 # Do the main loop of moving files to the temporary directory for analysis
@@ -160,6 +173,8 @@ for art_file_idx_second in range(1, len(art_files)):
     shift_halo_output_index()
     # then modify the parameter file
     modify_parameter_file(scale_factor_from_art_file(art_files[art_file_idx_second]))
+    # and clean up the directory
+    clean_up_rockstar_files()
 
     # then move the first file out. We'll move the next file in at the start
     # of the next loop
@@ -180,5 +195,5 @@ for out_file in temp_dir.iterdir():
     out_file.replace(new_file)
 temp_dir.rmdir()
 
-#     # update the sentinel file
-#     (rockstar_dir / "sentinel.txt").touch()
+# # update the sentinel file
+# (rockstar_dir / "sentinel.txt").touch()
