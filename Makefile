@@ -75,12 +75,19 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/shangrila/hui/sfe_200 \
 	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
 	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run \
-	                 $(runs_home)/stampede2/production/sfe100 \
-	                 $(runs_home)/stampede2/production/first_sfe_100_1e7_temp_cap \
+	                 $(runs_home)/stampede2/production/sfe_100/run \
+	                 $(runs_home)/stampede2/production/first_sfe_100_1e7_temp_cap\
+	                 $(runs_home)/stampede2/production/second_sfe_100_compiler_tooagressiveDMrefinement/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/default/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/no_hn/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/no_virial/run 
+	                 $(runs_home)/stampede2/old_ic_comparison/no_virial/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_base/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_base2/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodel/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodel_precdiv/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodelstrict/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_no_cpu_dispatch/run 
 endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
@@ -191,7 +198,7 @@ else
 	sfh_plots =
 	cimf_plots =
 	halo_growth_plot =
-	age_spread_plot = 
+	age_spread_plots = 
 endif
 
 # ------------------------------------------------------------------------------
@@ -311,7 +318,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(halo_management_sentinels) $(sfh_plots) $(cimf_plots) $(age_spread_plots) $(halo_growth_plot) $(debugs) $(galaxies) $(movies)
+all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(halo_management_sentinels) $(sfh_plots) $(cimf_plots) $(halo_growth_plot) $(debugs) $(galaxies) $(movies) #$(age_spread_plots)
 
 .PHONY: clean
 clean:

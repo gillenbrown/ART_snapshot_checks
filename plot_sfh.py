@@ -32,12 +32,13 @@ def full_dir(partial_path):
 
 names = {
          full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 SFE100 Shangrila",
-         full_dir("shangrila/old_ic_comparison/default_1e7_temp_cap/run"): "ART 2.0 SFE100 Shangrila Bad Caps",
+         # full_dir("shangrila/old_ic_comparison/default_1e7_temp_cap/run"): "ART 2.0 SFE100 Shangrila Bad Caps",
          # full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
          # full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
          full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
          # full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
-         # full_dir("stampede2/production/sfe100"): "T&L SFE100",
+         # full_dir("stampede2/production/sfe_100/run"): "T&L SFE100",
+         full_dir("stampede2/production/second_sfe_100_compiler_tooagressiveDMrefinement/run"): "T&L SFE100 old compiler",
          # full_dir("stampede2/production/first_sfe_100_1e7_temp_cap"): "T&L SFE100 Bad Caps",
          full_dir("stampede2/old_ic_comparison/default/run"): "ART 2.0 SFE100 Stampede2",
          full_dir("stampede2/old_ic_comparison/default_5000kms_cap/run"): "ART 2.0 SFE100 Stampede2 v$_{max}$=5000km/s",
@@ -182,6 +183,10 @@ for idx, name in enumerate(all_halos):
         sphere = all_ds[name].sphere(center=center, radius=(30, "kpc"))
         times, sfh_values = sfh(sphere)
 
+        # don't plot halos without few points
+        if len(times) < 2:
+            continue
+
         plot_times = times.to("Gyr").value
         plot_sfh = sfh_values.to("msun/yr").value
         dt = plot_times[1] - plot_times[0]
@@ -262,6 +267,9 @@ for idx, name in enumerate(all_halos):
                   halo.quantities["particle_position_z"]]
         sphere = all_ds[name].sphere(center=center, radius=(30, "kpc"))
         times, cumulative_mass = create_cumulative_mass(sphere)
+        # don't plot halos without few points
+        if len(times) < 2:
+            continue
 
         plot_times = times.to("Gyr").value
         cumulative_mass = cumulative_mass.to("msun").value
