@@ -33,7 +33,7 @@ if (rockstar_dir / "restart.cfg").is_file():
 else:
     restart = False
 
-ts = yt.load(sim_dir + 'continuous_a?.????.art')
+ts = yt.load(str(sim_dir / 'continuous_a?.????.art'))
 
 # check what kind of particles are present
 if ('N-BODY_0', 'MASS') in ts[0].derived_field_list:
@@ -60,5 +60,5 @@ if yt.is_root():
     print(f"\t- {writers} writers")
 
 rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers,
-                        outbase=rockstar_dir, particle_type=particle_type)
+                        outbase=str(rockstar_dir), particle_type=particle_type)
 rh.run(restart=restart)
