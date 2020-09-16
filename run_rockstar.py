@@ -83,19 +83,19 @@ def shift_halo_output_index():
 
     This lets them be the start of the next output
     """
-    old_halo_prefix = f"halos_1."
-    new_halo_prefix = f"halos_0."
-    old_list = f"out_1.list"
-    new_list = f"out_0.list"
+    old_halo_prefix = "halos_1."
+    new_halo_prefix = "halos_0."
+    old_list = "out_1.list"
+    new_list = "out_0.list"
     for file in rockstar_dir.iterdir():
         if file.name.startswith(old_halo_prefix):
             new_name = file.name.replace(old_halo_prefix, new_halo_prefix)
-            new_path = halos_dir / new_name
+            new_path = rockstar_dir / new_name
             # check that this file isn't already there - it should never be!
             assert not new_path.is_file()
             file.replace(new_path)
         if file.name == old_list:
-            new_path = halos_dir / new_list
+            new_path = rockstar_dir / new_list
             # check that this file isn't already there - it should never be!
             assert not new_path.is_file()
             file.replace(new_path)
