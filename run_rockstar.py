@@ -172,7 +172,7 @@ for art_file_idx_second in range(1, len(art_files)):
 # ==============================================================================
 # copy the outputs of the last halo run to the human directory. Copy, not move, them
 # so they can be the start of the next set of halo finding
-make_human_readable_halo_files(1, scale_factor_from_art_file(art_files[-1]), "copy")
+make_human_readable_halo_files(0, scale_factor_from_art_file(art_files[-1]), "copy")
 
 # move the files out of the temporary directory, then delete it
 for out_file in temp_dir.iterdir():
