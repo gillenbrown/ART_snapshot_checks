@@ -100,6 +100,35 @@ def shift_halo_output_index():
             assert not new_path.is_file()
             file.replace(new_path)
 
+def modify_parameter_file(scale_of_last_completed_output):
+    """
+    Change some values in the parameter file.
+
+    Specifically, we change the restart number and the scale factor of the output. I'm
+    not sure whether the scale factor change matters, but the restart number definitely
+    does. In this case it should already be 1, since when we do it 2 at a time that's
+    the index of the second one, but we double check.
+    """
+    restart_old = rockstar_dir / "restart.cfg"
+    restart_new = rockstar_dir / "restart.cfg.temp"
+
+    with open(restart_old, "r") as old:
+        with open(restart_new, "w") as new:
+            for line in old:
+                split = line.split()
+                key = split[0]
+                value = split[-1]
+                # we need to double check the restart number
+                if key == "RESTART_SNAP":
+                    assert value == "1"
+                # and the scale factor
+                if key == "SCALE_NOW":
+                    # get rid of the "a" in the scale factor string we have above
+                    line = line.replace(value, scale_of_last_completed_output)
+                new.write(line)
+
+    # then copy the file over
+    restart_old.replace(restart_new)
 
 # ==============================================================================
 #
@@ -129,6 +158,8 @@ for art_file_idx_second in range(1, len(art_files)):
     # Then move the ones with index 1 to be index 0, since those will be the starting
     # point for the next iteration of halo finding
     shift_halo_output_index()
+    # then modify the parameter file
+    modify_parameter_file(scale_factor_from_art_file(art_files[art_file_idx_second]))
 
     # then move the first file out. We'll move the next file in at the start
     # of the next loop
