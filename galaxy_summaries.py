@@ -229,6 +229,38 @@ for halo in halos[:n_halos]:
     out("Stellar Mass within 30 kpc: {:.2e} Msun".format(stellar_mass_30kpc))
     out("Stellar Mass within the virial radius: {:.2e} Msun".format(stellar_mass_virial))
 
+    # Print the masses in various states
+    cell_volumes = sphere_30_kpc[('index', 'cell_volume')]
+    gas_mass = sphere_30_kpc[('gas', 'cell_mass')]
+    gas_mass_HI = sphere_30_kpc[('gas', 'HI density')] * cell_volumes
+    gas_mass_HII = sphere_30_kpc[('gas', 'HII density')] * cell_volumes
+    gas_mass_H2 = 2 * sphere_30_kpc[('artio', 'RT_HVAR_H2')] * ds.arr(1, "code_mass/code_length**3") * cell_volumes
+    gas_mass_HeI = 4 * sphere_30_kpc[('gas', 'HeI density')] * cell_volumes
+    gas_mass_HeII = 4 * sphere_30_kpc[('gas', 'HeII density')] * cell_volumes
+    gas_mass_HeIII = 4 * sphere_30_kpc[('gas', 'HeIII density')] * cell_volumes
+    gas_mass_metals = sphere_30_kpc[('gas', 'metal_density')] * cell_volumes
+
+    gas_mass_total = np.sum(gas_mass.to("Msun").value)
+    gas_mass_HI_total = np.sum(gas_mass_HI.to("Msun").value)
+    gas_mass_HII_total = np.sum(gas_mass_HII.to("Msun").value)
+    gas_mass_H2_total = np.sum(gas_mass_H2.to("Msun").value)
+    gas_mass_HeI_total = np.sum(gas_mass_HeI.to("Msun").value)
+    gas_mass_HeII_total = np.sum(gas_mass_HeII.to("Msun").value)
+    gas_mass_HeIII_total = np.sum(gas_mass_HeIII.to("Msun").value)
+    gas_mass_metals_total = np.sum(gas_mass_metals.to("Msun").value)
+
+    out("")
+    out("Gas masses within 30 kpc:")
+    out("Total:  {:.2e} Msun".format(gas_mass_total))
+    out("HI:     {:.2e} Msun".format(gas_mass_HI_total))
+    out("HII:    {:.2e} Msun".format(gas_mass_HII_total))
+    out("H2:     {:.2e} Msun".format(gas_mass_H2_total))
+    out("He1:    {:.2e} Msun".format(gas_mass_HeI_total))
+    out("HeII:   {:.2e} Msun".format(gas_mass_HeII_total))
+    out("HeIII:  {:.2e} Msun".format(gas_mass_HeIII_total))
+    out("Metals: {:.2e} Msun".format(gas_mass_metals_total))
+
+
     # Metallicity
     metallicity = sphere_30_kpc[('STAR', 'METALLICITY_SNII')].value
     metallicity += sphere_30_kpc[('STAR', 'METALLICITY_SNIa')].value
