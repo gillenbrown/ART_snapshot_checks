@@ -73,7 +73,10 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/stampede2/old_ic_comparison/default/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/no_hn/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/no_virial/run 
+	                 $(runs_home)/stampede2/old_ic_comparison/no_virial/run \
+	                 $(runs_home)/stampede2/production/sfe100_hn00/run \
+	                 $(runs_home)/stampede2/production/sfe100_hn05/run \
+	                 $(runs_home)/stampede2/production/sfe100_hn20/run 
 # 	                 $(runs_home)/shangrila/hui/sfe_10 \
 # 	                 $(runs_home)/shangrila/hui/sfe_50 \
 # 	                 $(runs_home)/shangrila/hui/sfe_200 \
@@ -81,7 +84,6 @@ ifeq ($(machine),shangrila)
 # 	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run \
 # 	                 $(runs_home)/stampede2/production/first_sfe_100_1e7_temp_cap \
 # 	                 $(runs_home)/stampede2/production/second_sfe_100_compiler_tooagressiveDMrefinement/run
-# 	                 $(runs_home)/stampede2/production/sfe_100/run \
 # 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_base/run \
 # 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_base2/run \
 # 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodel/run \
