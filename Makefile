@@ -54,6 +54,7 @@ halo_growth_comp_script = ./halo_growth_comparison.py
 sfh_plots_script = ./plot_sfh.py
 cimf_plots_script = ./plot_cimf.py
 age_plot_script = ./plot_age_spread.py
+galaxies_comparison_script = ./plot_galaxy_comparisons.py
 dt_history_script = ./dt_history.py
 cfl_script = ./cfl_violations.py
 read_tree_dir = ./read_tree
@@ -197,11 +198,14 @@ ifeq ($(machine),shangrila)
 	halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
 	age_spread_plots = $(comparison_plots_dir)/age_spread_common.png \
 	                   $(comparison_plots_dir)/age_spread_last.png
+	# one sentinel file for the script that makes a bunch of plots
+	galaxy_comparison_sentinel = $(comparison_plots_dir)/comparison_sentinel.txt
 else
 	sfh_plots =
 	cimf_plots =
 	halo_growth_plot =
-	age_spread_plots = 
+	age_spread_plots =
+	galaxy_comparison_sentinel =
 endif
 
 # ------------------------------------------------------------------------------
@@ -321,7 +325,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(halo_management_sentinels) $(sfh_plots) $(cimf_plots) $(debugs) $(galaxies) $(movies) #  $(halo_growth_plot) $(age_spread_plots)
+all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(halo_management_sentinels) $(sfh_plots) $(cimf_plots) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(movies) #  $(halo_growth_plot) $(age_spread_plots)
 
 .PHONY: clean
 clean:
@@ -390,6 +394,10 @@ $(cimf_plots): $(cimf_plots_script) $(snapshots_hydro) $(halos_catalogs)
 # Make the age spread plots. 
 $(age_spread_plots): $(age_plot_script) $(snapshots_hydro) $(halos_catalogs)
 	python $(age_plot_script) $(sim_dirs_hydro)
+
+# and the galaxy comparison plots
+$(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script)
+	python $(galaxies_comparison_script) $(galaxy_comparison_sentinel) $(galaxies)
 
 # Make the individual nbody plots - several examples of very similar things here
 .SECONDEXPANSION:

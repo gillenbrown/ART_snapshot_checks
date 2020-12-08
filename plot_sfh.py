@@ -38,7 +38,7 @@ names = {
          full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
          # full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
          # full_dir("stampede2/old_ic_comparison/default/run"): "ART 2.0 SFE100 Stampede2",
-         # full_dir("stampede2/old_ic_comparison/default_5000kms_cap/run"): "ART 2.0 SFE100 Stampede2 v$_{max}$=5000km/s",
+         full_dir("stampede2/old_ic_comparison/default_5000kms_cap/run"): "Old IC 50% HN",
          # full_dir("stampede2/old_ic_comparison/no_hn/run"): "ART 2.0 SFE100 Stampede2 No HN",
          # full_dir("stampede2/old_ic_comparison/no_virial/run"): "ART 2.0 SFE100 Stampede2 No Virial",
          full_dir("stampede2/production/sfe100_hn20/run"): "LG 20% HN",
