@@ -52,6 +52,7 @@ halo_growth_comp_script = ./halo_growth_comparison.py
 sfh_plots_script = ./plot_sfh.py
 cimf_plots_script = ./plot_cimf.py
 age_plot_script = ./plot_age_spread.py
+galaxies_comparison_script = ./plot_galaxy_comparisons.py
 dt_history_script = ./dt_history.py
 cfl_script = ./cfl_violations.py
 read_tree_dir = ./read_tree
@@ -67,18 +68,28 @@ comparison_plots_dir = ./comparison_plots
 ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs
 	sim_dirs_nbody = 
-	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_10 \
-	                 $(runs_home)/shangrila/hui/sfe_50 \
-	                 $(runs_home)/shangrila/hui/sfe_100 \
-	                 $(runs_home)/shangrila/hui/sfe_200 \
-	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
-	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run \
-	                 $(runs_home)/stampede2/production/sfe100 \
-	                 $(runs_home)/stampede2/production/first_sfe_100_1e7_temp_cap \
+	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_100 \
 	                 $(runs_home)/stampede2/old_ic_comparison/default/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/no_hn/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/no_virial/run 
+	                 $(runs_home)/stampede2/old_ic_comparison/no_virial/run \
+	                 $(runs_home)/stampede2/production/sfe100_hn00/run \
+	                 $(runs_home)/stampede2/production/sfe100_hn05/run \
+	                 $(runs_home)/stampede2/production/sfe100_hn20/run 
+# 	                 $(runs_home)/shangrila/hui/sfe_10 \
+# 	                 $(runs_home)/shangrila/hui/sfe_50 \
+# 	                 $(runs_home)/shangrila/hui/sfe_200 \
+# 	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
+# 	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run \
+# 	                 $(runs_home)/stampede2/production/first_sfe_100_1e7_temp_cap \
+# 	                 $(runs_home)/stampede2/production/second_sfe_100_compiler_tooagressiveDMrefinement/run
+# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_base/run \
+# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_base2/run \
+# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodel/run \
+# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodel_precdiv/run \
+# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodelstrict/run \
+# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_no_cpu_dispatch/run 
+
 endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
@@ -186,11 +197,14 @@ ifeq ($(machine),shangrila)
 	halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
 	age_spread_plots = $(comparison_plots_dir)/age_spread_common.png \
 	                   $(comparison_plots_dir)/age_spread_last.png
+	# one sentinel file for the script that makes a bunch of plots
+	galaxy_comparison_sentinel = $(comparison_plots_dir)/comparison_sentinel.txt
 else
 	sfh_plots =
 	cimf_plots =
 	halo_growth_plot =
-	age_spread_plot = 
+	age_spread_plots =
+	galaxy_comparison_sentinel =
 endif
 
 # ------------------------------------------------------------------------------
@@ -310,7 +324,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(halo_management_sentinels) $(sfh_plots) $(cimf_plots) $(age_spread_plots) $(halo_growth_plot) $(debugs) $(galaxies) $(movies)
+all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(halo_management_sentinels) $(sfh_plots) $(cimf_plots) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(movies) #  $(halo_growth_plot) $(age_spread_plots)
 
 .PHONY: clean
 clean:
@@ -379,6 +393,10 @@ $(cimf_plots): $(cimf_plots_script) $(snapshots_hydro) $(halos_catalogs)
 # Make the age spread plots. 
 $(age_spread_plots): $(age_plot_script) $(snapshots_hydro) $(halos_catalogs)
 	python $(age_plot_script) $(sim_dirs_hydro)
+
+# and the galaxy comparison plots
+$(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script)
+	python $(galaxies_comparison_script) $(galaxy_comparison_sentinel) $(galaxies)
 
 # Make the individual nbody plots - several examples of very similar things here
 .SECONDEXPANSION:

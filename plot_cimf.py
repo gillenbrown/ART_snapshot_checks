@@ -25,18 +25,19 @@ def full_dir(partial_path):
     return base_dir / partial_path
 
 names = {
-         full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 SFE100 Shangrila",
-         full_dir("shangrila/old_ic_comparison/default_1e7_temp_cap/run"): "ART 2.0 SFE100 Shangrila Bad Caps",
+         # full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 SFE100 Shangrila",
+         # full_dir("shangrila/old_ic_comparison/default_1e7_temp_cap/run"): "ART 2.0 SFE100 Shangrila Bad Caps",
          # full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
          # full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
          full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
          # full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
-         # full_dir("stampede2/production/sfe100"): "T&L SFE100",
-         # full_dir("stampede2/production/first_sfe_100_1e7_temp_cap"): "T&L SFE100 Bad Caps",
-         full_dir("stampede2/old_ic_comparison/default/run"): "ART 2.0 SFE100 Stampede2",
-         full_dir("stampede2/old_ic_comparison/default_5000kms_cap/run"): "ART 2.0 SFE100 Stampede2 v$_{max}$=5000km/s",
-         full_dir("stampede2/old_ic_comparison/no_hn/run"): "ART 2.0 SFE100 Stampede2 No HN",
-         full_dir("stampede2/old_ic_comparison/no_virial/run"): "ART 2.0 SFE100 Stampede2 No Virial",
+         # full_dir("stampede2/old_ic_comparison/default/run"): "ART 2.0 SFE100 Stampede2",
+         # full_dir("stampede2/old_ic_comparison/default_5000kms_cap/run"): "ART 2.0 SFE100 Stampede2 v$_{max}$=5000km/s",
+         # full_dir("stampede2/old_ic_comparison/no_hn/run"): "ART 2.0 SFE100 Stampede2 No HN",
+         # full_dir("stampede2/old_ic_comparison/no_virial/run"): "ART 2.0 SFE100 Stampede2 No Virial",
+         full_dir("stampede2/production/sfe100_hn20/run"): "LG 20% HN",
+         full_dir("stampede2/production/sfe100_hn05/run"): "LG 5% HN",
+         full_dir("stampede2/production/sfe100_hn00/run"): "LG 0% HN",
          # full_dir("stampede2/ic_timing_tests/original_50_128"): "T&L - Original",
          # full_dir("stampede2/ic_timing_tests/trim_12_128"): "T&L - 4x Trim 128",
          # full_dir("stampede2/ic_timing_tests/trim_12_256"): "T&L - 4x Trim 256",
@@ -268,7 +269,7 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix):
     plot_power_law(ax, -2, 1E6, 3E6, 1E4)
     plot_power_law(ax, -3, 1E6, 3E6, 1E4)
 
-    ax.legend(loc=1, fontsize=14)
+    ax.legend(loc=1, fontsize=10)
     ax.set_yscale("log")
     ax.set_xscale("log")
     ax.set_limits(1E3, 1E7, 10, 1E7)
