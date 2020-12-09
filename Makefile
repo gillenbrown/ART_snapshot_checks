@@ -39,8 +39,6 @@ endif
 # 
 # ------------------------------------------------------------------------------
 halo_finding_script = ./run_rockstar.py
-rename_script = ./rename_halos.py
-halo_management_script = ./manage_halos.py
 debug_script = ./debug_output.py
 galaxies_script = ./galaxy_summaries.py
 nbody_single_halo_plots_script = ./plot_single_halo_nbody.py
@@ -123,7 +121,7 @@ snapshots_hydro = $(foreach dir,$(sim_out_dirs_hydro),$(wildcard $(dir)/*_a*.art
 # Parse the snapshot names into halo catalogs 
 # replace the directory and suffix
 sim_to_halo = $(subst .art,.0.bin,$(subst out/continuous,halos/halos,$(1)))
-halos_catalogs = $(foreach snapshot,$(snapshots),$(call sim_to_halo,$(snapshot)))
+#halos_catalogs = $(foreach snapshot,$(snapshots),$(call sim_to_halo,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
@@ -151,19 +149,6 @@ halo_words_to_rockstar_words = $(patsubst halos,rockstar_halos,$(1))
 rockstar_words_to_sentinel_words = $(patsubst %.0.bin,sentinel.txt,$(1))
 halo_words_to_sentinel_words = $(call halo_words_to_rockstar_words,$(call rockstar_words_to_sentinel_words,$(1)))
 halo_to_sentinel = $(call words_to_path,$(call halo_words_to_sentinel_words,$(call path_to_words,$(1))))
-
-# ------------------------------------------------------------------------------
-#
-#  Halo directory management
-# 
-# ------------------------------------------------------------------------------
-# On stampede2 we need to move the files out of the directory and modify the
-# restart file, while on shangrila we do nothing. Use sentinels for this
-halo_management_sentinels = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/clean_sentinel.txt)
-# We will call this script once we are done with the halo renaming. This 
-# wildcard will be acceptable since all the renamed halos will be present
-# at the point when it's called.
-halo_management_sentinel_to_halos = $(foreach snapshot,$(wildcard $(subst rockstar_halos/clean_sentinel.txt,out/,$(1))*_a*.art),$(call sim_to_halo,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
@@ -324,7 +309,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(halo_management_sentinels) $(sfh_plots) $(cimf_plots) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(movies) #  $(halo_growth_plot) $(age_spread_plots)
+all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_plots) $(cimf_plots) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(movies) #  $(halo_growth_plot) $(age_spread_plots)
 
 .PHONY: clean
 clean:
@@ -360,16 +345,6 @@ halos: $(rockstar_sentinels)
 $(rockstar_sentinels): %: $$(call sentinel_to_sims, %) 
 	python $(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@) $(call sentinel_to_halos_dir, $@) $(machine)
 
-# Rule to rename the halo catalogs into something more user-friendly
-.SECONDEXPANSION:
-$(halos_catalogs): %: $(rename_script) | $$(call halo_to_sentinel,%)
-	python $(rename_script) $@
-
-# then clean up this mess
-.SECONDEXPANSION:
-$(halo_management_sentinels): %: $$(call halo_management_sentinel_to_halos,%) $(halo_management_script)
-	python $(halo_management_script) $@ $(machine)
-
 # Make the debug files
 .SECONDEXPANSION:
 $(debugs): %: $(debug_script)
@@ -382,16 +357,16 @@ $(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(sfh_plots): $(sfh_plots_script) $(snapshots_hydro) $(halos_catalogs)
+$(sfh_plots): $(sfh_plots_script) $(snapshots_hydro) $(rockstar_sentinels)
 	python $(sfh_plots_script) $(sim_dirs_hydro)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(cimf_plots): $(cimf_plots_script) $(snapshots_hydro) $(halos_catalogs)
+$(cimf_plots): $(cimf_plots_script) $(snapshots_hydro) $(rockstar_sentinels)
 	python $(cimf_plots_script) $(sim_dirs_hydro)
 
 # Make the age spread plots. 
-$(age_spread_plots): $(age_plot_script) $(snapshots_hydro) $(halos_catalogs)
+$(age_spread_plots): $(age_plot_script) $(snapshots_hydro) $(rockstar_sentinels)
 	python $(age_plot_script) $(sim_dirs_hydro)
 
 # and the galaxy comparison plots
