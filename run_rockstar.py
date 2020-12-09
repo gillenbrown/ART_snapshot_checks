@@ -137,6 +137,7 @@ def clean_up_rockstar_files():
         if (
             file.name not in ["restart.cfg", "sentinel.txt"] and
             not file.name.startswith("halos_0.") and
+            (not file.name.startswith("out_") and file.suffix == ".list") and
             not file.is_dir()
         ):
             file.unlink()
