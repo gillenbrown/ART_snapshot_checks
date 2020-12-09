@@ -195,5 +195,5 @@ for out_file in temp_dir.iterdir():
     out_file.replace(new_file)
 temp_dir.rmdir()
 
-# # update the sentinel file
-# (rockstar_dir / "sentinel.txt").touch()
+# update the sentinel file
+(rockstar_dir / "sentinel.txt").touch()
