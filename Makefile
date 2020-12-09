@@ -92,7 +92,7 @@ endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
 	sim_dirs_nbody =
-	sim_dirs_hydro = $(runs_home)/production/test/run
+	sim_dirs_hydro = $(runs_home)/production/test_halo_finder/run
 	                 #$(runs_home)/production/sfe100_hn00/run \
 	                 #$(runs_home)/production/sfe100_hn05/run \
 	                 #$(runs_home)/production/sfe100_hn20/run \
