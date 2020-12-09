@@ -21,12 +21,16 @@ source ~/.bashrc
 unset PYTHONPATH
 
 # double check these variables
-echo $(which python)
-echo $PYTHONPATH
+# echo $(which python)
+# echo $PYTHONPATH
 
-# go to the directory I submitted the job from
-cd $SLURM_SUBMIT_DIR
-
+# I then need to copy the whole setup to scratch so I can run the job from
+# there. This is required by the Stampede2 folks to reduce stress on the
+# $WORK filesystem
+work_dir=$WORK/ART_snapshot_checks/
+new_dir=$SCRATCH/snapshot_checks_${SLURM_JOB_ID}
+cp -r $work_dir $new_dir
+cd $new_dir
 
 # halos uses all the cores, so it needs to be done one at a time. The number
 # used thereafter depends on the memory, it's just empirical. For halos we have
@@ -37,3 +41,8 @@ make dirs
 remora ibrun -n 1 -o 0 make halos
 remora make -j10
 # &>> $SLURM_JOB_NAME.stdout.$SLURM_JOB_ID
+
+# Then I can remove our temporary directory. No plots should be written here,
+# as everything is in the simulation directories, and the stdout file will be
+# in the submission directory (i.e. $WORK)
+rm -rf $new_dir
