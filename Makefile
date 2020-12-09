@@ -92,7 +92,10 @@ endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
 	sim_dirs_nbody =
-	sim_dirs_hydro = $(runs_home)/old_ic_comparison/test/run
+	sim_dirs_hydro = $(runs_home)/production/test/run
+	                 #$(runs_home)/production/sfe100_hn00/run \
+	                 #$(runs_home)/production/sfe100_hn05/run \
+	                 #$(runs_home)/production/sfe100_hn20/run \
 endif
 
 # combine the N-Body and Hydro into one big list
