@@ -67,10 +67,15 @@ ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs
 	sim_dirs_nbody = 
 	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_100 \
-	                 $(runs_home)/stampede2/old_ic_comparison/default/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/no_hn/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/no_virial/run \
+	                 $(runs_home)/shangrila/hui/sfe_10 \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap1000kms_hn50/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap1000kms_hn001/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap1000kms_hn50_novirial/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50_v1/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn00/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn05/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn20/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50/run \
 	                 $(runs_home)/stampede2/production/sfe100_hn00/run \
 	                 $(runs_home)/stampede2/production/sfe100_hn05/run \
 	                 $(runs_home)/stampede2/production/sfe100_hn20/run 
@@ -92,10 +97,9 @@ endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
 	sim_dirs_nbody =
-	sim_dirs_hydro = $(runs_home)/production/test_halo_finder/run
-	                 #$(runs_home)/production/sfe100_hn00/run \
-	                 #$(runs_home)/production/sfe100_hn05/run \
-	                 #$(runs_home)/production/sfe100_hn20/run
+	sim_dirs_hydro = $(runs_home)/production/sfe100_hn00/run \
+	                 $(runs_home)/production/sfe100_hn05/run \
+	                 $(runs_home)/production/sfe100_hn20/run
 endif
 
 # combine the N-Body and Hydro into one big list
