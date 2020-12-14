@@ -271,16 +271,21 @@ for halo in halos[:n_halos]:
     metal_mass = masses * metallicity
 
     out("")
+    out("Stellar metallicity (nans mean no stars)")
     out("Mass-weighted mean metallicity of:")
     for max_age in [np.inf, 40]:
-        star_mask = sphere_30_kpc[('STAR', 'age')].to("Myr").value < max_age
-        # get the mass-weighted metallicity
-        mean_metallicity = np.sum(metal_mass[star_mask]) / np.sum(masses[star_mask])
-
         if np.isinf(max_age):
             descriptor = "all stars"
         else:
             descriptor = f"stars younger than {max_age} Myr"
+
+        star_ages = sphere_30_kpc[('STAR', 'age')].to("Myr").value
+        # get the mass-weighted metallicity
+        if np.min(star_ages) < max_age:
+            star_mask = star_ages < max_age
+            mean_metallicity = np.sum(metal_mass[star_mask]) / np.sum(masses[star_mask])
+        else:
+            mean_metallicity = np.nan
 
         out(f"{descriptor:>25} = {mean_metallicity:.2e} -> log(Z/Z_sun) = {np.log10(mean_metallicity/0.02):.2f}")
 
