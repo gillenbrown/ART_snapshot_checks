@@ -407,8 +407,13 @@ for line in tqdm(stdout, total=total_lines):
             # dont' need this info
             continue
         else:
-            key, value = line.split("=")
-            this_violation[key.strip()] = value.strip()
+            # sometimes there is extra information here from other ranks, so 
+            # check that we can read it in appropriately
+            try:
+                key, value = line.split("=")
+                this_violation[key.strip()] = value.strip()
+            except ValueError:
+                continue  # skip this line
 
 
 # close the file

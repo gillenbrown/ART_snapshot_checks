@@ -74,8 +74,13 @@ with open(log_file, "r") as in_file:
             if line == "courant cell information:" or line.startswith("CFL tolerance"):
                 continue
             else:
-                key, value = line.split("=")
-                this_violation[key.strip()] = value.strip()
+                # sometimes there is extra information here from other ranks, so
+                # check that we can read it in appropriately
+                try:
+                    key, value = line.split("=")
+                    this_violation[key.strip()] = value.strip()
+                except ValueError:
+                    continue  # skip this line
 
 # ======================================================================================
 #
