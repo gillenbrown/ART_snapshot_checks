@@ -39,7 +39,7 @@ cd $new_dir
 # memory considerations
 make dirs
 remora ibrun -n 1 -o 0 make halos
-remora make -j10
+remora make -j6
 # &>> $SLURM_JOB_NAME.stdout.$SLURM_JOB_ID
 
 # Then I can remove our temporary directory. No plots should be written here,

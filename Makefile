@@ -320,7 +320,7 @@ all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_plots) 
 
 .PHONY: clean
 clean:
-	rm -r $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_plots_dirs)
+	rm -r $(sim_checks_dirs) $(sim_plots_dirs)
 
 .PHONY: clean_all
 clean_all:
