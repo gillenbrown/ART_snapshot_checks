@@ -187,7 +187,7 @@ def plot_power_law(ax, slope, x1, x2, y1):
     ax.plot([x1, x2], [y1, y2], c=bpl.almost_black, lw=1, ls="--")
     ax.add_text(1.1*x2, y2, text=slope, va="center", ha="left", fontsize=18)
 
-def cimf(data_obj, include_initial_bound):
+def cimf(data_obj, include_initial_bound, max_age_myr):
     """
     Make the cluster initial mass function. 
     
@@ -195,6 +195,8 @@ def cimf(data_obj, include_initial_bound):
     :param include_initial_bound: whether to incorporate the initial bound
                                   fraction of clusters, or just get the 
                                   distribution of initial particle masses
+    :param max_age_myr: The maximum age to restrict the plot to. Is infinity as the
+                        default, which plots all stars.
     :returns: Two lists. The first is f_i * M, representing the initial
               bound mass, of M if include_initial_bound=False. This will be 
               binned values suitable to plot. The second is dN/dLogM for each 
@@ -204,6 +206,11 @@ def cimf(data_obj, include_initial_bound):
     if include_initial_bound:
         star_initial_bound = get_initial_bound_fraction(data_obj)
         star_initial_mass *= star_initial_bound
+    # then restrict to recently formed clusters. This can be set to infinity, which
+    # plots everything
+    max_age = max_age_myr * yt.units.Myr
+    mask = data_obj[('STAR', 'age')] < max_age
+    star_initial_mass = star_initial_mass[mask]
     
     # create bins with spacing of 0.16 dex
     bin_width = 0.16  # dex
@@ -223,7 +230,7 @@ def cimf(data_obj, include_initial_bound):
     
     return m_centers, hist
 
-def plot_cimf(ds_dict, halos_dict, plot_name_suffix):
+def plot_cimf(ds_dict, halos_dict, plot_name_suffix, max_age_myr=np.inf):
     """
     Plot the initial cluster mass function.
 
@@ -235,9 +242,14 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix):
                              dictionaries are passed in. This will determine if
                              the redshift is labeled as common to all, or 
                              individually per simulation
+    :param max_age_myr: The maximum age to restrict the plot to. Is infinity as the
+                        default, which plots all stars.
     """
     if plot_name_suffix not in ["last", "common"]:
         raise ValueError("bad plot_name_suffix")
+    # add the age if it's not infinity
+    if not np.isinf(max_age_myr):
+        plot_name_suffix += f"{max_age_myr}myr"
     
     fig, ax = bpl.subplots(figsize=[9, 7])
 
@@ -249,8 +261,8 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix):
                       halo.quantities["particle_position_z"]]
             
             sphere = ds_dict[name].sphere(center=center, radius=(100, "kpc"))
-            mass_plot_with_bound, dn_dlogM_with_bound = cimf(sphere, True)
-            mass_plot_without_bound, dn_dlogM_without_bound = cimf(sphere, False)
+            mass_plot_with_bound, dn_dlogM_with_bound = cimf(sphere, True, max_age_myr)
+            mass_plot_no_bound, dn_dlogM_no_bound = cimf(sphere, False, max_age_myr)
             
             # make the label only for the biggest halo
             if halo.quantities["rank"] == 1:
@@ -263,7 +275,7 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix):
                 label = None
 
             ax.plot(mass_plot_with_bound, dn_dlogM_with_bound, c=c, ls="-", label=label)
-            ax.plot(mass_plot_without_bound, dn_dlogM_without_bound, c=c, ls=":")
+            ax.plot(mass_plot_no_bound, dn_dlogM_no_bound, c=c, ls=":")
             
     # plot the guiding lines
     plot_power_law(ax, -2, 1E6, 3E6, 1E4)
@@ -285,3 +297,4 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix):
 # then actually call this function to build the plots
 plot_cimf(common_ds, common_halos, "common")
 plot_cimf(last_ds, last_halos, "last")
+plot_cimf(last_ds, last_halos, "last", 100)
