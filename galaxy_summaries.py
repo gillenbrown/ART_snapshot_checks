@@ -189,8 +189,9 @@ for halo in halos[:n_halos]:
     for quantity in ordered_quantities:   
         q_name = quantity_names[quantity]
         if q_name == "Virial Radius" or "Position" in q_name:
-            value = halo[quantity].to("kpc")
-            out("{}: {:<7.3f}".format(q_name, value))
+            value_kpc = halo[quantity].to("kpc").value
+            value_code = (halo[quantity] / ds.length_unit).value
+            out("{}: {:>7.3f} kpc, {:>7.3f} code".format(q_name, value_kpc, value_code))
         elif "Mass" in q_name:
             value = halo[quantity].to("Msun")
             out("{}: {:<2.3e}".format(q_name, value))
