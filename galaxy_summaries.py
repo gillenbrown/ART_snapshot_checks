@@ -133,7 +133,7 @@ for halo in hc.catalog:
         while halo[position_name] > ds.domain_width[0]:
             # make sure subtraction doesn't happen in code units
             print(f"fixing halo {halo['rank']} position")
-            halo[position_name] = halo[position_name].to("cm") - ds.domain_width.to("cm")
+            halo[position_name] = halo[position_name].to("cm") - ds.domain_width[0].to("cm")
 
 # get the N-body particle locations. These are different in the old and new
 # simulations, so we have to check 
