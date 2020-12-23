@@ -19,7 +19,6 @@ um = abundance_matching.UniverseMachine()
 
 import betterplotlib as bpl
 bpl.set_style()
-bpl.color_cycle.append("0.5")
 
 import yt
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
