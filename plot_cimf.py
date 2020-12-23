@@ -269,7 +269,7 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix, max_age_myr=np.inf):
             # make the label only for the biggest halo
             if halo.quantities["rank"] == 1:
                 # and include the redshift if it's different for each sim
-                if plot_name_suffix == "last":
+                if "last" in plot_name_suffix:
                     label = f"{name}: z = {1/ds_dict[name].scale_factor - 1:.1f}"
                 else:
                     label = name
@@ -289,7 +289,7 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix, max_age_myr=np.inf):
     ax.set_limits(1E3, 1E7, 10, 1E7)
     
     # if there is a common redshift, annotate it
-    if plot_name_suffix == "common":
+    if "common" in plot_name_suffix:
         ax.easy_add_text(f"z = {1/common_scale - 1:.1f}", "upper left")
 
     ax.add_labels("$f_i$M [$M_\odot$]", "dN/dlogM")
