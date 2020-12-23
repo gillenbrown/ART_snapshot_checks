@@ -265,16 +265,19 @@ for idx, name in enumerate(all_halos):
                   halo.quantities["particle_position_z"]]
         sphere = all_ds[name].sphere(center=center, radius=(30, "kpc"))
         times, cumulative_mass = create_cumulative_mass(sphere)
-        # don't plot halos without few points
-        if len(times) < 2:
-            continue
+        # handle halos with few points
+        if len(times) == 1:
+            times = np.concatenate([times, times])
+            cumulative_mass = np.concatenate([cumulative_mass, cumulative_mass])
+        elif len(times) == 0:
+            times = [0, 0, 0] * yt.units.Gyr
+            cumulative_mass = [0, 0, 0] * yt.units.Msun
 
         plot_times = times.to("Gyr").value
         cumulative_mass = cumulative_mass.to("msun").value
         dt = plot_times[1] - plot_times[0]
         if halo.quantities["rank"] == 1:
             label = f"{name}: z = {1 / all_ds[name].scale_factor - 1:.1f}"
-            label = name
         else:
             label = None
         ax.plot(plot_times, cumulative_mass, c=c, label=label)
