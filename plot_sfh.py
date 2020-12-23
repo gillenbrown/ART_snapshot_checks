@@ -273,6 +273,7 @@ for idx, name in enumerate(all_halos):
         cumulative_mass = cumulative_mass.to("msun").value
         dt = plot_times[1] - plot_times[0]
         if halo.quantities["rank"] == 1:
+            label = f"{name}: z = {1 / all_ds[name].scale_factor - 1:.1f}"
             label = name
         else:
             label = None
