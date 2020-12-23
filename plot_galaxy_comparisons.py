@@ -129,23 +129,20 @@ def full_dir(partial_path):
     return os.path.join(base_dir, partial_path)
 
 names = {
-         # full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 SFE100 Shangrila",
-         # full_dir("shangrila/old_ic_comparison/default_1e7_temp_cap/run"): "ART 2.0 SFE100 Shangrila Bad Caps",
          # full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
          # full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
          full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
          # full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
-         # full_dir("stampede2/old_ic_comparison/default/run"): "ART 2.0 SFE100 Stampede2",
-         full_dir("stampede2/old_ic_comparison/default_5000kms_cap/run"): "Old IC 50% HN",
-         # full_dir("stampede2/old_ic_comparison/no_hn/run"): "ART 2.0 SFE100 Stampede2 No HN",
-         # full_dir("stampede2/old_ic_comparison/no_virial/run"): "ART 2.0 SFE100 Stampede2 No Virial",
-         full_dir("stampede2/production/sfe100_hn20/run"): "LG 20% HN",
-         full_dir("stampede2/production/sfe100_hn05/run"): "LG 5% HN",
-         full_dir("stampede2/production/sfe100_hn00/run"): "LG 0% HN",
-         # full_dir("stampede2/ic_timing_tests/original_50_128"): "T&L - Original",
-         # full_dir("stampede2/ic_timing_tests/trim_12_128"): "T&L - 4x Trim 128",
-         # full_dir("stampede2/ic_timing_tests/trim_12_256"): "T&L - 4x Trim 256",
-         # full_dir("stampede2/ic_timing_tests/trim_25_256"): "T&L - 2x Trim 256",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn00/run"): "Old IC 0% HN",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn05/run"): "Old IC 5% HN",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn20/run"): "Old IC 20% HN",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn50/run"): "Old IC 50% HN new",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn50_v1/run"): "Old IC 50% HN",
+         full_dir("stampede2/production/sfe001_hn20/run"): "LG SFE1 20% HN",
+         full_dir("stampede2/production/sfe010_hn20/run"): "LG SFE10 20% HN",
+         full_dir("stampede2/production/sfe100_hn20/run"): "LG SFE100 20% HN",
+         full_dir("stampede2/production/sfe100_hn05/run"): "LG SFE100 5% HN",
+         full_dir("stampede2/production/sfe100_hn00/run"): "LG SFE100 0% HN",
          }
 
 binned_summaries = defaultdict(list)
