@@ -207,7 +207,7 @@ ages = [z_to_age(z).to("Gyr").value for z in zs]
 ax.fill_between(x=ages, y1=lo_lim, y2=hi_lim, alpha=0.4, lw=0,
                 color="0.3", label="MW-like")
 
-ax.legend(loc=2)
+ax.legend(loc=2, fontsize=10)
 ax.set_yscale("log")
 ax.set_limits(0, 1.05*max_time, y_min=1E-1)
 ax.add_labels("Time [Gyr]", "SFR  [$M_\odot$/yr]")
@@ -283,7 +283,7 @@ for idx, name in enumerate(all_halos):
         if max(plot_times) > max_time:
             max_time = max(plot_times)
 
-ax.legend()
+ax.legend(fontsize=10)
 ax.set_yscale("log")
 ax.set_limits(0, 1.05*max_time, y_min=1E6)
 ax.add_labels("Time [Gyr]", "Stellar Mass  [$M_\odot$]")
