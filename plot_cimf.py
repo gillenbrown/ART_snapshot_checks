@@ -98,7 +98,10 @@ for directory in sys.argv[1:]:
                      if file.is_file()
                      and str(file.name).endswith(".art")
                      and str(file.name).startswith("continuous_a")]
-    last_snapshots.append(sorted(all_snapshots)[-1])
+    # restrict to be a reasonable redshift
+    this_last_snapshot = sorted(all_snapshots)[-1]
+    if filename_to_scale_factor(this_last_snapshot) > 0.15:
+        last_snapshots.append(this_last_snapshot)
     
 earliest_last_snapshot = sorted(last_snapshots)[0]
 common_scale = filename_to_scale_factor(earliest_last_snapshot) + 0.001  
