@@ -31,7 +31,7 @@ def full_dir(partial_path):
     return os.path.join(base_dir, partial_path)
 
 names = {
-         # full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
+         full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
          # full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
          full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
          # full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
@@ -47,6 +47,8 @@ names = {
          full_dir("stampede2/production/sfe100_hn00/run"): "LG SFE100 0% HN",
          }
 
+# if I have a lot of simulations to plot, I need to extend the color cycle
+color_cycle = bpl.color_cycle + [bpl.almost_black, "skyblue", "sienna", "orchid"]
 
 # make dictionary to store the resulting datasets
 all_ds = dict()
@@ -172,7 +174,7 @@ fig, ax = bpl.subplots()
 # store data about times
 max_time = 0
 for idx, name in enumerate(all_halos):
-    c = bpl.color_cycle[idx]
+    c = color_cycle[idx]
     for halo in all_halos[name]:
         center = [halo.quantities["particle_position_x"],
                   halo.quantities["particle_position_y"],
@@ -257,7 +259,7 @@ fig, ax = bpl.subplots()
 # store data about times
 max_time = 0
 for idx, name in enumerate(all_halos):
-    c = bpl.color_cycle[idx]
+    c = color_cycle[idx]
     for halo in all_halos[name]:
         center = [halo.quantities["particle_position_x"],
                   halo.quantities["particle_position_y"],

@@ -129,7 +129,7 @@ def full_dir(partial_path):
     return os.path.join(base_dir, partial_path)
 
 names = {
-         # full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
+         full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
          # full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
          full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
          # full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
@@ -166,10 +166,12 @@ def get_scale_factor(summary_path):
 # Then go through and plot everything!
 # 
 # =============================================================================
+# if I have a lot of simulations to plot, I need to extend the color cycle
+color_cycle = bpl.color_cycle + [bpl.almost_black, "skyblue", "sienna", "orchid"]
 # define some helper functions first
 def plot_quantities(quantity, unit, ax):
     for idx, sim_name in enumerate(binned_summaries):
-        color = bpl.color_cycle[idx]
+        color = color_cycle[idx]
         summaries = binned_summaries[sim_name]
         # the number of halos to plot will not change throughout the history 
         # of the simulation

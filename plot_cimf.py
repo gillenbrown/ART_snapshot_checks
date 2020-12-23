@@ -111,6 +111,8 @@ common_halos = dict()
 last_halos = dict()
 # and one to ensure each has the same color
 colors = dict()
+# if I have a lot of simulations to plot, I need to extend the color cycle
+color_cycle = bpl.color_cycle + [bpl.almost_black, "skyblue", "sienna", "orchid"]
 
 idx = 0
 for directory in sys.argv[1:]:
@@ -118,7 +120,7 @@ for directory in sys.argv[1:]:
     if directory not in names:
         continue
 
-    colors[names[directory]] = bpl.color_cycle[idx]
+    colors[names[directory]] = color_cycle[idx]
     idx += 1
 
     out_dir = directory / "out"
