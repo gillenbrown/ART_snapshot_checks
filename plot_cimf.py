@@ -141,7 +141,8 @@ for directory in sys.argv[1:]:
     
     # then the last one that's in common with the other simulations
     all_common_snapshots = [file for file in all_snapshots
-                            if filename_to_scale_factor(file.name) <= common_scale]
+                            if filename_to_scale_factor(file.name) <= common_scale
+                            and abs(filename_to_scale_factor(file.name) - common_scale) < 0.02]
     # if there are no snapshots early enough for this, don't add them
     if len(all_common_snapshots) > 0:
         last_common_snapshot = sorted(all_common_snapshots)[-1]
