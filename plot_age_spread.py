@@ -6,11 +6,9 @@ different outputs. This code is very similar to plot_cimf.py, some of it was
 copied. 
 """
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
-from scipy import special
 import yt
 from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
 
@@ -19,31 +17,7 @@ import betterplotlib as bpl
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
-# I have to hardcode some labels to make this easier, parsing them won't work
-# nearly as well
-def full_dir(partial_path):
-    base_dir = Path("/u/home/gillenb/art_runs/runs/").absolute()
-    return base_dir / partial_path
-
-names = {
-         # full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 SFE100 Shangrila",
-         # full_dir("shangrila/old_ic_comparison/default_1e7_temp_cap/run"): "ART 2.0 SFE100 Shangrila Bad Caps",
-         # full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
-         # full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
-         full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
-         # full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
-         # full_dir("stampede2/old_ic_comparison/default/run"): "ART 2.0 SFE100 Stampede2",
-         # full_dir("stampede2/old_ic_comparison/default_5000kms_cap/run"): "ART 2.0 SFE100 Stampede2 v$_{max}$=5000km/s",
-         # full_dir("stampede2/old_ic_comparison/no_hn/run"): "ART 2.0 SFE100 Stampede2 No HN",
-         # full_dir("stampede2/old_ic_comparison/no_virial/run"): "ART 2.0 SFE100 Stampede2 No Virial",
-         full_dir("stampede2/production/sfe100_hn20/run"): "LG 20% HN",
-         full_dir("stampede2/production/sfe100_hn05/run"): "LG 5% HN",
-         full_dir("stampede2/production/sfe100_hn00/run"): "LG 0% HN",
-         # full_dir("stampede2/ic_timing_tests/original_50_128"): "T&L - Original",
-         # full_dir("stampede2/ic_timing_tests/trim_12_128"): "T&L - 4x Trim 128",
-         # full_dir("stampede2/ic_timing_tests/trim_12_256"): "T&L - 4x Trim 256",
-         # full_dir("stampede2/ic_timing_tests/trim_25_256"): "T&L - 2x Trim 256",
-         }
+from plot_utils import names, colors
     
 def filename_to_scale_factor(filename):
     return float(filename[-10:-4]) 
@@ -113,17 +87,11 @@ common_ds = dict()
 last_ds = dict()
 common_halos = dict()
 last_halos = dict()
-# and one to ensure each has the same color
-colors = dict()
 
-idx = 0
 for directory in sys.argv[1:]:
     directory = Path(directory)
     if directory not in names:
         continue
-
-    colors[names[directory]] = bpl.color_cycle[idx]
-    idx += 1
 
     out_dir = directory / "out"
     

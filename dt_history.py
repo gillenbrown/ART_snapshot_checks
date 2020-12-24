@@ -1,7 +1,6 @@
 from pathlib import Path
 import sys
 
-import numpy as np
 from astropy import units as u
 from matplotlib import colors
 from matplotlib import cm
@@ -102,7 +101,7 @@ def is_end_of_level_timesteps(line):
 def is_timestep_success_line(line):
     return line.startswith("done with timestep") or \
            line.strip().endswith("CFL CONDITION VIOLATED:") or \
-           line.startswith("level=0 vFac(aexpv)/vFac(aexp0)")
+           line.startswith("assigning density on level 0")
            # This last one is only used for the intial condition
 
 def is_end_of_cfl_violation_info(line):
@@ -137,7 +136,7 @@ def did_timestep_succeed(line):
     # will be the timestep number. If not, it will be the level of the CFL violation.
     if line.startswith("done with timestep"):
         return True
-    elif line.startswith("level=0 vFac(aexpv)/vFac(aexp0)"):
+    elif line.startswith("assigning density on level 0"):
         return True
     else:
         return False
@@ -150,7 +149,7 @@ def get_successful_timestep_number(line):
     if not is_timestep_success_line(line):
         raise ValueError("This is not a timestep success line!")
 
-    if line.startswith("level=0 vFac(aexpv)/vFac(aexp0)"):
+    if line.startswith("assigning density on level 0"):
         return 0  # IC doesn't really count
     elif line.startswith("done with timestep"):
         return int(line.split()[3])

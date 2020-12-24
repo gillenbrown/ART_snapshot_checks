@@ -35,7 +35,7 @@ if len(found_sims) == 0:
     plot_name.touch()
     exit()
 # get the earliest one so there are less stars and it loads quicker
-ds = yt.load(sorted(found_sims)[0])
+ds = yt.load(str(sorted(found_sims)[0]))
 H0 = ds.artio_parameters["hubble"][0]*100
 omega_m = ds.artio_parameters["OmegaM"][0]
 cosmo = cosmology.FlatLambdaCDM(H0, omega_m, Tcmb0=2.725)
@@ -81,7 +81,12 @@ class Halo(object):
         
         # then create an interpolation object, which will be used for calculating the ratios
         # of the growth history
-        self.growth_age_interp = interpolate.interp1d(x=self.growth_age, y=self.growth_mass, kind="linear")
+        if len(self.growth_age) == 0:
+            raise ValueError("bad halo growth")
+        elif len(self.growth_age) == 1:
+            self.growth_age_interp = None
+        else:
+            self.growth_age_interp = interpolate.interp1d(x=self.growth_age, y=self.growth_mass, kind="linear")
 
     def _init_mergers(self, mergers_file_loc):
         self.mergers_scale = []
@@ -175,8 +180,12 @@ def plot_mass_ratio(ax, halo1, halo2, color):
     
     ages = np.linspace(age_start, age_end, 1000)
     
-    ratios = [halo2.growth_age_interp(a) / halo1.growth_age_interp(a)
-              for a in ages]
+    if halo1.growth_age_interp is not None and halo2.growth_age_interp is not None:
+        ratios = [halo2.growth_age_interp(a) / halo1.growth_age_interp(a)
+                  for a in ages]
+    else:
+        ages = [age_start]
+        ratios = [halo2.growth_mass[0] / halo1.growth_mass[0]]
     
     diffs_dex = [np.log10(r) for r in ratios]
     
