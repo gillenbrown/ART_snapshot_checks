@@ -55,6 +55,7 @@ sfh_plots_script = ./plot_sfh.py
 cimf_plots_script = ./plot_cimf.py
 age_plot_script = ./plot_age_spread.py
 galaxies_comparison_script = ./plot_galaxy_comparisons.py
+comparison_utils_script = ./plot_utils.py
 dt_history_script = ./dt_history.py
 cfl_script = ./cfl_violations.py
 read_tree_dir = ./read_tree
@@ -70,21 +71,20 @@ comparison_plots_dir = ./comparison_plots
 ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs
 	sim_dirs_nbody = 
-	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_100 \
-	                 $(runs_home)/shangrila/hui/sfe_10 \
+	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_10 \
+	                 $(runs_home)/shangrila/hui/sfe_50 \
+	                 $(runs_home)/shangrila/hui/sfe_100 \
+ 	                 $(runs_home)/shangrila/hui/sfe_200 \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn00/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn05/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn20/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50_v1/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50/run \
 	                 $(runs_home)/stampede2/production/sfe001_hn20/run \
 	                 $(runs_home)/stampede2/production/sfe010_hn20/run \
-	                 $(runs_home)/stampede2/production/sfe100_hn00/run \
+	                 $(runs_home)/stampede2/production/sfe100_hn20/run \
 	                 $(runs_home)/stampede2/production/sfe100_hn05/run \
-	                 $(runs_home)/stampede2/production/sfe100_hn20/run 
-# 	                 $(runs_home)/shangrila/hui/sfe_10 \
-# 	                 $(runs_home)/shangrila/hui/sfe_50 \
-# 	                 $(runs_home)/shangrila/hui/sfe_200 \
+	                 $(runs_home)/stampede2/production/sfe100_hn00/run
 # 	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
 # 	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run \
 # 	                 $(runs_home)/stampede2/production/first_sfe_100_1e7_temp_cap \
@@ -389,20 +389,20 @@ $(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(sfh_plots): $(sfh_plots_script) $(snapshots_hydro) $(halos_catalogs)
+$(sfh_plots): $(sfh_plots_script) $(comparison_utils_script) $(snapshots_hydro) $(halos_catalogs)
 	python $(sfh_plots_script) $(sim_dirs_hydro)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(cimf_plots): $(cimf_plots_script) $(snapshots_hydro) $(halos_catalogs)
+$(cimf_plots): $(cimf_plots_script) $(comparison_utils_script) $(snapshots_hydro) $(halos_catalogs)
 	python $(cimf_plots_script) $(sim_dirs_hydro)
 
 # Make the age spread plots. 
-$(age_spread_plots): $(age_plot_script) $(snapshots_hydro) $(halos_catalogs)
+$(age_spread_plots): $(age_plot_script) $(comparison_utils_script) $(snapshots_hydro) $(halos_catalogs)
 	python $(age_plot_script) $(sim_dirs_hydro)
 
 # and the galaxy comparison plots
-$(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script)
+$(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(comparison_utils_script)
 	python $(galaxies_comparison_script) $(galaxy_comparison_sentinel) $(galaxies)
 
 # Make the individual nbody plots - several examples of very similar things here

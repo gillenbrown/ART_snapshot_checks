@@ -1,7 +1,6 @@
 from pathlib import Path
 import sys
 
-import numpy as np
 from astropy import units as u
 from matplotlib import colors
 from matplotlib import cm

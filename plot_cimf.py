@@ -5,7 +5,6 @@ Creates a plot showing the comparative cluster initial mass function of
 galaxies in an output
 """
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -18,28 +17,7 @@ import betterplotlib as bpl
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
-# I have to hardcode some labels to make this easier, parsing them won't work
-# nearly as well
-def full_dir(partial_path):
-    base_dir = Path("/u/home/gillenb/art_runs/runs/").absolute()
-    return base_dir / partial_path
-
-names = {
-         full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
-         # full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
-         full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
-         # full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
-         full_dir("stampede2/old_ic_comparison/cap5000kms_hn00/run"): "Old IC 0% HN",
-         full_dir("stampede2/old_ic_comparison/cap5000kms_hn05/run"): "Old IC 5% HN",
-         full_dir("stampede2/old_ic_comparison/cap5000kms_hn20/run"): "Old IC 20% HN",
-         full_dir("stampede2/old_ic_comparison/cap5000kms_hn50/run"): "Old IC 50% HN new",
-         full_dir("stampede2/old_ic_comparison/cap5000kms_hn50_v1/run"): "Old IC 50% HN",
-         full_dir("stampede2/production/sfe001_hn20/run"): "LG SFE1 20% HN",
-         full_dir("stampede2/production/sfe010_hn20/run"): "LG SFE10 20% HN",
-         full_dir("stampede2/production/sfe100_hn20/run"): "LG SFE100 20% HN",
-         full_dir("stampede2/production/sfe100_hn05/run"): "LG SFE100 5% HN",
-         full_dir("stampede2/production/sfe100_hn00/run"): "LG SFE100 0% HN",
-         }
+from plot_utils import names, colors
     
 def filename_to_scale_factor(filename):
     return float(filename[-10:-4]) 
@@ -112,19 +90,11 @@ common_ds = dict()
 last_ds = dict()
 common_halos = dict()
 last_halos = dict()
-# and one to ensure each has the same color
-colors = dict()
-# if I have a lot of simulations to plot, I need to extend the color cycle
-color_cycle = bpl.color_cycle + [bpl.almost_black, "skyblue", "sienna", "orchid"]
 
-idx = 0
 for directory in sys.argv[1:]:
     directory = Path(directory)
     if directory not in names:
         continue
-
-    colors[names[directory]] = color_cycle[idx]
-    idx += 1
 
     out_dir = directory / "out"
     

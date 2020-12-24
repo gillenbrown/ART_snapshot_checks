@@ -6,7 +6,7 @@ Creates a plot showing the comparative SFH of galaxies in an output
 The parameters passed to this script must be directories with the 
 """
 import sys
-import os
+from pathlib import Path
 from collections import defaultdict
 
 import numpy as np
@@ -23,28 +23,7 @@ bpl.set_style()
 import yt
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
-# I have to hardcode some labels to make this easier, parsing them won't work
-# nearly as well
-def full_dir(partial_path):
-    base_dir = "/u/home/gillenb/art_runs/runs/"
-    return os.path.join(base_dir, partial_path)
-
-names = {
-         full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
-         # full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
-         full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
-         # full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
-         full_dir("stampede2/old_ic_comparison/cap5000kms_hn00/run"): "Old IC 0% HN",
-         full_dir("stampede2/old_ic_comparison/cap5000kms_hn05/run"): "Old IC 5% HN",
-         full_dir("stampede2/old_ic_comparison/cap5000kms_hn20/run"): "Old IC 20% HN",
-         full_dir("stampede2/old_ic_comparison/cap5000kms_hn50/run"): "Old IC 50% HN new",
-         full_dir("stampede2/old_ic_comparison/cap5000kms_hn50_v1/run"): "Old IC 50% HN",
-         full_dir("stampede2/production/sfe001_hn20/run"): "LG SFE1 20% HN",
-         full_dir("stampede2/production/sfe010_hn20/run"): "LG SFE10 20% HN",
-         full_dir("stampede2/production/sfe100_hn20/run"): "LG SFE100 20% HN",
-         full_dir("stampede2/production/sfe100_hn05/run"): "LG SFE100 5% HN",
-         full_dir("stampede2/production/sfe100_hn00/run"): "LG SFE100 0% HN",
-         }
+from plot_utils import names, colors
 
 # if I have a lot of simulations to plot, I need to extend the color cycle
 color_cycle = bpl.color_cycle + [bpl.almost_black, "skyblue", "sienna", "orchid"]
@@ -53,22 +32,24 @@ color_cycle = bpl.color_cycle + [bpl.almost_black, "skyblue", "sienna", "orchid"
 all_ds = dict()
 all_halos = defaultdict(list)
 for directory in sys.argv[1:]:
+    directory = Path(directory)
     if directory not in names:
         print(f"Skipping {directory}")
         continue
 
-    out_dir = os.path.join(directory, "out")
-    halos_dir = os.path.join(directory, "halos")
+    out_dir = directory / "out"
+    halos_dir = directory / "halos"
 
-    last_out = sorted([file for file in  os.listdir(out_dir)
-                       if file.endswith(".art")
-                       and file.startswith("continuous_a")])[-1]
+    last_out = sorted([file.name for file in out_dir.iterdir()
+                       if file.is_file()
+                       and str(file.name).endswith(".art")
+                       and str(file.name).startswith("continuous_a")])[-1]
 
     last_halo = last_out.replace("continuous_", "halos_").replace(".art", ".0.bin")
 
 
-    ds = yt.load(os.path.join(out_dir, last_out))
-    halos_ds = yt.load(os.path.join(halos_dir, last_halo))
+    ds = yt.load(str(out_dir /  last_out))
+    halos_ds = yt.load(str(halos_dir / last_halo))
 
     all_ds[names[directory]] = ds
 
@@ -173,7 +154,7 @@ fig, ax = bpl.subplots()
 # store data about times
 max_time = 0
 for idx, name in enumerate(all_halos):
-    c = color_cycle[idx]
+    c = colors[name]
     for halo in all_halos[name]:
         center = [halo.quantities["particle_position_x"],
                   halo.quantities["particle_position_y"],
@@ -258,7 +239,7 @@ fig, ax = bpl.subplots()
 # store data about times
 max_time = 0
 for idx, name in enumerate(all_halos):
-    c = color_cycle[idx]
+    c = colors[name]
     for halo in all_halos[name]:
         center = [halo.quantities["particle_position_x"],
                   halo.quantities["particle_position_y"],
