@@ -25,23 +25,20 @@ def full_dir(partial_path):
     return base_dir / partial_path
 
 names = {
-         # full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 SFE100 Shangrila",
-         # full_dir("shangrila/old_ic_comparison/default_1e7_temp_cap/run"): "ART 2.0 SFE100 Shangrila Bad Caps",
-         # full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
+         full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
          # full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
          full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
          # full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
-         # full_dir("stampede2/old_ic_comparison/default/run"): "ART 2.0 SFE100 Stampede2",
-         # full_dir("stampede2/old_ic_comparison/default_5000kms_cap/run"): "ART 2.0 SFE100 Stampede2 v$_{max}$=5000km/s",
-         # full_dir("stampede2/old_ic_comparison/no_hn/run"): "ART 2.0 SFE100 Stampede2 No HN",
-         # full_dir("stampede2/old_ic_comparison/no_virial/run"): "ART 2.0 SFE100 Stampede2 No Virial",
-         full_dir("stampede2/production/sfe100_hn20/run"): "LG 20% HN",
-         full_dir("stampede2/production/sfe100_hn05/run"): "LG 5% HN",
-         full_dir("stampede2/production/sfe100_hn00/run"): "LG 0% HN",
-         # full_dir("stampede2/ic_timing_tests/original_50_128"): "T&L - Original",
-         # full_dir("stampede2/ic_timing_tests/trim_12_128"): "T&L - 4x Trim 128",
-         # full_dir("stampede2/ic_timing_tests/trim_12_256"): "T&L - 4x Trim 256",
-         # full_dir("stampede2/ic_timing_tests/trim_25_256"): "T&L - 2x Trim 256",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn00/run"): "Old IC 0% HN",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn05/run"): "Old IC 5% HN",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn20/run"): "Old IC 20% HN",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn50/run"): "Old IC 50% HN new",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn50_v1/run"): "Old IC 50% HN",
+         full_dir("stampede2/production/sfe001_hn20/run"): "LG SFE1 20% HN",
+         full_dir("stampede2/production/sfe010_hn20/run"): "LG SFE10 20% HN",
+         full_dir("stampede2/production/sfe100_hn20/run"): "LG SFE100 20% HN",
+         full_dir("stampede2/production/sfe100_hn05/run"): "LG SFE100 5% HN",
+         full_dir("stampede2/production/sfe100_hn00/run"): "LG SFE100 0% HN",
          }
     
 def filename_to_scale_factor(filename):
@@ -101,7 +98,10 @@ for directory in sys.argv[1:]:
                      if file.is_file()
                      and str(file.name).endswith(".art")
                      and str(file.name).startswith("continuous_a")]
-    last_snapshots.append(sorted(all_snapshots)[-1])
+    # restrict to be a reasonable redshift
+    this_last_snapshot = sorted(all_snapshots)[-1]
+    if filename_to_scale_factor(this_last_snapshot) > 0.15:
+        last_snapshots.append(this_last_snapshot)
     
 earliest_last_snapshot = sorted(last_snapshots)[0]
 common_scale = filename_to_scale_factor(earliest_last_snapshot) + 0.001  
@@ -114,6 +114,8 @@ common_halos = dict()
 last_halos = dict()
 # and one to ensure each has the same color
 colors = dict()
+# if I have a lot of simulations to plot, I need to extend the color cycle
+color_cycle = bpl.color_cycle + [bpl.almost_black, "skyblue", "sienna", "orchid"]
 
 idx = 0
 for directory in sys.argv[1:]:
@@ -121,7 +123,7 @@ for directory in sys.argv[1:]:
     if directory not in names:
         continue
 
-    colors[names[directory]] = bpl.color_cycle[idx]
+    colors[names[directory]] = color_cycle[idx]
     idx += 1
 
     out_dir = directory / "out"
@@ -139,7 +141,8 @@ for directory in sys.argv[1:]:
     
     # then the last one that's in common with the other simulations
     all_common_snapshots = [file for file in all_snapshots
-                            if filename_to_scale_factor(file.name) <= common_scale]
+                            if filename_to_scale_factor(file.name) <= common_scale
+                            and abs(filename_to_scale_factor(file.name) - common_scale) < 0.02]
     # if there are no snapshots early enough for this, don't add them
     if len(all_common_snapshots) > 0:
         last_common_snapshot = sorted(all_common_snapshots)[-1]
@@ -267,7 +270,7 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix, max_age_myr=np.inf):
             # make the label only for the biggest halo
             if halo.quantities["rank"] == 1:
                 # and include the redshift if it's different for each sim
-                if plot_name_suffix == "last":
+                if "last" in plot_name_suffix:
                     label = f"{name}: z = {1/ds_dict[name].scale_factor - 1:.1f}"
                 else:
                     label = name
@@ -287,7 +290,7 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix, max_age_myr=np.inf):
     ax.set_limits(1E3, 1E7, 10, 1E7)
     
     # if there is a common redshift, annotate it
-    if plot_name_suffix == "common":
+    if "common" in plot_name_suffix:
         ax.easy_add_text(f"z = {1/common_scale - 1:.1f}", "upper left")
 
     ax.add_labels("$f_i$M [$M_\odot$]", "dN/dlogM")
@@ -297,4 +300,5 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix, max_age_myr=np.inf):
 # then actually call this function to build the plots
 plot_cimf(common_ds, common_halos, "common")
 plot_cimf(last_ds, last_halos, "last")
+plot_cimf(common_ds, common_halos, "common", 100)
 plot_cimf(last_ds, last_halos, "last", 100)

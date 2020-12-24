@@ -68,14 +68,13 @@ ifeq ($(machine),shangrila)
 	sim_dirs_nbody = 
 	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_100 \
 	                 $(runs_home)/shangrila/hui/sfe_10 \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap1000kms_hn50/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap1000kms_hn001/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap1000kms_hn50_novirial/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50_v1/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn00/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn05/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn20/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50_v1/run \
+	                 $(runs_home)/stampede2/production/sfe001_hn20/run \
+	                 $(runs_home)/stampede2/production/sfe010_hn20/run \
 	                 $(runs_home)/stampede2/production/sfe100_hn00/run \
 	                 $(runs_home)/stampede2/production/sfe100_hn05/run \
 	                 $(runs_home)/stampede2/production/sfe100_hn20/run 

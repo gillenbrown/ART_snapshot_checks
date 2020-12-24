@@ -19,7 +19,6 @@ um = abundance_matching.UniverseMachine()
 
 import betterplotlib as bpl
 bpl.set_style()
-bpl.color_cycle.append("0.5")
 
 import yt
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -31,25 +30,24 @@ def full_dir(partial_path):
     return os.path.join(base_dir, partial_path)
 
 names = {
-         # full_dir("shangrila/old_ic_comparison/default/run"): "ART 2.0 SFE100 Shangrila",
-         # full_dir("shangrila/old_ic_comparison/default_1e7_temp_cap/run"): "ART 2.0 SFE100 Shangrila Bad Caps",
-         # full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
+         full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
          # full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
          full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
          # full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
-         # full_dir("stampede2/old_ic_comparison/default/run"): "ART 2.0 SFE100 Stampede2",
-         full_dir("stampede2/old_ic_comparison/default_5000kms_cap/run"): "Old IC 50% HN",
-         # full_dir("stampede2/old_ic_comparison/no_hn/run"): "ART 2.0 SFE100 Stampede2 No HN",
-         # full_dir("stampede2/old_ic_comparison/no_virial/run"): "ART 2.0 SFE100 Stampede2 No Virial",
-         full_dir("stampede2/production/sfe100_hn20/run"): "LG 20% HN",
-         full_dir("stampede2/production/sfe100_hn05/run"): "LG 5% HN",
-         full_dir("stampede2/production/sfe100_hn00/run"): "LG 0% HN",
-         # full_dir("stampede2/ic_timing_tests/original_50_128"): "T&L - Original",
-         # full_dir("stampede2/ic_timing_tests/trim_12_128"): "T&L - 4x Trim 128",
-         # full_dir("stampede2/ic_timing_tests/trim_12_256"): "T&L - 4x Trim 256",
-         # full_dir("stampede2/ic_timing_tests/trim_25_256"): "T&L - 2x Trim 256",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn00/run"): "Old IC 0% HN",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn05/run"): "Old IC 5% HN",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn20/run"): "Old IC 20% HN",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn50/run"): "Old IC 50% HN new",
+         full_dir("stampede2/old_ic_comparison/cap5000kms_hn50_v1/run"): "Old IC 50% HN",
+         full_dir("stampede2/production/sfe001_hn20/run"): "LG SFE1 20% HN",
+         full_dir("stampede2/production/sfe010_hn20/run"): "LG SFE10 20% HN",
+         full_dir("stampede2/production/sfe100_hn20/run"): "LG SFE100 20% HN",
+         full_dir("stampede2/production/sfe100_hn05/run"): "LG SFE100 5% HN",
+         full_dir("stampede2/production/sfe100_hn00/run"): "LG SFE100 0% HN",
          }
 
+# if I have a lot of simulations to plot, I need to extend the color cycle
+color_cycle = bpl.color_cycle + [bpl.almost_black, "skyblue", "sienna", "orchid"]
 
 # make dictionary to store the resulting datasets
 all_ds = dict()
@@ -175,7 +173,7 @@ fig, ax = bpl.subplots()
 # store data about times
 max_time = 0
 for idx, name in enumerate(all_halos):
-    c = bpl.color_cycle[idx]
+    c = color_cycle[idx]
     for halo in all_halos[name]:
         center = [halo.quantities["particle_position_x"],
                   halo.quantities["particle_position_y"],
@@ -208,7 +206,7 @@ ages = [z_to_age(z).to("Gyr").value for z in zs]
 ax.fill_between(x=ages, y1=lo_lim, y2=hi_lim, alpha=0.4, lw=0,
                 color="0.3", label="MW-like")
 
-ax.legend(loc=2)
+ax.legend(loc=2, fontsize=10)
 ax.set_yscale("log")
 ax.set_limits(0, 1.05*max_time, y_min=1E-1)
 ax.add_labels("Time [Gyr]", "SFR  [$M_\odot$/yr]")
@@ -260,22 +258,26 @@ fig, ax = bpl.subplots()
 # store data about times
 max_time = 0
 for idx, name in enumerate(all_halos):
-    c = bpl.color_cycle[idx]
+    c = color_cycle[idx]
     for halo in all_halos[name]:
         center = [halo.quantities["particle_position_x"],
                   halo.quantities["particle_position_y"],
                   halo.quantities["particle_position_z"]]
         sphere = all_ds[name].sphere(center=center, radius=(30, "kpc"))
         times, cumulative_mass = create_cumulative_mass(sphere)
-        # don't plot halos without few points
-        if len(times) < 2:
-            continue
+        # handle halos with few points
+        if len(times) == 1:
+            times = np.concatenate([times, times])
+            cumulative_mass = np.concatenate([cumulative_mass, cumulative_mass])
+        elif len(times) == 0:
+            times = [0, 0, 0] * yt.units.Gyr
+            cumulative_mass = [0, 0, 0] * yt.units.Msun
 
         plot_times = times.to("Gyr").value
         cumulative_mass = cumulative_mass.to("msun").value
         dt = plot_times[1] - plot_times[0]
         if halo.quantities["rank"] == 1:
-            label = name
+            label = f"{name}: z = {1 / all_ds[name].scale_factor - 1:.1f}"
         else:
             label = None
         ax.plot(plot_times, cumulative_mass, c=c, label=label)
@@ -284,7 +286,7 @@ for idx, name in enumerate(all_halos):
         if max(plot_times) > max_time:
             max_time = max(plot_times)
 
-ax.legend()
+ax.legend(fontsize=10)
 ax.set_yscale("log")
 ax.set_limits(0, 1.05*max_time, y_min=1E6)
 ax.add_labels("Time [Gyr]", "Stellar Mass  [$M_\odot$]")
