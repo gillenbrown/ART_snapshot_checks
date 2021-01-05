@@ -163,6 +163,8 @@ for art_file_idx_second in range(1, len(art_files)):
     # out will make sure that gets taken care of correctly.
     if machine == "stampede2":
         os.system(f"ibrun -n 47 -o 1 python ./halo_finding_rockstar.py {temp_dir} {rockstar_dir} 47")
+    elif machine == "shangrila":
+        os.system(f"mpiexec -np 4 python ./halo_finding_rockstar.py {temp_dir} {rockstar_dir} 4")
 
     # Then need to handle the existing files to prepare for the next iteration
     # First we get the oldest outputs out to the other directory. These have index 0
