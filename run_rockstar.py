@@ -196,6 +196,8 @@ make_human_readable_halo_files(0, scale_factor_from_art_file(art_files[-1]), "co
 for out_file in temp_dir.iterdir():
     new_file = sim_dir / out_file.name
     out_file.replace(new_file)
+# make sure temp_dir is empty before deleting it
+assert len([item for item in temp_dir.iterdir()]) == 0
 temp_dir.rmdir()
 
 # update the sentinel file
