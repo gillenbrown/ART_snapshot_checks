@@ -128,7 +128,7 @@ def modify_parameter_file(scale_of_last_completed_output):
                 new.write(line)
 
     # then copy the file over
-    restart_old.replace(restart_new)
+    restart_new.replace(restart_old)
 
 def clean_up_rockstar_files():
     # Remove some of the files not needed to restart. They'll be regenerated
