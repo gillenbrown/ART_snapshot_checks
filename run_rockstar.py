@@ -30,15 +30,18 @@ temp_dir = sim_dir / "temp_output_dir_for_halo_finding"
 if not temp_dir.is_dir() and yt.is_root():
     temp_dir.mkdir()
 
-print(f"Reading simulations from: {sim_dir}")
-print(f"Writing intermediate catalogs to: {rockstar_dir}")
-print(f"Writing final catalogs to: {halos_dir}")
-
 # ==============================================================================
 #
 # Key functions to be used later
 #
 # ==============================================================================
+def already_done(art_file):
+    scale_factor = scale_factor_from_art_file(art_file)
+    halo_file = f"halos_a{scale_factor}.0.bin"
+    list_file = f"out_a{scale_factor}.list"
+    all_output_files = [item.name for item in halos_dir.glob('*')]
+    return halo_file in all_output_files and list_file in all_output_files
+
 def move_all_simulation_files(art_file, old_dir, new_dir):
     for file in old_dir.iterdir():
         if file.stem == art_file.stem:
@@ -47,17 +50,34 @@ def move_all_simulation_files(art_file, old_dir, new_dir):
 def scale_factor_from_art_file(art_file):
     return art_file.stem[-6:]
 
-def make_human_readable_halo_files(rockstar_idx, scale_factor, method="copy"):
+def art_file_from_scale_factor(directory, scale_factor):
+    return directory / f"continuous_a{scale_factor}.art"
+
+def move_restart_halo_catalogs(scale_factor):
+    """
+    This moves one set of halo catalogs from the directory with nicer names to the
+    rockstar directory, with index 0, as we will restart from this.
+    """
+    new_halo_prefix = "halos_0."
+    old_halo_prefix = f"halos_a{scale_factor}."
+    new_list = "out_0.list"
+    old_list = f"out_a{scale_factor}.list"
+    for file in halos_dir.iterdir():
+        if file.name.startswith(old_halo_prefix):
+            new_name = file.name.replace(old_halo_prefix, new_halo_prefix)
+            new_path = rockstar_dir / new_name
+            file.replace(new_path)
+        if file.name == old_list:
+            new_path = rockstar_dir / new_list
+            file.replace(new_path)
+
+def make_human_readable_halo_files(rockstar_idx, scale_factor):
     """
     This moves one set of halo files to the halos directory with nicer names
 
     :param rockstar_idx: The index Rockstar has assigned to this set of outputs
     :param scale_factor: the scale factor to use in the nicely formatted name
-    :param method: Whether to copy or move the files. It must be either "copy" or "move"
     """
-    if method not in ["copy", "move"]:
-        raise ValueError("Incorrect method in rename_halo_files()")
-
     old_halo_prefix = f"halos_{rockstar_idx}."
     new_halo_prefix = f"halos_a{scale_factor}."
     old_list = f"out_{rockstar_idx}.list"
@@ -66,16 +86,10 @@ def make_human_readable_halo_files(rockstar_idx, scale_factor, method="copy"):
         if file.name.startswith(old_halo_prefix):
             new_name = file.name.replace(old_halo_prefix, new_halo_prefix)
             new_path = halos_dir / new_name
-            if method == "move":
-                file.replace(new_path)
-            else:
-                shutil.copy2(file, new_path)
+            file.replace(new_path)
         if file.name == old_list:
             new_path = halos_dir / new_list
-            if method == "move":
-                file.replace(new_path)
-            else:
-                shutil.copy2(file, new_path)
+            file.replace(new_path)
 
 def shift_halo_output_index():
     """
@@ -100,7 +114,47 @@ def shift_halo_output_index():
             assert not new_path.is_file()
             file.replace(new_path)
 
-def modify_parameter_file(scale_of_last_completed_output):
+# I have this set up to use the restart file to tell whether or not we need to restart.
+# I do this because without the restart file, it will NOT restart properly.
+# This means I do need to be careful not to delete that restart file. But I do have a
+# check that should guard against this if things go wrong.
+def has_restart():
+    restart_file_loc = rockstar_dir / "restart.cfg"
+    return restart_file_loc.is_file()
+    # n_halo_files = len(list(halos_dir.iterdir()))
+    # return n_halo_files > 0
+
+# def get_last_scale():
+#     """
+#     Get the scale factor of the last completed output.
+#     """
+#     max_scale_str = "-1"
+#     for item in halos_dir.iterdir():
+#         if item.name.startswith("out_") and item.name.endswith(".list"):
+#             this_scale_str = item.name[5:11]
+#             if float(this_scale_str) > float(max_scale_str):
+#                 max_scale_str = this_scale_str
+#
+#     assert float(max_scale_str) > 0
+#     return max_scale_str
+
+def get_last_scale_from_parameter_file():
+    """
+    Get the scale factor of the last completed output.
+    """
+    restart_file_loc = rockstar_dir / "restart.cfg"
+    assert restart_file_loc.is_file()
+
+    with open(restart_file_loc, "r") as restart_file:
+        for line in restart_file:
+            split = line.split()
+            key = split[0]
+            value = split[-1]
+
+            if key == "SCALE_NOW":
+                return value
+
+def modify_parameter_file(scale_of_last_completed_output, restarted):
     """
     Change some values in the parameter file.
 
@@ -120,10 +174,15 @@ def modify_parameter_file(scale_of_last_completed_output):
                 value = split[-1]
                 # we need to double check the restart number
                 if key == "RESTART_SNAP":
-                    assert value == "1"
+                    # if we started fresh, the value should be zero. We want to make
+                    # sure it is 1, so we can restart from the next output next time
+                    if not restarted:
+                        assert line.strip() == "RESTART_SNAP = 0"
+                        line = line.replace("RESTART_SNAP = 0", "RESTART_SNAP = 1")
+                    else:
+                        assert value == "1"
                 # and the scale factor
                 if key == "SCALE_NOW":
-                    # get rid of the "a" in the scale factor string we have above
                     line = line.replace(value, scale_of_last_completed_output)
                 new.write(line)
 
@@ -132,17 +191,35 @@ def modify_parameter_file(scale_of_last_completed_output):
 
 def clean_up_rockstar_files():
     # Remove some of the files not needed to restart. They'll be regenerated
-    # in the next loop of the rockstar finding
+    # in the next loop of the rockstar finding. Note that this removes any residual
+    # halos files too, so be careful to move those out before using this.
     for file in rockstar_dir.iterdir():
         if (
             file.name not in ["restart.cfg", "sentinel.txt"] and
-            not file.name.startswith("halos_0.") and
-            not (file.name.startswith("out_") and file.suffix == ".list") and
             not file.is_dir()
         ):
             file.unlink()
         elif file.name == "profiling" and file.is_dir():
             shutil.rmtree(file)
+
+def halo_finding_successfull(this_scale_factor, restarted):
+    """
+    Check if the halo finding worked. This is determined by checking the number of lines
+    in the outputs file. If it has more than the lines in the header, we say it worked
+    """
+    # if it's early, there may not be halos, so let that pass.
+    if this_scale_factor < 0.1:
+        return True
+    # see which rockstar index to check
+    if restarted:
+        rockstar_idx = 1
+    else:
+        rockstar_idx = 0
+    # then count the number of lines in that file.
+    halo_file_loc = rockstar_dir / f"halos_{rockstar_idx}.0.ascii"
+    with open(halo_file_loc, "r") as halo_file:
+        n_lines = len([1 for line in halo_file if len(line.strip()) > 0])
+    return n_lines > 20  # there are 20 header lines
 
 # ==============================================================================
 #
@@ -150,13 +227,68 @@ def clean_up_rockstar_files():
 #
 # ==============================================================================
 # first get all the output files
-art_files = sorted([file for file in sim_dir.iterdir() if file.suffix == ".art"])
-# start by moving the first file there
-move_all_simulation_files(art_files[0], sim_dir, temp_dir)
-# Then loop through all the rest of the files
-for art_file_idx_second in range(1, len(art_files)):
-    # move this file to the temporary directory
-    move_all_simulation_files(art_files[art_file_idx_second], sim_dir, temp_dir)
+all_art_files = [file for file in sim_dir.iterdir() if file.suffix == ".art"]
+# see which ones need halos to be made for
+art_files = sorted([art_file for art_file in all_art_files
+                    if not already_done(art_file)])
+
+# I want to do a check that the files were made correctly (since sometimes I find bugs
+# on shangrila that result in zero halos being found). I'll redo a set of halos if it
+# doesn't work. To do this, I'll use an index, then iterate it if the halo finding is
+# successfull.
+idx = 0
+while idx < len(art_files):
+    art_file = art_files[idx]
+    # first check whether we have a file to restart from. If we do, we'll restart from
+    # it. Otherwise, we'll do a run with one simulation output to create a restart file
+    # which we can then build off of.
+    restart = has_restart()
+
+    # first compare the scale factor to the scale factor given in the config file. The
+    # scale factor of this item should be larger than the previously done one.
+    this_scale_str = scale_factor_from_art_file(art_file)
+    if restart:
+        restart_scale_str = get_last_scale_from_parameter_file()
+        if float(this_scale_str) <= float(restart_scale_str):
+            out_str = "Error in halo finding: " \
+                      f"Last done output is a={restart_scale_str}, " \
+                      f"yet we're trying to do a={this_scale_str} now"
+            raise RuntimeError(out_str)
+
+    # If there's no restart, make sure the scale factor for this is reasonable. This
+    # is just a double check to make sure it's not accidentally missing
+    if not restart and float(this_scale_str) > 0.1:
+        raise RuntimeError(f"No restart file found for a={this_scale_str}, are you sure?")
+
+    # print what we're about to do
+    if restart:
+        print("\n" + "=" * 80 + "\n" +
+              f"Restarting from a={restart_scale_str} to do a={this_scale_str}\n" +
+              f"{str(sim_dir)}\n" +
+              "=" * 80 + "\n")
+    else:
+        print("\n" + "=" * 80 + "\n" +
+              f"Starting fresh from a={this_scale_str}\n" +
+              f"{str(sim_dir)}\n" +
+              "=" * 80 + "\n")
+
+    # Then move the output files corresponding to these scales to the temp directory.
+    move_all_simulation_files(art_file, sim_dir, temp_dir)
+    # I need to get the appropriate ART restart files. If there's not a restart file, we
+    # don't do this
+    if restart:
+        restart_file = art_file_from_scale_factor(sim_dir, restart_scale_str)
+        if not restart_file.is_file():
+            raise RuntimeError(f"ART output for a={restart_scale_str} not found in {sim_dir}")
+        move_all_simulation_files(restart_file, sim_dir, temp_dir)
+
+
+    # Do the same thing with the rockstar output files. I only need to move the set
+    # we're restarting from, as of course the second one hasn't been made yet. We only
+    # do this if we're restarting
+    if restart:
+        move_restart_halo_catalogs(restart_scale_str)
+
     # Do the halo analysis. I know using os in this way is "wrong", but yt and rockstar
     # have issues with MPI ranks when doing multiple runs of rockstar, as well as
     # memory issues when running rockstar on many outputs, so completely separating it
@@ -166,36 +298,51 @@ for art_file_idx_second in range(1, len(art_files)):
     elif machine == "shangrila":
         os.system(f"mpiexec -np 4 python ./halo_finding_rockstar.py {temp_dir} {rockstar_dir} 4")
 
-    # Then need to handle the existing files to prepare for the next iteration
-    # First we get the oldest outputs out to the other directory. These have index 0
-    # be definition
-    first_scale = scale_factor_from_art_file(art_files[art_file_idx_second - 1])
-    make_human_readable_halo_files(0, first_scale, "move")
-    # Then move the ones with index 1 to be index 0, since those will be the starting
-    # point for the next iteration of halo finding
-    shift_halo_output_index()
-    # then modify the parameter file
-    modify_parameter_file(scale_factor_from_art_file(art_files[art_file_idx_second]))
-    # and clean up the directory
+    # if successfull, continue on. Otherwise, delete the halo catalogs and try again.
+    if halo_finding_successfull(float(this_scale_str), restart):
+        # move the resulting halo catalogs to the directory for human readable files,
+        # formatting them nicely as we do so. The indices are different if we restart, so
+        # we need to be careful.
+        if restart:
+            make_human_readable_halo_files(0, restart_scale_str)
+            make_human_readable_halo_files(1, this_scale_str)
+        else:
+            make_human_readable_halo_files(0, this_scale_str)
+
+        # reset the rockstar restart file
+        modify_parameter_file(this_scale_str, restart)
+        # move to next set of halos
+        idx += 1
+    else:
+        print("\n" + "=" * 80 + "\n" +
+              f"Halo catalogs for a={this_scale_str} failed! Trying again...\n" +
+              f"{str(sim_dir)}\n" +
+              "=" * 80 + "\n")
+        # if we are restarting, move back the restart halo catalog, which was
+        # successful. When we clean up the rockstar files below, it will remove the
+        # unsuccessfull halo catalogs that are left in this directory
+        if restart:
+            make_human_readable_halo_files(0, restart_scale_str)
+            # we modify the parameter file to go back to the last output
+            modify_parameter_file(restart_scale_str, restart)
+        else:
+            # remove the restart file
+            restart_file_loc = rockstar_dir / "restart.cfg"
+            restart_file_loc.unlink()
+
+    # and clean out other rockstar files, including any failed halo catalogs
     clean_up_rockstar_files()
 
-    # then move the first file out. We'll move the next file in at the start
-    # of the next loop
-    move_all_simulation_files(art_files[art_file_idx_second - 1], temp_dir, sim_dir)
+    # move simulation output files back to where they belong
+    move_all_simulation_files(art_file, temp_dir, sim_dir)
+    if restart:
+        move_all_simulation_files(restart_file, temp_dir, sim_dir)
 
 # ==============================================================================
 #
 # Final cleanup
 #
 # ==============================================================================
-# copy the outputs of the last halo run to the human directory. Copy, not move, them
-# so they can be the start of the next set of halo finding
-make_human_readable_halo_files(0, scale_factor_from_art_file(art_files[-1]), "copy")
-
-# move the files out of the temporary directory, then delete it
-for out_file in temp_dir.iterdir():
-    new_file = sim_dir / out_file.name
-    out_file.replace(new_file)
 # make sure temp_dir is empty before deleting it
 assert len([item for item in temp_dir.iterdir()]) == 0
 temp_dir.rmdir()
