@@ -98,7 +98,9 @@ ifeq ($(machine),stampede2)
 	sim_dirs_nbody =
 	sim_dirs_hydro = $(runs_home)/production/sfe100_hn00/run \
 	                 $(runs_home)/production/sfe100_hn05/run \
-	                 $(runs_home)/production/sfe100_hn20/run
+	                 $(runs_home)/production/sfe100_hn20/run \
+	                 $(runs_home)/production/sfe010_hn20/run \
+	                 $(runs_home)/production/sfe001_hn20/run
 endif
 
 # combine the N-Body and Hydro into one big list
