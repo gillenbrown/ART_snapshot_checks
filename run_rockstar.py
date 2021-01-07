@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 import shutil
 import yt
+from tqdm import tqdm
 yt.funcs.mylog.setLevel(0)  # ignore yt's output
 
 # format of sys.argv:
@@ -26,7 +27,7 @@ rockstar_dir = Path(sys.argv[2]).resolve()
 halos_dir = Path(sys.argv[3]).resolve()
 machine = sys.argv[4]
 # Create the subdirectory where we'll do the actual halo finding
-temp_dir = sim_dir / "temp_output_dir_for_halo_finding"
+temp_dir = rockstar_dir.parent / "temp_output_dir_for_halo_finding"
 if not temp_dir.is_dir() and yt.is_root():
     temp_dir.mkdir()
 
@@ -91,29 +92,6 @@ def make_human_readable_halo_files(rockstar_idx, scale_factor):
             new_path = halos_dir / new_list
             file.replace(new_path)
 
-def shift_halo_output_index():
-    """
-    This moves the set of halo files with index 1 to index 0
-
-    This lets them be the start of the next output
-    """
-    old_halo_prefix = "halos_1."
-    new_halo_prefix = "halos_0."
-    old_list = "out_1.list"
-    new_list = "out_0.list"
-    for file in rockstar_dir.iterdir():
-        if file.name.startswith(old_halo_prefix):
-            new_name = file.name.replace(old_halo_prefix, new_halo_prefix)
-            new_path = rockstar_dir / new_name
-            # check that this file isn't already there - it should never be!
-            assert not new_path.is_file()
-            file.replace(new_path)
-        if file.name == old_list:
-            new_path = rockstar_dir / new_list
-            # check that this file isn't already there - it should never be!
-            assert not new_path.is_file()
-            file.replace(new_path)
-
 # I have this set up to use the restart file to tell whether or not we need to restart.
 # I do this because without the restart file, it will NOT restart properly.
 # This means I do need to be careful not to delete that restart file. But I do have a
@@ -162,6 +140,11 @@ def modify_parameter_file(scale_of_last_completed_output, restarted):
     not sure whether the scale factor change matters, but the restart number definitely
     does. In this case it should already be 1, since when we do it 2 at a time that's
     the index of the second one, but we double check.
+
+    Note that the only reason I need to modify the scale factor is to tell which output
+    to use next. Normally the scale factor is a much longer string, but setting it
+    manually to the same number of sig figs as the ART output file makes sure I can
+    read it.
     """
     restart_old = rockstar_dir / "restart.cfg"
     restart_new = rockstar_dir / "restart.cfg.temp"
@@ -192,10 +175,13 @@ def modify_parameter_file(scale_of_last_completed_output, restarted):
 def clean_up_rockstar_files():
     # Remove some of the files not needed to restart. They'll be regenerated
     # in the next loop of the rockstar finding. Note that this removes any residual
-    # halos files too, so be careful to move those out before using this.
+    # halos files too, so be careful to move those out before using this. Note that I
+    # do note remove the rockstar.cfg file because it's needed by the merger trees. It
+    # gets overwritten each time the halo finder runs, so I don't need to worry about
+    # updating it manually.
     for file in rockstar_dir.iterdir():
         if (
-            file.name not in ["restart.cfg", "sentinel.txt"] and
+            file.name not in ["restart.cfg", "sentinel.txt", "rockstar.cfg"] and
             not file.is_dir()
         ):
             file.unlink()
@@ -226,7 +212,10 @@ def halo_finding_successfull(this_scale_factor, restarted):
 # Do the main loop of moving files to the temporary directory for analysis
 #
 # ==============================================================================
-# first get all the output files
+# first clean up any leftover files in the rockstar directory. This includes the
+# out*.list files that are made at the end of this script.
+clean_up_rockstar_files()
+# get all the output files
 all_art_files = [file for file in sim_dir.iterdir() if file.suffix == ".art"]
 # see which ones need halos to be made for
 art_files = sorted([art_file for art_file in all_art_files
@@ -337,6 +326,43 @@ while idx < len(art_files):
     move_all_simulation_files(art_file, temp_dir, sim_dir)
     if restart:
         move_all_simulation_files(restart_file, temp_dir, sim_dir)
+
+# ==============================================================================
+#
+# Formatting out_*.list files for consistent trees
+#
+# ==============================================================================
+# I need to move all the out_*.list files to the rockstar directory, but without their
+# nice scale factor names, so that consistent trees knows what to do with them. Note
+# that I delete these files at the beginning of the script so they don't interfere with
+# the actual creation of the files
+out_files = sorted([halo_file for halo_file in halos_dir.iterdir()
+                   if halo_file.name.startswith("out_")
+                   and halo_file.name.endswith(".list")])
+
+for idx, out_file in tqdm(enumerate(out_files)):
+    new_out = f"out_{idx}.list"
+    new_path = rockstar_dir / new_out
+    shutil.copy2(out_file, new_path)
+
+# I also need to modify the rockstar.cfg file to have the correct number of output
+# files, as this is what tells it how many to include in the tree.
+config_old = rockstar_dir / "rockstar.cfg"
+config_new = rockstar_dir / "rockstar.cfg.temp"
+
+with open(config_old, "r") as old:
+    with open(config_new, "w") as new:
+        for line in old:
+            split = line.split()
+            key = split[0]
+            value = split[-1]
+
+            if key == "NUM_SNAPS":
+                line = line.replace(value, str(len(out_files)))
+            new.write(line)
+
+# then copy the file over
+config_new.replace(config_old)
 
 # ==============================================================================
 #
