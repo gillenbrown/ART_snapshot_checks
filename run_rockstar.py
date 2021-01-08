@@ -246,7 +246,7 @@ while idx < len(art_files):
 
     # If there's no restart, make sure the scale factor for this is reasonable. This
     # is just a double check to make sure it's not accidentally missing
-    if not restart and float(this_scale_str) > 0.1:
+    if not restart and float(this_scale_str) > 0.15:
         raise RuntimeError(f"No restart file found for a={this_scale_str}, are you sure?")
 
     # print what we're about to do
