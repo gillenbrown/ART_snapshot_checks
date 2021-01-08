@@ -215,8 +215,10 @@ def halo_finding_successfull(this_scale_factor, restarted):
 # first clean up any leftover files in the rockstar directory. This includes the
 # out*.list files that are made at the end of this script.
 clean_up_rockstar_files()
-# get all the output files
-all_art_files = [file for file in sim_dir.iterdir() if file.suffix == ".art"]
+# get all the output files, but exclude the restart files (which are just
+# 'continuous_0.art'
+all_art_files = [file for file in sim_dir.iterdir()
+                 if file.name.startswith('continuous_a') and file.suffix == ".art"]
 # see which ones need halos to be made for
 art_files = sorted([art_file for art_file in all_art_files
                     if not already_done(art_file)])
