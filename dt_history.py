@@ -74,6 +74,14 @@ def find_first_timestep_number(log_file):
                 if line.startswith("done with timestep"):
                     return int(line.split()[3])
 
+def is_end_of_header(line):
+    """
+    Finds a line that marks the end of the header of the file. This is a line
+    that will recur elsewhere in the file, so only call this once at the
+    beginning.
+    """
+    return line.startswith("a = ")
+
 def is_dt_post_cfl_line(line):
     return "dtl_post_cfl" in line
 
@@ -221,7 +229,8 @@ timestep_number = find_first_timestep_number(log_file)
 stdout = open(log_file, "r")
 
 # Have state variables indicating where we are within the file
-looking_for_dt_post_cfl = True
+looking_for_end_of_header = True
+looking_for_dt_post_cfl = False
 looking_for_global_timestep = False
 looking_for_level_dt = False
 looking_for_timestep_success = False
@@ -233,6 +242,13 @@ for line in tqdm(stdout, total=total_lines):
         continue
 
     line = strip_mpi_rank_from_line(line)
+
+    if looking_for_end_of_header:
+        if is_end_of_header(line):
+            # look for saved dt info
+            looking_for_end_of_header = False
+            looking_for_dt_post_cfl = True
+            continue
 
     if looking_for_dt_post_cfl:
         # some files don't have this information, don't even look for it
