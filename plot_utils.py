@@ -48,3 +48,20 @@ colors = {
     "LG SFE100 5% HN": cmap_lg_hnf(0.7),
     "LG SFE100 0% HN": cmap_lg_hnf(0.4),
 }
+
+axis_number = {
+    "NBm SFE10": 0,
+    "NBm SFE50": 0,
+    "NBm SFE100": 0,
+    "NBm SFE200": 0,
+    "Old IC SFE100 0% HN": 0,
+    "Old IC SFE100 5% HN": 0,
+    "Old IC SFE100 20% HN": 0,
+    "Old IC SFE100 50% HN": 0,
+    "Old IC SFE100 50% HN new": 0,
+    "LG SFE1 20% HN": 1,
+    "LG SFE10 20% HN": 1,
+    "LG SFE100 20% HN": 1,
+    "LG SFE100 5% HN": 1,
+    "LG SFE100 0% HN": 1,
+}

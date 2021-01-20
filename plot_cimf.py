@@ -17,7 +17,7 @@ import betterplotlib as bpl
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
-from plot_utils import names, colors
+from plot_utils import names, colors, axis_number
     
 def filename_to_scale_factor(filename):
     return float(filename[-10:-4]) 
@@ -223,49 +223,62 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix, max_age_myr=np.inf):
     # add the age if it's not infinity
     if not np.isinf(max_age_myr):
         plot_name_suffix += f"{max_age_myr}myr"
-    
-    fig, ax = bpl.subplots(figsize=[9, 7])
 
-    for idx, name in enumerate(halos_dict):
-        c = colors[name]
-        for halo in halos_dict[name]:
-            center = [halo.quantities["particle_position_x"],
-                      halo.quantities["particle_position_y"],
-                      halo.quantities["particle_position_z"]]
-            
-            sphere = ds_dict[name].sphere(center=center, radius=(100, "kpc"))
-            mass_plot_with_bound, dn_dlogM_with_bound = cimf(sphere, True, max_age_myr)
-            mass_plot_no_bound, dn_dlogM_no_bound = cimf(sphere, False, max_age_myr)
-            
-            # make the label only for the biggest halo
-            if halo.quantities["rank"] == 1:
-                # and include the redshift if it's different for each sim
-                if "last" in plot_name_suffix:
-                    label = f"{name}: z = {1/ds_dict[name].scale_factor - 1:.1f}"
+    for split in [True, False]:
+        if split:
+            fig, axs = bpl.subplots(figsize=[18, 7], ncols=2)
+        else:
+            fig, ax = bpl.subplots(figsize=[9, 7])
+            axs = [ax]
+
+        for idx, name in enumerate(halos_dict):
+            c = colors[name]
+            if split:
+                ax = axs[axis_number[name]]
+            for halo in halos_dict[name]:
+                center = [halo.quantities["particle_position_x"],
+                          halo.quantities["particle_position_y"],
+                          halo.quantities["particle_position_z"]]
+
+                sphere = ds_dict[name].sphere(center=center, radius=(100, "kpc"))
+                mass_plot_with_bound, dn_dlogM_with_bound = cimf(sphere, True, max_age_myr)
+                mass_plot_no_bound, dn_dlogM_no_bound = cimf(sphere, False, max_age_myr)
+
+                # make the label only for the biggest halo
+                if halo.quantities["rank"] == 1:
+                    # and include the redshift if it's different for each sim
+                    if "last" in plot_name_suffix:
+                        label = f"{name}: z = {1/ds_dict[name].scale_factor - 1:.1f}"
+                    else:
+                        label = name
                 else:
-                    label = name
-            else:
-                label = None
+                    label = None
 
-            ax.plot(mass_plot_with_bound, dn_dlogM_with_bound, c=c, ls="-", label=label)
-            ax.plot(mass_plot_no_bound, dn_dlogM_no_bound, c=c, ls=":")
-            
-    # plot the guiding lines
-    plot_power_law(ax, -2, 1E6, 3E6, 1E4)
-    plot_power_law(ax, -3, 1E6, 3E6, 1E4)
+                ax.plot(mass_plot_with_bound, dn_dlogM_with_bound, c=c, ls="-", label=label)
+                ax.plot(mass_plot_no_bound, dn_dlogM_no_bound, c=c, ls=":")
 
-    ax.legend(loc=1, fontsize=10)
-    ax.set_yscale("log")
-    ax.set_xscale("log")
-    ax.set_limits(1E3, 1E7, 10, 1E7)
-    
-    # if there is a common redshift, annotate it
-    if "common" in plot_name_suffix:
-        ax.easy_add_text(f"z = {1/common_scale - 1:.1f}", "upper left")
+        for ax in axs:
+            # plot the guiding lines
+            plot_power_law(ax, -2, 1E6, 3E6, 1E4)
+            plot_power_law(ax, -3, 1E6, 3E6, 1E4)
 
-    ax.add_labels("$f_i$M [$M_\odot$]", "dN/dlogM")
+            ax.legend(loc=1, fontsize=10)
+            ax.set_yscale("log")
+            ax.set_xscale("log")
+            ax.set_limits(1E3, 1E7, 10, 1E7)
 
-    fig.savefig(f"./comparison_plots/cimf_{plot_name_suffix}.png")
+            # if there is a common redshift, annotate it
+            if "common" in plot_name_suffix:
+                ax.easy_add_text(f"z = {1/common_scale - 1:.1f}", "upper left")
+
+            ax.add_labels("$f_i$M [$M_\odot$]", "dN/dlogM")
+
+        if split:
+            name = f"./comparison_plots/cimf_{plot_name_suffix}_split.png"
+        else:
+            name = f"./comparison_plots/cimf_{plot_name_suffix}.png"
+
+        fig.savefig(name)
 
 # then actually call this function to build the plots
 plot_cimf(common_ds, common_halos, "common")
