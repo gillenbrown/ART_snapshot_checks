@@ -72,7 +72,10 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/shangrila/hui/sfe_100 \
  	                 $(runs_home)/shangrila/hui/sfe_200 \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn00/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn01/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn05/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn06/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn10/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn20/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50_v1/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50/run \
