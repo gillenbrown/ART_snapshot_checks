@@ -160,11 +160,28 @@ def plot_power_law(ax, slope, x1, x2, y1):
     ax.plot([x1, x2], [y1, y2], c=bpl.almost_black, lw=1, ls="--")
     ax.add_text(1.1*x2, y2, text=slope, va="center", ha="left", fontsize=18)
 
-def cimf(data_obj, include_initial_bound, max_age_myr):
+def cimf(data_obj, mass_type, max_age_myr):
     """
-    Make the cluster initial mass function. 
+    Make the cluster initial mass function. \
+
+    Notes on the different mass variables:
+    ('STAR', 'INITIAL_MASS') - initial stellar mass of the star particle
+    ('STAR', 'MASS') - current stellar mass of the star particle, accounting for
+        stellar evolution
+    ('STAR', 'INITIAL_BOUND_FRACTION') - NOT the actual initial bound fraction. See
+        the `get_initial_bound_fraction` function above for more on how to use this,
+        but this variable is the accumulated mass near the cluster over the course of
+        accretion. This is used to calculate formation efficiency, which is then used
+        to get the actual initial bound fraction
+    ('STAR', 'BOUND_FRACTION') - This is the actual bound fraction at the current time,
+        but NOT accounting for the proper initial bound fraction
     
     :param data_obj: Sphere object representing a galaxy
+    :param mass_type: String encoding which mass to get here. The options are:
+                      "initial" - just the initial stellar masses
+                      "initial bound" - initial masses including initial bound fraction
+                      "current" - current bound mass, accounting for the initial bound
+                                  fraction, tidal disruption, and stellar death
     :param include_initial_bound: whether to incorporate the initial bound
                                   fraction of clusters, or just get the 
                                   distribution of initial particle masses
@@ -175,15 +192,23 @@ def cimf(data_obj, include_initial_bound, max_age_myr):
               binned values suitable to plot. The second is dN/dLogM for each 
               of the bins in the first list.
     """
-    star_initial_mass = data_obj[('STAR', 'INITIAL_MASS')].to("Msun").value
-    if include_initial_bound:
+    if mass_type == "initial":
+        mass = data_obj[('STAR', 'INITIAL_MASS')].to("Msun").value
+    elif mass_type == "initial bound":
+        initial_mass = data_obj[('STAR', 'INITIAL_MASS')].to("Msun").value
         star_initial_bound = get_initial_bound_fraction(data_obj)
-        star_initial_mass *= star_initial_bound
+        mass = initial_mass * star_initial_bound
+    elif mass_type == "current":
+        raw_mass = data_obj[('STAR', 'INITIAL_MASS')].to("Msun").value
+        star_initial_bound = get_initial_bound_fraction(data_obj)
+        tidal_bound_fraction = data_obj[('STAR', 'BOUND_FRACTION')].value
+        mass = raw_mass * star_initial_bound * tidal_bound_fraction
+
     # then restrict to recently formed clusters. This can be set to infinity, which
     # plots everything
     max_age = max_age_myr * yt.units.Myr
     mask = data_obj[('STAR', 'age')] < max_age
-    star_initial_mass = star_initial_mass[mask]
+    mass = mass[mask]
     
     # create bins with spacing of 0.16 dex
     bin_width = 0.16  # dex
@@ -195,7 +220,7 @@ def cimf(data_obj, include_initial_bound, max_age_myr):
     m_centers = 10**np.array(m_centers_log)
     
     # then make the histogram showing how many there are per bin
-    hist, edges = np.histogram(star_initial_mass, bins=m_boundaries)
+    hist, edges = np.histogram(mass, bins=m_boundaries)
     assert np.array_equiv(m_boundaries, edges)
     
     # We have dN, make it per dLogM
@@ -203,7 +228,7 @@ def cimf(data_obj, include_initial_bound, max_age_myr):
     
     return m_centers, hist
 
-def plot_cimf(ds_dict, halos_dict, plot_name_suffix, max_age_myr=np.inf):
+def plot_cimf(ds_dict, halos_dict, plot_name_suffix, masses_to_plot, max_age_myr=np.inf):
     """
     Plot the initial cluster mass function.
 
@@ -215,6 +240,8 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix, max_age_myr=np.inf):
                              dictionaries are passed in. This will determine if
                              the redshift is labeled as common to all, or 
                              individually per simulation
+    :param masses_to_plot: A lit of the masses to plot, see the `cimf` function for the
+                           allowed options
     :param max_age_myr: The maximum age to restrict the plot to. Is infinity as the
                         default, which plots all stars.
     """
@@ -241,21 +268,24 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix, max_age_myr=np.inf):
                           halo.quantities["particle_position_z"]]
 
                 sphere = ds_dict[name].sphere(center=center, radius=(100, "kpc"))
-                mass_plot_with_bound, dn_dlogM_with_bound = cimf(sphere, True, max_age_myr)
-                mass_plot_no_bound, dn_dlogM_no_bound = cimf(sphere, False, max_age_myr)
 
-                # make the label only for the biggest halo
-                if halo.quantities["rank"] == 1:
-                    # and include the redshift if it's different for each sim
-                    if "last" in plot_name_suffix:
-                        label = f"{name}: z = {1/ds_dict[name].scale_factor - 1:.1f}"
+                for mass_type in masses_to_plot:
+                    mass_plot, dn_dlogM = cimf(sphere, mass_type, max_age_myr)
+
+                    # make the label only for the biggest halo, and not for initial only
+                    if halo.quantities["rank"] == 1 and mass_type != "initial":
+                        # and include the redshift if it's different for each sim
+                        if "last" in plot_name_suffix:
+                            label = f"{name}: z = {1/ds_dict[name].scale_factor - 1:.1f}"
+                        else:
+                            label = name
                     else:
-                        label = name
-                else:
-                    label = None
+                        label = None
 
-                ax.plot(mass_plot_with_bound, dn_dlogM_with_bound, c=c, ls="-", label=label)
-                ax.plot(mass_plot_no_bound, dn_dlogM_no_bound, c=c, ls=":")
+                    # have different line styles
+                    lss = {"initial": ":", "initial bound": "-", "current": "-"}
+
+                    ax.plot(mass_plot, dn_dlogM, c=c, ls=lss[mass_type], label=label)
 
         for ax in axs:
             # plot the guiding lines
@@ -273,15 +303,18 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix, max_age_myr=np.inf):
 
             ax.add_labels("$f_i$M [$M_\odot$]", "dN/dlogM")
 
+        name = f"./comparison_plots/cimf_{plot_name_suffix}"
+        if 'current' in masses_to_plot:
+            name += "_current"
         if split:
-            name = f"./comparison_plots/cimf_{plot_name_suffix}_split.png"
-        else:
-            name = f"./comparison_plots/cimf_{plot_name_suffix}.png"
-
+            name += "_split"
+        name += ".png"
         fig.savefig(name)
 
 # then actually call this function to build the plots
-plot_cimf(common_ds, common_halos, "common")
-plot_cimf(last_ds, last_halos, "last")
-plot_cimf(common_ds, common_halos, "common", 100)
-plot_cimf(last_ds, last_halos, "last", 100)
+plot_cimf(common_ds, common_halos, "common", ["initial bound", "initial"])
+plot_cimf(last_ds, last_halos, "last", ["initial bound", "initial"])
+plot_cimf(common_ds, common_halos, "common", ["initial bound", "initial"], 100)
+plot_cimf(last_ds, last_halos, "last", ["initial bound", "initial"], 100)
+plot_cimf(common_ds, common_halos, "common", ["current"])
+plot_cimf(last_ds, last_halos, "last", ["current"])
