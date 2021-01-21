@@ -194,7 +194,7 @@ def halo_finding_successfull(this_scale_factor, restarted):
     in the outputs file. If it has more than the lines in the header, we say it worked
     """
     # if it's early, there may not be halos, so let that pass.
-    if this_scale_factor < 0.1:
+    if this_scale_factor < 0.05:
         return True
     # see which rockstar index to check
     if restarted:
