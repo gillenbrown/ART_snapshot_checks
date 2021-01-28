@@ -11,9 +11,7 @@ def full_dir(partial_path):
 
 names = {
     full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
-    full_dir("shangrila/hui/sfe_50"): "NBm SFE50",
     full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
-    full_dir("shangrila/hui/sfe_200"): "NBm SFE200",
     full_dir("stampede2/old_ic_comparison/cap5000kms_hn00/run"): "Old IC SFE100 0% HN",
     full_dir("stampede2/old_ic_comparison/cap5000kms_hn01/run"): "Old IC SFE100 1% HN",
     full_dir("stampede2/old_ic_comparison/cap5000kms_hn10/run"): "Old IC SFE100 10% HN",
@@ -34,10 +32,8 @@ cmap_nbm = cm.Greys
 cmap_rerun = cm.Greens
 
 colors = {
-    "NBm SFE10": cmap_nbm(0.2),
-    "NBm SFE50": cmap_nbm(0.35),
-    "NBm SFE100": cmap_nbm(0.5),
-    "NBm SFE200": cmap_nbm(0.65),
+    "NBm SFE10": cmap_nbm(0.35),
+    "NBm SFE100": cmap_nbm(0.65),
     "Old IC SFE100 0% HN": cmap_rerun(0.3),
     "Old IC SFE100 1% HN": cmap_rerun(0.4),
     "Old IC SFE100 10% HN": cmap_rerun(0.5),
@@ -53,9 +49,7 @@ colors = {
 
 axis_number = {
     "NBm SFE10": 0,
-    "NBm SFE50": 0,
     "NBm SFE100": 0,
-    "NBm SFE200": 0,
     "Old IC SFE100 0% HN": 0,
     "Old IC SFE100 1% HN": 0,
     "Old IC SFE100 10% HN": 0,

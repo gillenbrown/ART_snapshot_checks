@@ -62,12 +62,11 @@ def get_ds_and_halos(ds_path):
 # common output of all simulations, then one with the last output of each 
 # simulation. Those all need to be stored separately.
 
-# Start by getting the last common output
+# Start by getting the last common output among the production runs
 last_snapshots = []
 for directory in sys.argv[1:]:
     directory = Path(directory)
-    if directory not in names:
-        print(f"Skipping {directory}")
+    if directory not in names or "stampede2/production" not in str(directory):
         continue
 
     out_dir = directory / "out"
@@ -94,6 +93,7 @@ last_halos = dict()
 for directory in sys.argv[1:]:
     directory = Path(directory)
     if directory not in names:
+        print(f"Skipping {directory}")
         continue
 
     out_dir = directory / "out"
@@ -247,6 +247,9 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix, masses_to_plot, max_age_myr
     """
     if plot_name_suffix not in ["last", "common"]:
         raise ValueError("bad plot_name_suffix")
+    # if we plot current, it should be alone, with nothing else
+    if "current" in masses_to_plot and len(masses_to_plot) > 1:
+        raise RuntimeError("Current masses must be plotted alone.")
     # add the age if it's not infinity
     if not np.isinf(max_age_myr):
         plot_name_suffix += f"{max_age_myr}myr"
@@ -288,20 +291,42 @@ def plot_cimf(ds_dict, halos_dict, plot_name_suffix, masses_to_plot, max_age_myr
                     ax.plot(mass_plot, dn_dlogM, c=c, ls=lss[mass_type], label=label)
 
         for ax in axs:
-            # plot the guiding lines
-            plot_power_law(ax, -2, 1E6, 3E6, 1E4)
-            plot_power_law(ax, -3, 1E6, 3E6, 1E4)
-
             ax.legend(loc=1, fontsize=10)
             ax.set_yscale("log")
             ax.set_xscale("log")
-            ax.set_limits(1E3, 1E7, 10, 1E7)
+            # have different y limits for different versions of the plot
+            # the minimum value in the plot is 1 / (0.16 * ln(10) = 2.5
+            # put the plot limit just above that, to make it cleaner and stop
+            # weird vertical lines.
+            if "myr" in plot_name_suffix:
+                # small timeframe, don't need to show much.
+                y_min = 3
+                if "100" in plot_name_suffix:
+                    y_max =1e4
+                else:
+                    y_max = 1e5
+            elif "current" in plot_name_suffix:
+                y_min = 10
+                y_max = 1e5
+            else:
+                y_min = 10
+                y_max = 1e6
+            ax.set_limits(1e3, 1e7, y_min, y_max)
+
+            # plot the guiding lines
+            log_space = 0.4 * (np.log10(y_max) - np.log10(y_min))
+            y_guide = 10**(np.log10(y_min) + log_space)
+            plot_power_law(ax, -2, 1E6, 3E6, y_guide)
+            plot_power_law(ax, -3, 1E6, 3E6, y_guide)
 
             # if there is a common redshift, annotate it
             if "common" in plot_name_suffix:
                 ax.easy_add_text(f"z = {1/common_scale - 1:.1f}", "upper left")
 
-            ax.add_labels("$f_i$M [$M_\odot$]", "dN/dlogM")
+            if "current" in masses_to_plot:
+                ax.add_labels("$f_b$M [$M_\odot$]", "dN/dlogM")
+            else:
+                ax.add_labels("$f_i M_i$ [$M_\odot$]", "dN/dlogM")
 
         name = f"./comparison_plots/cimf_{plot_name_suffix}"
         if 'current' in masses_to_plot:
@@ -316,5 +341,7 @@ plot_cimf(common_ds, common_halos, "common", ["initial bound", "initial"])
 plot_cimf(last_ds, last_halos, "last", ["initial bound", "initial"])
 plot_cimf(common_ds, common_halos, "common", ["initial bound", "initial"], 100)
 plot_cimf(last_ds, last_halos, "last", ["initial bound", "initial"], 100)
+plot_cimf(common_ds, common_halos, "common", ["initial bound", "initial"], 300)
+plot_cimf(last_ds, last_halos, "last", ["initial bound", "initial"], 300)
 plot_cimf(common_ds, common_halos, "common", ["current"])
 plot_cimf(last_ds, last_halos, "last", ["current"])
