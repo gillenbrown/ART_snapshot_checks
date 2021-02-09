@@ -214,6 +214,7 @@ plot_quantities("stellar_mass_30_kpc", u.Msun, ax)
 ax.set_yscale("log")
 ax.legend(fontsize=10)
 ax.add_labels("Scale Factor", "Stellar Mass [M$_\odot$] within 30 kpc")
+ax.set_limits(y_min=2e7)
 fig.savefig(plot_dir / "galaxy_comparison_stellar_mass.png")
 
 # -----------------------------------------------------------------------------

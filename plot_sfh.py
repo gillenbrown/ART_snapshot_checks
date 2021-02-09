@@ -289,7 +289,7 @@ for split in [True, False]:
     for ax in axs:
         ax.legend(fontsize=10)
         ax.set_yscale("log")
-        ax.set_limits(0, 1.05*max_time, 1e6, 3e10)
+        ax.set_limits(0, 1.05*max_time, 2e7, 3e10)
         ax.add_labels("Time [Gyr]", "Stellar Mass  [$M_\odot$]")
 
         # then add the redshift axis. The process of selecting the labels raises
