@@ -180,7 +180,7 @@ debugs = $(foreach snapshot,$(snapshots),$(call sim_to_debug,$(snapshot)))
 sim_to_galaxies = $(subst .art,.txt,$(subst out/continuous,checks/galaxy_summaries, $(1)))
 galaxies_to_sim = $(subst .txt,.art,$(subst checks/galaxy_summaries,out/continuous, $(1)))
 galaxies_to_halo = $(subst .txt,.0.bin,$(subst checks/galaxy_summaries,halos/halos, $(1)))
-galaxies = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_galaxies,$(snapshot)))
+galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
