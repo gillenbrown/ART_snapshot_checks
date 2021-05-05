@@ -25,8 +25,9 @@ names = {
     full_dir("stampede2/production/sfe100_hn00/run"): "LG SFE100 0% HN",
 }
 
-cmap_lg_sfe = cm.Blues
-cmap_lg_hnf = cm.Purples
+cmap_tl_sfe = cm.Blues
+cmap_tl_hnf = cm.Purples
+cmap_rj_sfe = cm.Oranges
 # note that cmap_lg_sfe(1.0) should approximately equal cmap_lg_hnf(1.0)
 cmap_nbm = cm.Greys
 cmap_rerun = cm.Greens
@@ -40,11 +41,13 @@ colors = {
     "Old IC SFE100 20% HN": cmap_rerun(0.6),
     "Old IC SFE100 50% HN": cmap_rerun(0.7),
     "Old IC SFE100 50% HN new": cmap_rerun(0.8),
-    "LG SFE1 20% HN": cmap_lg_sfe(0.4),
-    "LG SFE10 20% HN": cmap_lg_sfe(0.7),
-    "LG SFE100 20% HN": cmap_lg_hnf(1.0),
-    "LG SFE100 5% HN": cmap_lg_hnf(0.7),
-    "LG SFE100 0% HN": cmap_lg_hnf(0.4),
+    "T&L SFE1 20% HN": cmap_tl_sfe(0.4),
+    "T&L SFE10 20% HN": cmap_tl_sfe(0.7),
+    "T&L SFE100 20% HN": cmap_tl_hnf(1.0),
+    "T&L SFE100 5% HN": cmap_tl_hnf(0.7),
+    "T&L SFE100 0% HN": cmap_tl_hnf(0.4),
+    "R&J SFE10 20% HN": cmap_rj_sfe(0.5),
+    "R&J SFE100 20% HN": cmap_rj_sfe(1.0),
 }
 
 axis_number = {
@@ -56,9 +59,11 @@ axis_number = {
     "Old IC SFE100 20% HN": 0,
     "Old IC SFE100 50% HN": 0,
     "Old IC SFE100 50% HN new": 0,
-    "LG SFE1 20% HN": 1,
-    "LG SFE10 20% HN": 1,
-    "LG SFE100 20% HN": 1,
-    "LG SFE100 5% HN": 1,
-    "LG SFE100 0% HN": 1,
+    "T&L SFE1 20% HN": 1,
+    "T&L SFE10 20% HN": 1,
+    "T&L SFE100 20% HN": 1,
+    "T&L SFE100 5% HN": 1,
+    "T&L SFE100 0% HN": 1,
+    "R&J SFE10 20% HN": 2,
+    "R&J SFE100 20% HN": 2,
 }
