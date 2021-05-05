@@ -81,31 +81,24 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn20/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50_v1/run \
-	                 $(runs_home)/stampede2/production/sfe001_hn20/run \
-	                 $(runs_home)/stampede2/production/sfe010_hn20/run \
-	                 $(runs_home)/stampede2/production/sfe100_hn20/run \
-	                 $(runs_home)/stampede2/production/sfe100_hn05/run \
-	                 $(runs_home)/stampede2/production/sfe100_hn00/run
-# 	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
-# 	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run \
-# 	                 $(runs_home)/stampede2/production/first_sfe_100_1e7_temp_cap \
-# 	                 $(runs_home)/stampede2/production/second_sfe_100_compiler_tooagressiveDMrefinement/run
-# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_base/run \
-# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_base2/run \
-# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodel/run \
-# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodel_precdiv/run \
-# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodelstrict/run \
-# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_no_cpu_dispatch/run 
-
+	                 $(runs_home)/stampede2/production/tl_sfe001_hn20/run \
+	                 $(runs_home)/stampede2/production/tl_sfe010_hn20/run \
+	                 $(runs_home)/stampede2/production/tl_sfe100_hn20/run \
+	                 $(runs_home)/stampede2/production/tl_sfe100_hn05/run \
+	                 $(runs_home)/stampede2/production/tl_sfe100_hn00/run \
+	                 $(runs_home)/stampede2/production/rj_sfe010_hn20/run \
+	                 $(runs_home)/stampede2/production/rj_sfe100_hn20/run 
 endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
 	sim_dirs_nbody =
-	sim_dirs_hydro = $(runs_home)/production/sfe100_hn00/run \
-	                 $(runs_home)/production/sfe100_hn05/run \
-	                 $(runs_home)/production/sfe100_hn20/run \
-	                 $(runs_home)/production/sfe010_hn20/run \
-	                 $(runs_home)/production/sfe001_hn20/run
+	sim_dirs_hydro = $(runs_home)/production/tl_sfe001_hn20/run \
+	                 $(runs_home)/production/tl_sfe010_hn20/run \
+	                 $(runs_home)/production/tl_sfe100_hn00/run \
+	                 $(runs_home)/production/tl_sfe100_hn05/run \
+	                 $(runs_home)/production/tl_sfe100_hn20/run \
+	                 $(runs_home)/production/rj_sfe010_hn20/run \
+	                 $(runs_home)/production/rj_sfe100_hn20/run 
 endif
 
 # combine the N-Body and Hydro into one big list
