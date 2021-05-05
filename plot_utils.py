@@ -19,11 +19,11 @@ names = {
     full_dir("stampede2/old_ic_comparison/cap5000kms_hn20/run"): "Old IC SFE100 20% HN",
     full_dir("stampede2/old_ic_comparison/cap5000kms_hn50_v1/run"): "Old IC SFE100 50% HN",
     full_dir("stampede2/old_ic_comparison/cap5000kms_hn50/run"): "Old IC SFE100 50% HN new",
-    full_dir("stampede2/production/sfe001_hn20/run"): "LG SFE1 20% HN",
-    full_dir("stampede2/production/sfe010_hn20/run"): "LG SFE10 20% HN",
-    full_dir("stampede2/production/sfe100_hn20/run"): "LG SFE100 20% HN",
-    full_dir("stampede2/production/sfe100_hn05/run"): "LG SFE100 5% HN",
-    full_dir("stampede2/production/sfe100_hn00/run"): "LG SFE100 0% HN",
+    full_dir("stampede2/production/tl_sfe001_hn20/run"): "LG SFE1 20% HN",
+    full_dir("stampede2/production/tl_sfe010_hn20/run"): "LG SFE10 20% HN",
+    full_dir("stampede2/production/tl_sfe100_hn20/run"): "LG SFE100 20% HN",
+    full_dir("stampede2/production/tl_sfe100_hn05/run"): "LG SFE100 5% HN",
+    full_dir("stampede2/production/tl_sfe100_hn00/run"): "LG SFE100 0% HN",
 }
 
 cmap_tl_sfe = cm.Blues
