@@ -315,7 +315,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_plots) $(cimf_plots) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(movies) #  $(halo_growth_plot) $(age_spread_plots)
+all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_plots) $(cimf_plots) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(movies) $(halo_growth_plot) # $(age_spread_plots)
 
 .PHONY: clean
 clean:

@@ -10,6 +10,7 @@ def full_dir(partial_path):
 
 
 names = {
+    full_dir("pleiades/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset/"): "T&L Collisionless",
     full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
     full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
     full_dir("stampede2/old_ic_comparison/cap5000kms_hn00/run"): "Old IC SFE100 0% HN",
