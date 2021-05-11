@@ -450,7 +450,7 @@ $(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 	$(read_tree_exe) $(call merger_to_tree,$@) && touch $@
 
 # Then use those to make the halo comparison plot
-$(halo_growth_plot): $(merger_sentinels) $(halo_growth_comp_script)
+$(halo_growth_plot): $(merger_sentinels) $(halo_growth_comp_script) $(comparison_utils_script)
 	python $(halo_growth_comp_script) $@
 
 # timing output
