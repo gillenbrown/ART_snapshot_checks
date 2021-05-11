@@ -26,6 +26,9 @@ names = {
     full_dir("stampede2/production/tl_sfe100_hn00/run"): "T&L SFE100 0% HN",
     full_dir("stampede2/production/rj_sfe010_hn20/run"): "R&J SFE10 20% HN",
     full_dir("stampede2/production/rj_sfe100_hn20/run"): "R&J SFE100 20% HN",
+    full_dir("stampede2/rj_nbody/original_92.48mpc_level07/run"): "R&J Collisionless Original",
+    full_dir("stampede2/rj_nbody/hybrid_46.24mpc_level08/run"): "R&J Collisionless 2x Trim",
+    full_dir("stampede2/rj_nbody/hybrid_23.12mpc_level08/run"): "R&J Collisionless 4x Trim",
 }
 
 cmap_tl_sfe = cm.Blues

@@ -141,7 +141,7 @@ class Simulation(object):
         try:
             name_base = plot_utils.names[Path(output_dir)]
         except KeyError:
-            raise ValueError("not found", output_dir)
+            raise ValueError("Sim name not found in plot_utils.py", output_dir)
 
         self.g1 = Halo(mergers_1, growth_1, name_base)
         self.g2 = Halo(mergers_2, growth_2, name_base)
