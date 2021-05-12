@@ -37,6 +37,7 @@ cmap_rj_sfe = cm.Oranges
 # note that cmap_lg_sfe(1.0) should approximately equal cmap_lg_hnf(1.0)
 cmap_nbm = cm.Greys
 cmap_rerun = cm.Greens
+cmap_rj_collisionless = cm.Reds
 
 colors = {
     "NBm SFE10": cmap_nbm(0.35),
@@ -54,6 +55,9 @@ colors = {
     "T&L SFE100 0% HN": cmap_tl_hnf(0.4),
     "R&J SFE10 20% HN": cmap_rj_sfe(0.5),
     "R&J SFE100 20% HN": cmap_rj_sfe(1.0),
+    "R&J Collisionless Original": cmap_rj_collisionless(1.0),
+    "R&J Collisionless 2x Trim": cmap_rj_collisionless(0.7),
+    "R&J Collisionless 4x Trim": cmap_rj_collisionless(0.4),
 }
 
 axis_number = {
@@ -70,6 +74,9 @@ axis_number = {
     "T&L SFE100 20% HN": 1,
     "T&L SFE100 5% HN": 1,
     "T&L SFE100 0% HN": 1,
-    "R&J SFE10 20% HN": 2,
-    "R&J SFE100 20% HN": 2,
+    "R&J SFE10 20% HN": 1,
+    "R&J SFE100 20% HN": 1,
+    "R&J Collisionless Original": 1,
+    "R&J Collisionless 2x Trim": 1,
+    "R&J Collisionless 4x Trim": 1,
 }
