@@ -165,14 +165,20 @@ def plot_quantities(quantity, unit, ax):
             for summary in summaries:
                 info = parsed_summaries[summary]
                 # then get the quanties of interest
-                quantities.append(info[rank][quantity].to(unit).value)
-                scale_factors.append(get_scale_factor(summary))
+                try:  # check that the output has the desired quantity
+                    quantities.append(info[rank][quantity].to(unit).value)
+                    scale_factors.append(get_scale_factor(summary))
+                except KeyError:  # output does not have it
+                    continue
             # only add the label for rank 1, so I don't duplicate
             if rank == 1:
                 label = sim_name
             else:
                 label = None
-            ax.plot(scale_factors, quantities, label=label, c=color)
+
+            # only plot if at least one output has the quantity desired
+            if len(scale_factors) > 0:
+                ax.plot(scale_factors, quantities, label=label, c=color)
 
 def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, ax):
     for idx, sim_name in enumerate(binned_summaries):
@@ -187,14 +193,20 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, ax):
             for summary in summaries:
                 info = parsed_summaries[summary]
                 # then get the quanties of interest
-                quantities_x.append(info[rank][quantity_x].to(unit_x).value)
-                quantities_y.append(info[rank][quantity_y].to(unit_y).value)
+                try:  # check that the output has the desired quantity
+                    quantities_x.append(info[rank][quantity_x].to(unit_x).value)
+                    quantities_y.append(info[rank][quantity_y].to(unit_y).value)
+                except KeyError:  # output does not have it
+                    continue
             # only add the label for rank 1, so I don't duplicate
             if rank == 1:
                 label = sim_name
             else:
                 label = None
-            ax.plot(quantities_x, quantities_y, label=label, c=color)
+
+            # only plot if at least one output has the quantities desired
+            if len(quantities_x) > 0:
+                ax.plot(quantities_x, quantities_y, label=label, c=color)
 
 # -----------------------------------------------------------------------------
 # halo mass plot
