@@ -15,12 +15,15 @@ from astropy import cosmology
 from astropy import units as u
 
 import abundance_matching
+
 um = abundance_matching.UniverseMachine()
 
 import betterplotlib as bpl
+
 bpl.set_style()
 
 import yt
+
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
 from plot_utils import names, colors, axis_number
@@ -37,22 +40,26 @@ for directory in sys.argv[1:]:
     out_dir = directory / "out"
     halos_dir = directory / "halos"
 
-    last_out = sorted([file.name for file in out_dir.iterdir()
-                       if file.is_file()
-                       and str(file.name).endswith(".art")
-                       and str(file.name).startswith("continuous_a")])[-1]
+    last_out = sorted(
+        [
+            file.name
+            for file in out_dir.iterdir()
+            if file.is_file()
+            and str(file.name).endswith(".art")
+            and str(file.name).startswith("continuous_a")
+        ]
+    )[-1]
 
     last_halo = last_out.replace("continuous_", "halos_").replace(".art", ".0.bin")
 
-
-    ds = yt.load(str(out_dir /  last_out))
+    ds = yt.load(str(out_dir / last_out))
     halos_ds = yt.load(str(halos_dir / last_halo))
 
     all_ds[names[directory]] = ds
 
     # if we are the old IC set, we have one galaxy, otherwise two
     # check what kind of particles are present
-    if ('N-BODY_0', 'MASS') in ds.derived_field_list:
+    if ("N-BODY_0", "MASS") in ds.derived_field_list:
         n_galaxies_each = 2
     else:
         n_galaxies_each = 1
@@ -62,10 +69,11 @@ for directory in sys.argv[1:]:
     hc.create(save_halos=True, save_catalog=False)
 
     # Do some parsing of the halo catalogs
-    # We get the indices that sort it. The reversing there makes the biggest 
+    # We get the indices that sort it. The reversing there makes the biggest
     # halos first, like we want.
-    halo_masses = yt.YTArray([halo.quantities["particle_mass"] 
-                              for halo in hc.halo_list])
+    halo_masses = yt.YTArray(
+        [halo.quantities["particle_mass"] for halo in hc.halo_list]
+    )
     rank_idxs = np.argsort(halo_masses)[::-1]
     # Add this info to each halo object, and put the halos into a new sorted list,
     # with the highest mass (lowest rank) halos first). We only keep the number
@@ -78,13 +86,13 @@ for directory in sys.argv[1:]:
 
 
 # =============================================================================
-#         
+#
 # Set up cosmology
-# 
+#
 # =============================================================================
 temp_ds = all_ds[list(all_ds.keys())[0]]
 # Initialize the cosmology object, used to put a redshift scale on the plots
-h = temp_ds.artio_parameters["hubble"][0] 
+h = temp_ds.artio_parameters["hubble"][0]
 H_0 = h * 100 * u.km / (u.Mpc * u.second)
 omega_matter = temp_ds.artio_parameters["OmegaM"][0]
 cosmo = cosmology.FlatLambdaCDM(H0=H_0, Om0=omega_matter, Tcmb0=2.725)
@@ -94,21 +102,26 @@ def age_to_z(age):
         return cosmology.z_at_value(cosmo.age, age)
     except cosmology.funcs.CosmologyError:  # happens at very high z
         return 1000
+
+
 def z_to_age_Gyr(z):
     # this is needed since the twin axis function always works with a scalar
     return z_to_age(z).to("Gyr").value
+
+
 def z_to_age(z):
     return cosmo.age(z).to("Gyr")
 
+
 # =============================================================================
-#         
+#
 # Function that actually does this calculation
-# 
+#
 # =============================================================================
 def sfh(data_obj):
     masses = data_obj[("STAR", "INITIAL_MASS")].in_units("msun")
     creation_times = data_obj[("STAR", "creation_time")]
-    
+
     # have the bins start with the last time, so that the final bin is not
     # strange due to only being incomplete
     dt = 100 * yt.units.Myr
@@ -126,24 +139,25 @@ def sfh(data_obj):
         # get the age range
         min_age = bin_edges[left_idx]
         max_age = bin_edges[left_idx + 1]
-        
+
         # then get the stars in that range
         age_more_idx = np.where(creation_times >= min_age)
-        age_less_idx = np.where(creation_times <  max_age)
+        age_less_idx = np.where(creation_times < max_age)
         age_good_idx = np.intersect1d(age_more_idx, age_less_idx)
-        
+
         # and sum their masses
         this_formed_mass = np.sum(masses[age_good_idx])
-        
+
         sfr_values.append(this_formed_mass / dt)
         bin_centers.append((min_age + max_age) / 2.0)
-        
+
     return yt.YTArray(bin_centers), yt.YTArray(sfr_values)
 
+
 # =============================================================================
-#         
+#
 # Then plot!
-# 
+#
 # =============================================================================
 label_redshifts = [10, 5, 3, 2, 1, 0.5, 0.3, 0.2, 0.1]
 
@@ -162,9 +176,11 @@ for split in [True, False]:
             ax = axs[axis_number[name]]
 
         for halo in all_halos[name]:
-            center = [halo.quantities["particle_position_x"],
-                      halo.quantities["particle_position_y"],
-                      halo.quantities["particle_position_z"]]
+            center = [
+                halo.quantities["particle_position_x"],
+                halo.quantities["particle_position_y"],
+                halo.quantities["particle_position_z"],
+            ]
             sphere = all_ds[name].sphere(center=center, radius=(30, "kpc"))
             times, sfh_values = sfh(sphere)
 
@@ -179,8 +195,9 @@ for split in [True, False]:
                 label = name
             else:
                 label = None
-            ax.errorbar(plot_times, plot_sfh, xerr=0.5 * dt, markersize=8,
-                        c=c, label=label)
+            ax.errorbar(
+                plot_times, plot_sfh, xerr=0.5 * dt, markersize=8, c=c, label=label
+            )
             ax.plot(plot_times, plot_sfh, lw=1.0, c=c)
 
             # figure out the max time to use for the plot limit
@@ -188,23 +205,23 @@ for split in [True, False]:
                 max_time = max(plot_times)
 
     # compare to Milky Way prediction
-    zs, sfhs, hi_lim, lo_lim = um.get_sfh("halo", 0, 1E12)
+    zs, sfhs, hi_lim, lo_lim = um.get_sfh("halo", 0, 1e12)
     ages = [z_to_age(z).to("Gyr").value for z in zs]
     for ax in axs:
-        ax.fill_between(x=ages, y1=lo_lim, y2=hi_lim, alpha=0.4, lw=0,
-                        color="0.3", label="MW-like")
+        ax.fill_between(
+            x=ages, y1=lo_lim, y2=hi_lim, alpha=0.4, lw=0, color="0.3", label="MW-like"
+        )
 
         ax.legend(loc=2, fontsize=10)
         ax.set_yscale("log")
-        ax.set_limits(0, 1.05*max_time, 0.1, 20)
+        ax.set_limits(0, 1.05 * max_time, 0.1, 20)
         ax.add_labels("Time [Gyr]", "SFR  [$M_\odot$/yr]")
 
         # then add the redshift axis. The process of selecting the labels raises
         # warnings, so we can ignore that
         # with warnings.catch_warnings():
         #     warnings.simplefilter('ignore', UserWarning)
-        ax.twin_axis("x", label_redshifts, "Redshift",
-                     new_to_old_func=z_to_age_Gyr)
+        ax.twin_axis("x", label_redshifts, "Redshift", new_to_old_func=z_to_age_Gyr)
 
     if split:
         name = "./comparison_plots/sfh_comparison_split.png"
@@ -214,9 +231,9 @@ for split in [True, False]:
 
 
 # =============================================================================
-#         
+#
 # Compare the cumulative mass - a very similar calculation
-# 
+#
 # =============================================================================
 def create_cumulative_mass(data_obj):
     """
@@ -236,13 +253,14 @@ def create_cumulative_mass(data_obj):
     times = creation_times[sort_idxs]
     mass_in_order = masses[sort_idxs]
     mass_cumulative = np.cumsum(mass_in_order)
-    
+
     return times.in_units("Gyr"), yt.YTArray(mass_cumulative)
 
+
 # =============================================================================
-#         
+#
 # Then plot!
-# 
+#
 # =============================================================================
 label_redshifts = [10, 5, 3, 2, 1, 0.5, 0.3, 0.2, 0.1]
 
@@ -260,9 +278,11 @@ for split in [True, False]:
             ax = axs[axis_number[name]]
 
         for halo in all_halos[name]:
-            center = [halo.quantities["particle_position_x"],
-                      halo.quantities["particle_position_y"],
-                      halo.quantities["particle_position_z"]]
+            center = [
+                halo.quantities["particle_position_x"],
+                halo.quantities["particle_position_y"],
+                halo.quantities["particle_position_z"],
+            ]
             sphere = all_ds[name].sphere(center=center, radius=(30, "kpc"))
             times, cumulative_mass = create_cumulative_mass(sphere)
             # handle halos with few points
@@ -289,20 +309,17 @@ for split in [True, False]:
     for ax in axs:
         ax.legend(fontsize=10)
         ax.set_yscale("log")
-        ax.set_limits(0, 1.05*max_time, 2e7, 3e10)
+        ax.set_limits(0, 1.05 * max_time, 2e7, 3e10)
         ax.add_labels("Time [Gyr]", "Stellar Mass  [$M_\odot$]")
 
         # then add the redshift axis. The process of selecting the labels raises
         # warnings, so we can ignore that
         # with warnings.catch_warnings():
         #     warnings.simplefilter('ignore', UserWarning)
-        ax.twin_axis("x", label_redshifts, "Redshift",
-                     new_to_old_func=z_to_age_Gyr)
+        ax.twin_axis("x", label_redshifts, "Redshift", new_to_old_func=z_to_age_Gyr)
 
     if split:
         name = "./comparison_plots/mass_growth_comparison_split.png"
     else:
         name = "./comparison_plots/mass_growth_comparison.png"
     fig.savefig(name)
-
-

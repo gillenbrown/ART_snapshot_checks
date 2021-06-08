@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 import yt
 from yt.extensions.astro_analysis.halo_finding.rockstar.api import RockstarHaloFinder
+
 yt.funcs.mylog.setLevel(50)  # ignore yt's output - can disable to debug
 yt.enable_parallelism()
 
@@ -26,15 +27,16 @@ if yt.is_root():
 ds = yt.load(sim_loc)
 
 # check what kind of particles are present
-if ('N-BODY_0', 'MASS') in ds.derived_field_list:
+if ("N-BODY_0", "MASS") in ds.derived_field_list:
     particle_type = "N-BODY_0"
 else:
     particle_type = "N-BODY"
 
-# The number of readers and writers is relatively arbitrary in terms of 
+# The number of readers and writers is relatively arbitrary in terms of
 # performance, I've found (although without any rigorous testing). The important
 # this is the number of files created, which is proportional to num_writers.
-# on systems with limited file counts this should be a lower number. 
-rh = RockstarHaloFinder(ds, num_readers=1, num_writers=2, 
-                        outbase=out_dir, particle_type=particle_type)
+# on systems with limited file counts this should be a lower number.
+rh = RockstarHaloFinder(
+    ds, num_readers=1, num_writers=2, outbase=out_dir, particle_type=particle_type
+)
 rh.run()

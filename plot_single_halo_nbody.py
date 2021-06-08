@@ -25,6 +25,7 @@ from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
 import numpy as np
 
 import betterplotlib as bpl
+
 bpl.set_style()
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -54,14 +55,16 @@ sim_dir = os.path.dirname(ds_loc) + os.sep
 plots_dir = sim_dir.replace("/out/", "/plots/")
 
 if split:
-    plot_name = plots_dir + "n_body_split_halo_rank_{}_a{}.png".format(rank, scale_factor)
+    plot_name = plots_dir + "n_body_split_halo_rank_{}_a{}.png".format(
+        rank, scale_factor
+    )
 else:
     plot_name = plots_dir + "n_body_halo_rank_{}_a{}.png".format(rank, scale_factor)
 
 # =========================================================================
-#         
+#
 # Read in halo catalogs
-# 
+#
 # =========================================================================
 halo_file = os.path.abspath(sys.argv[2])
 ds_halos = yt.load(halo_file)
@@ -69,7 +72,7 @@ ds_halos = yt.load(halo_file)
 # Then create the halo catalogs
 hc = HaloCatalog(halos_ds=ds_halos, data_ds=ds, output_dir="./")
 # Restrict to things about LMC mass and above
-hc.add_filter('quantity_value', 'particle_mass', '>', 3E10, 'Msun')
+hc.add_filter("quantity_value", "particle_mass", ">", 3e10, "Msun")
 hc.create(save_catalog=False)
 
 # check that we have any halos at all. If not, we can exit. This can happen
@@ -77,8 +80,9 @@ hc.create(save_catalog=False)
 halo_masses = yt.YTArray([item["particle_mass"] for item in hc.catalog])
 if len(halo_masses) < rank:
     fig, ax = bpl.subplots(figsize=[8.0, 8.0])
-    ax.easy_add_text("Rank {} does not exist at z={:.2f}".format(rank, z), 
-                     "center left")
+    ax.easy_add_text(
+        "Rank {} does not exist at z={:.2f}".format(rank, z), "center left"
+    )
     ax.set_axis_off()
     fig.savefig(plot_name, dpi=400)
     exit()
@@ -87,14 +91,16 @@ if len(halo_masses) < rank:
 # first, like we want.
 rank_idxs = np.argsort(halo_masses)[::-1]
 
-# then we pick the one of the right rank to use. Rank 1 is the first item, so 
+# then we pick the one of the right rank to use. Rank 1 is the first item, so
 # we subtract one in the indexing
-halo = hc.catalog[rank_idxs[rank-1]]
+halo = hc.catalog[rank_idxs[rank - 1]]
 
 # then get the center to use
-center = [halo["particle_position_x"],
-          halo["particle_position_y"],
-          halo["particle_position_z"]]
+center = [
+    halo["particle_position_x"],
+    halo["particle_position_y"],
+    halo["particle_position_z"],
+]
 
 # then the plot is easy to call
 plot_size = ds.quan(600, "kpccm").to("kpc")

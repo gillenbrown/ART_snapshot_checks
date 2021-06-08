@@ -3,6 +3,7 @@ from pathlib import Path
 import gc
 import yt
 from yt.extensions.astro_analysis.halo_finding.rockstar.api import RockstarHaloFinder
+
 yt.funcs.mylog.setLevel(50)  # ignore yt's output - only show rockstar
 yt.enable_parallelism()
 
@@ -14,6 +15,7 @@ yt.enable_parallelism()
 
 # print function that always flushes
 import functools
+
 print = functools.partial(print, flush=True)
 
 # do error checking on root only.
@@ -27,16 +29,16 @@ rockstar_dir = Path(sys.argv[2]).resolve()
 cores_to_use = int(sys.argv[3])
 
 # check to see if there is a currently existing halo catalog already here
-# to restart from. 
+# to restart from.
 if (rockstar_dir / "restart.cfg").is_file():
     restart = True
 else:
     restart = False
 
-ts = yt.load(str(sim_dir / 'continuous_a?.????.art'))
+ts = yt.load(str(sim_dir / "continuous_a?.????.art"))
 
 # check what kind of particles are present
-if ('N-BODY_0', 'MASS') in ts[0].derived_field_list:
+if ("N-BODY_0", "MASS") in ts[0].derived_field_list:
     particle_type = "N-BODY_0"
 else:
     particle_type = "N-BODY"
@@ -59,8 +61,13 @@ if yt.is_root():
     print(f"\t- {readers} readers")
     print(f"\t- {writers} writers")
 
-rh = RockstarHaloFinder(ts, num_readers=readers, num_writers=writers,
-                        outbase=str(rockstar_dir), particle_type=particle_type)
+rh = RockstarHaloFinder(
+    ts,
+    num_readers=readers,
+    num_writers=writers,
+    outbase=str(rockstar_dir),
+    particle_type=particle_type,
+)
 rh.run(restart=restart)
 
 # then make sure to clean up the memory. We do this explicitly just to be sure

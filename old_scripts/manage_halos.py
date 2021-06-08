@@ -30,9 +30,9 @@ if hostname != "stampede2":
     exit()
 
 # ==============================================================================
-# 
+#
 # Remove everything from the rockstar directory
-# 
+#
 # ==============================================================================
 rockstar_dir = sentinel.parent
 for file in rockstar_dir.iterdir():
@@ -42,9 +42,9 @@ for file in rockstar_dir.iterdir():
         shutil.rmtree(file)
 
 # ==============================================================================
-# 
+#
 # Find the last output so we can copy it over
-# 
+#
 # ==============================================================================
 max_scale = "a0.0000"  # keep as string to avoid parsing. comparison still work
 human_dir = rockstar_dir.parent / "halos"
@@ -64,9 +64,9 @@ for file in human_dir.iterdir():
         shutil.copy2(file, new_file)
 
 # ==============================================================================
-# 
+#
 # Modify the parameter file
-# 
+#
 # ==============================================================================
 restart_old = rockstar_dir / "restart.cfg"
 restart_new = rockstar_dir / "restart.cfg.temp"

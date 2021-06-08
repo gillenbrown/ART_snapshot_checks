@@ -10,15 +10,21 @@ def full_dir(partial_path):
 
 
 names = {
-    full_dir("pleiades/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset/"): "T&L Collisionless",
+    full_dir(
+        "pleiades/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset/"
+    ): "T&L Collisionless",
     full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
     full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
     full_dir("stampede2/old_ic_comparison/cap5000kms_hn00/run"): "Old IC SFE100 0% HN",
     full_dir("stampede2/old_ic_comparison/cap5000kms_hn01/run"): "Old IC SFE100 1% HN",
     full_dir("stampede2/old_ic_comparison/cap5000kms_hn10/run"): "Old IC SFE100 10% HN",
     full_dir("stampede2/old_ic_comparison/cap5000kms_hn20/run"): "Old IC SFE100 20% HN",
-    full_dir("stampede2/old_ic_comparison/cap5000kms_hn50_v1/run"): "Old IC SFE100 50% HN",
-    full_dir("stampede2/old_ic_comparison/cap5000kms_hn50/run"): "Old IC SFE100 50% HN new",
+    full_dir(
+        "stampede2/old_ic_comparison/cap5000kms_hn50_v1/run"
+    ): "Old IC SFE100 50% HN",
+    full_dir(
+        "stampede2/old_ic_comparison/cap5000kms_hn50/run"
+    ): "Old IC SFE100 50% HN new",
     full_dir("stampede2/production/tl_sfe001_hn20/run"): "T&L SFE1 20% HN",
     full_dir("stampede2/production/tl_sfe010_hn20/run"): "T&L SFE10 20% HN",
     full_dir("stampede2/production/tl_sfe100_hn20/run"): "T&L SFE100 20% HN",
@@ -26,9 +32,15 @@ names = {
     full_dir("stampede2/production/tl_sfe100_hn00/run"): "T&L SFE100 0% HN",
     full_dir("stampede2/production/rj_sfe010_hn20/run"): "R&J SFE10 20% HN",
     full_dir("stampede2/production/rj_sfe100_hn20/run"): "R&J SFE100 20% HN",
-    full_dir("stampede2/rj_nbody/original_92.48mpc_level07/run"): "R&J Collisionless Original",
-    full_dir("stampede2/rj_nbody/hybrid_46.24mpc_level08/run"): "R&J Collisionless 2x Trim",
-    full_dir("stampede2/rj_nbody/hybrid_23.12mpc_level08/run"): "R&J Collisionless 4x Trim",
+    full_dir(
+        "stampede2/rj_nbody/original_92.48mpc_level07/run"
+    ): "R&J Collisionless Original",
+    full_dir(
+        "stampede2/rj_nbody/hybrid_46.24mpc_level08/run"
+    ): "R&J Collisionless 2x Trim",
+    full_dir(
+        "stampede2/rj_nbody/hybrid_23.12mpc_level08/run"
+    ): "R&J Collisionless 4x Trim",
 }
 
 cmap_tl_sfe = cm.Blues

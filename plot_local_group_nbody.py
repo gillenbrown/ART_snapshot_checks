@@ -22,6 +22,7 @@ from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
 import numpy as np
 
 import betterplotlib as bpl
+
 bpl.set_style()
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -52,9 +53,9 @@ else:
     plot_name = plots_dir + "n_body_local_group_a{}.png".format(scale_factor)
 
 # =========================================================================
-#         
+#
 # Read in halo catalogs
-# 
+#
 # =========================================================================
 halo_file = os.path.abspath(sys.argv[2])
 ds_halos = yt.load(halo_file)
@@ -62,7 +63,7 @@ ds_halos = yt.load(halo_file)
 # Then create the halo catalogs
 hc = HaloCatalog(halos_ds=ds_halos, data_ds=ds, output_dir="./")
 # Restrict to things about LMC mass and above
-hc.add_filter('quantity_value', 'particle_mass', '>', 3E10, 'Msun')
+hc.add_filter("quantity_value", "particle_mass", ">", 3e10, "Msun")
 hc.create(save_catalog=False)
 
 # check that we have any halos at all. If not, we can exit. This can happen
@@ -70,8 +71,9 @@ hc.create(save_catalog=False)
 halo_masses = yt.YTArray([item["particle_mass"] for item in hc.catalog])
 if len(halo_masses) < 2:
     fig, ax = bpl.subplots(figsize=[8.0, 8.0])
-    ax.easy_add_text("The Local Group does not exist at z={:.2f}".format(z), 
-                     "center left")
+    ax.easy_add_text(
+        "The Local Group does not exist at z={:.2f}".format(z), "center left"
+    )
     ax.set_axis_off()
     fig.savefig(plot_name, dpi=400)
     exit()
@@ -88,15 +90,17 @@ for rank, idx in enumerate(rank_idxs, start=1):
     halo["rank"] = rank
     halos.append(halo)
 
-# then we pick the one of the right rank to use. Rank 1 is the first item, so 
+# then we pick the one of the right rank to use. Rank 1 is the first item, so
 # we subtract one in the indexing
 m31 = hc.catalog[rank_idxs[0]]
 mw = hc.catalog[rank_idxs[1]]
 
 # define the center to be the middle between the two halos.
-center = [0.5 * (m31["particle_position_x"] + mw["particle_position_x"]),
-          0.5 * (m31["particle_position_y"] + mw["particle_position_y"]),
-          0.5 * (m31["particle_position_z"] + mw["particle_position_z"])]
+center = [
+    0.5 * (m31["particle_position_x"] + mw["particle_position_x"]),
+    0.5 * (m31["particle_position_y"] + mw["particle_position_y"]),
+    0.5 * (m31["particle_position_z"] + mw["particle_position_z"]),
+]
 
 # then the plot is easy to call
 plot_size = ds.quan(2, "Mpccm").to("Mpc")
@@ -107,11 +111,13 @@ else:
     plot = nbody_projection_all_species(ds, center, plot_size, "Mpc", None)
 
     # annotate the halos
-    text_args={"color":"k", "va":"center", "ha":"center"}
+    text_args = {"color": "k", "va": "center", "ha": "center"}
     for halo in halos:
-        coord = [halo["particle_position_x"], 
-                 halo["particle_position_y"], 
-                 halo["particle_position_z"]]
+        coord = [
+            halo["particle_position_x"],
+            halo["particle_position_y"],
+            halo["particle_position_z"],
+        ]
         rank = halo["rank"]
         if rank < 3:
             plot.annotate_text(text=rank, pos=coord, text_args=text_args)

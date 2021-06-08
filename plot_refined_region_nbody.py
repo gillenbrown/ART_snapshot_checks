@@ -45,9 +45,9 @@ sim_dir = os.path.dirname(ds_loc) + os.sep
 plots_dir = sim_dir.replace("/out/", "/plots/")
 
 # =========================================================================
-#         
+#
 # Read in halo catalogs
-# 
+#
 # =========================================================================
 halo_file = os.path.abspath(sys.argv[2])
 ds_halos = yt.load(halo_file)
@@ -55,7 +55,7 @@ ds_halos = yt.load(halo_file)
 # Then create the halo catalogs
 hc = HaloCatalog(halos_ds=ds_halos, data_ds=ds, output_dir="./")
 # Restrict to things about LMC mass and above
-hc.add_filter('quantity_value', 'particle_mass', '>', 3E10, 'Msun')
+hc.add_filter("quantity_value", "particle_mass", ">", 3e10, "Msun")
 hc.create(save_catalog=False)
 
 # check that we have any halos at all. If not, we can exit. This can happen
@@ -75,11 +75,13 @@ for rank, idx in enumerate(rank_idxs, start=1):
     halos.append(halo)
 
 # Then start plotting
-is_zoom = ('N-BODY_0', 'POSITION_X') in ds.field_list
+is_zoom = ("N-BODY_0", "POSITION_X") in ds.field_list
 if is_zoom:
-    center = [np.median(ad[('N-BODY_0', 'POSITION_X')]),
-              np.median(ad[('N-BODY_0', 'POSITION_Y')]),
-              np.median(ad[('N-BODY_0', 'POSITION_Z')])]
+    center = [
+        np.median(ad[("N-BODY_0", "POSITION_X")]),
+        np.median(ad[("N-BODY_0", "POSITION_Y")]),
+        np.median(ad[("N-BODY_0", "POSITION_Z")]),
+    ]
 else:
     center = ds.domain_center
 
@@ -98,11 +100,13 @@ else:
     plot = nbody_projection_all_species(ds, center, plot_size, "Mpc", None)
 
     # annotate the halos
-    text_args={"color":"k", "va":"center", "ha":"center"}
+    text_args = {"color": "k", "va": "center", "ha": "center"}
     for halo in halos:
-        coord = [halo["particle_position_x"], 
-                 halo["particle_position_y"], 
-                 halo["particle_position_z"]]
+        coord = [
+            halo["particle_position_x"],
+            halo["particle_position_y"],
+            halo["particle_position_z"],
+        ]
         rank = halo["rank"]
         if rank < 6:
             plot.annotate_text(text=rank, pos=coord, text_args=text_args)

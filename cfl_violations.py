@@ -9,6 +9,7 @@ from tqdm import tqdm
 from matplotlib import colors, cm
 import cmocean
 import betterplotlib as bpl
+
 bpl.set_style()
 
 # Get the log directory specified by the user
@@ -32,6 +33,7 @@ with open(log_file, "r") as in_file:
         pass
 total_lines = i + 1
 
+
 def get_rid_of_beginning_of_line(line):
     line = line.strip()
     while True:
@@ -51,6 +53,7 @@ def get_rid_of_beginning_of_line(line):
 
     return line, level
 
+
 in_cfl = False
 raw_violations = []
 
@@ -63,7 +66,10 @@ with open(log_file, "r") as in_file:
         elif in_cfl and "timestep(" in line:
             continue
 
-        elif in_cfl and "---------------------------------------------------------" in line:
+        elif (
+            in_cfl
+            and "---------------------------------------------------------" in line
+        ):
             in_cfl = False
             raw_violations.append(this_violation)
 
@@ -87,10 +93,7 @@ with open(log_file, "r") as in_file:
 # Then parse the information
 #
 # ======================================================================================
-units_dict = {"Myr": u.Myr,
-              "K": u.K,
-              "cm^-3": u.cm**-3,
-              "cm/s": u.cm / u.s}
+units_dict = {"Myr": u.Myr, "K": u.K, "cm^-3": u.cm ** -3, "cm/s": u.cm / u.s}
 
 
 def parse_simple_quan(value_string):
@@ -133,7 +136,7 @@ for item in raw_violations:
     violations.append(new_item)
 
 # validate the reported crossing times, which can be used to calculate the cell size
-is_new_run = True # set this is the default, we'll check until its wrong. We can't just
+is_new_run = True  # set this is the default, we'll check until its wrong. We can't just
 # check it once because sometimes it is accurate, as all the velocities are positive,
 # so ART's broken calculation still works
 for item in violations:
@@ -157,35 +160,38 @@ for item in violations:
 
 # Add cell mass. I currently don't do anything with this, but I keep it for later
 for item in violations:
-    item["cell mass"] =  (c.m_p * item["n"] * item["cell size"]**3).to("Msun")
+    item["cell mass"] = (c.m_p * item["n"] * item["cell size"] ** 3).to("Msun")
 
 # ======================================================================================
 #
 # plot
 #
 # ======================================================================================
-mass_norm = colors.LogNorm(vmin=1, vmax=1E5)
+mass_norm = colors.LogNorm(vmin=1, vmax=1e5)
 mass_mappable = cm.ScalarMappable(norm=mass_norm, cmap=cmocean.cm.haline_r)
-mass_colors = [mass_mappable.to_rgba(v["cell mass"].to("Msun").value) for v in violations]
+mass_colors = [
+    mass_mappable.to_rgba(v["cell mass"].to("Msun").value) for v in violations
+]
 
 fig, ax = bpl.subplots(figsize=[10, 6])
-ax.scatter([v["cs"].to("km/s").value for v in violations],
-           [v["v_max"].to("km/s").value for v in violations],
-           c=mass_colors, alpha=1)
+ax.scatter(
+    [v["cs"].to("km/s").value for v in violations],
+    [v["v_max"].to("km/s").value for v in violations],
+    c=mass_colors,
+    alpha=1,
+)
 
 ax.add_labels("Sound Speed [km/s]", "Bulk Velocity [km/s]")
 ax.equal_scale()
 
-ax.fill_between([0.001, 1E6], y1=c.c.to("km/s").value, y2=1E6,
-                color="0.8", zorder=0)
-ax.fill_between([c.c.to("km/s").value, 1E6], y1=0, y2=1E6,
-                color="0.8", zorder=0)
-ax.axhline(1E3, ls="--", zorder=0)
-ax.axvline(1E3, ls="--", zorder=0)
-ax.plot([1E-3, 1E8], [1E-3, 1E8], c=bpl.almost_black, ls=":", lw=1, zorder=0)
+ax.fill_between([0.001, 1e6], y1=c.c.to("km/s").value, y2=1e6, color="0.8", zorder=0)
+ax.fill_between([c.c.to("km/s").value, 1e6], y1=0, y2=1e6, color="0.8", zorder=0)
+ax.axhline(1e3, ls="--", zorder=0)
+ax.axvline(1e3, ls="--", zorder=0)
+ax.plot([1e-3, 1e8], [1e-3, 1e8], c=bpl.almost_black, ls=":", lw=1, zorder=0)
 ax.set_yscale("log")
 ax.set_xscale("log")
-ax.set_limits(10, 1E6, 10, 1E6)
+ax.set_limits(10, 1e6, 10, 1e6)
 
 # ax.add_text(x=0.2, y=1.01E3, text="Velocity Cap",
 #             ha="left", va="bottom",
@@ -193,9 +199,7 @@ ax.set_limits(10, 1E6, 10, 1E6)
 # ax.add_text(y=0.2, x=1.01E3, text="Velocity Cap",
 #             ha="left", va="bottom", rotation=270,
 #             fontsize=16)
-ax.add_text(x=2000, y=4E5, text="Speed of Light!",
-            ha="left", va="bottom",
-            fontsize=16)
+ax.add_text(x=2000, y=4e5, text="Speed of Light!", ha="left", va="bottom", fontsize=16)
 
 cb = fig.colorbar(mass_mappable, ax=ax)
 cb.set_label("Cell Mass [$M_\odot$]")
