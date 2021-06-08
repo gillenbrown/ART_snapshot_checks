@@ -10,6 +10,7 @@ This script takes the list of all summary files.
 import sys
 from pathlib import Path
 from collections import defaultdict
+import numpy as np
 from astropy import units as u
 import betterplotlib as bpl
 
@@ -164,14 +165,48 @@ def plot_quantities(quantity, unit, ax):
             for summary in summaries:
                 info = parsed_summaries[summary]
                 # then get the quanties of interest
-                quantities.append(info[rank][quantity].to(unit).value)
-                scale_factors.append(get_scale_factor(summary))
+                try:  # check that the output has the desired quantity
+                    quantities.append(info[rank][quantity].to(unit).value)
+                    scale_factors.append(get_scale_factor(summary))
+                except KeyError:  # output does not have it
+                    continue
             # only add the label for rank 1, so I don't duplicate
             if rank == 1:
                 label = sim_name
             else:
                 label = None
-            ax.plot(scale_factors, quantities, label=label, c=color)
+
+            # only plot if at least one output has the quantity desired
+            if len(scale_factors) > 0:
+                ax.plot(scale_factors, quantities, label=label, c=color)
+
+def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, ax):
+    for idx, sim_name in enumerate(binned_summaries):
+        color = colors[sim_name]
+        summaries = binned_summaries[sim_name]
+        # the number of halos to plot will not change throughout the history
+        # of the simulation
+        n_to_plot = get_n_halos_to_plot(summaries[0])
+        for rank in range(1, n_to_plot+1):
+            quantities_x = []
+            quantities_y = []
+            for summary in summaries:
+                info = parsed_summaries[summary]
+                # then get the quanties of interest
+                try:  # check that the output has the desired quantity
+                    quantities_x.append(info[rank][quantity_x].to(unit_x).value)
+                    quantities_y.append(info[rank][quantity_y].to(unit_y).value)
+                except KeyError:  # output does not have it
+                    continue
+            # only add the label for rank 1, so I don't duplicate
+            if rank == 1:
+                label = sim_name
+            else:
+                label = None
+
+            # only plot if at least one output has the quantities desired
+            if len(quantities_x) > 0:
+                ax.plot(quantities_x, quantities_y, label=label, c=color)
 
 # -----------------------------------------------------------------------------
 # halo mass plot
@@ -191,7 +226,28 @@ plot_quantities("stellar_mass_30_kpc", u.Msun, ax)
 ax.set_yscale("log")
 ax.legend(fontsize=10)
 ax.add_labels("Scale Factor", "Stellar Mass [M$_\odot$] within 30 kpc")
+ax.set_limits(y_min=2e7)
 fig.savefig(plot_dir / "galaxy_comparison_stellar_mass.png")
+
+# -----------------------------------------------------------------------------
+# mass-metallicity plot
+# -----------------------------------------------------------------------------
+fig, ax = bpl.subplots()
+plot_two_quantities("stellar_mass_30_kpc", u.Msun,
+                    "metallicity_all_stars", u.dimensionless_unscaled, ax)
+# add Kirby 2013 line. Technically Kirby measures [Fe/H], I'll have to redo the
+# summaries to calculate that instead. For now assuem log(Z/Z_sun) = [Fe/H]
+masses = np.logspace(3, 11, 5)
+fe_h_kirby = -1.69 + 0.3 * np.log10(masses / 1e6)
+ax.plot(masses, fe_h_kirby, c=bpl.almost_black, ls=":", label="Kirby+2013 (z=0)")
+ax.fill_between(masses, fe_h_kirby - 0.17, fe_h_kirby + 0.17, color="0.97", zorder=0)
+
+ax.set_xscale("log")
+ax.legend(fontsize=10, frameon=False)
+ax.add_labels("Stellar Mass [M$_\odot$] within 30 kpc",
+              "Mean Stellar Metallicity [log(Z/$Z_\odot$)]")
+ax.set_limits(1e5, 3e10)
+fig.savefig(plot_dir / "galaxy_comparison_mass_metallicity.png")
 
 # -----------------------------------------------------------------------------
 # gas masses plots

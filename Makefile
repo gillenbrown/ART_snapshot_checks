@@ -25,13 +25,11 @@ endif
 ifeq ($(machine),shangrila)
 	tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
 	tree_dir = /u/home/gillenb/code/not_mine/consistent-trees
-	halo_finding_script = ./run_rockstar.sh
 	timing_script = /u/home/gillenb/code/mine/cart/utils/scripts/parse_timing2.pl
 endif
 ifeq ($(machine),stampede2)
 	tree_config_script = $(HOME)/code/rockstar-galaxies/scripts/gen_merger_cfg.pl
 	tree_dir = $(HOME)/code/consistent-trees
-	halo_finding_script = ./run_rockstar_stampede2.sh
 	timing_script = $(HOME)/code/cart/utils/scripts/parse_timing2.pl
 endif
 
@@ -40,9 +38,7 @@ endif
 #  Code locations that are relative to this file
 # 
 # ------------------------------------------------------------------------------
-halo_finding_py_file = ./halo_finding_rockstar.py
-rename_script = ./rename_halos.py
-halo_management_script = ./manage_halos.py
+halo_finding_script = ./run_rockstar.py
 debug_script = ./debug_output.py
 galaxies_script = ./galaxy_summaries.py
 nbody_single_halo_plots_script = ./plot_single_halo_nbody.py
@@ -70,39 +66,39 @@ comparison_plots_dir = ./comparison_plots
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
 	runs_home = /u/home/gillenb/art_runs/runs
-	sim_dirs_nbody = 
+	sim_dirs_nbody = $(runs_home)/stampede2/rj_nbody/original_92.48mpc_level07/run \
+	                 $(runs_home)/stampede2/rj_nbody/hybrid_46.24mpc_level08/run \
+	                 $(runs_home)/stampede2/rj_nbody/hybrid_23.12mpc_level08/run 
 	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_10 \
 	                 $(runs_home)/shangrila/hui/sfe_50 \
 	                 $(runs_home)/shangrila/hui/sfe_100 \
  	                 $(runs_home)/shangrila/hui/sfe_200 \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn00/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn01/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn05/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn06/run \
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn10/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn20/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50_v1/run \
 	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50/run \
-	                 $(runs_home)/stampede2/production/sfe001_hn20/run \
-	                 $(runs_home)/stampede2/production/sfe010_hn20/run \
-	                 $(runs_home)/stampede2/production/sfe100_hn20/run \
-	                 $(runs_home)/stampede2/production/sfe100_hn05/run \
-	                 $(runs_home)/stampede2/production/sfe100_hn00/run
-# 	                 $(runs_home)/shangrila/old_ic_comparison/default/run \
-# 	                 $(runs_home)/shangrila/old_ic_comparison/default_1e7_temp_cap/run \
-# 	                 $(runs_home)/stampede2/production/first_sfe_100_1e7_temp_cap \
-# 	                 $(runs_home)/stampede2/production/second_sfe_100_compiler_tooagressiveDMrefinement/run
-# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_base/run \
-# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_base2/run \
-# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodel/run \
-# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodel_precdiv/run \
-# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_fpmodelstrict/run \
-# 	                 $(runs_home)/stampede2/old_ic_comparison/default_5000kms_cap_compiler_no_cpu_dispatch/run 
-
+	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50_v1/run \
+	                 $(runs_home)/stampede2/production/tl_sfe001_hn20/run \
+	                 $(runs_home)/stampede2/production/tl_sfe010_hn20/run \
+	                 $(runs_home)/stampede2/production/tl_sfe100_hn20/run \
+	                 $(runs_home)/stampede2/production/tl_sfe100_hn05/run \
+	                 $(runs_home)/stampede2/production/tl_sfe100_hn00/run
+# 	                 $(runs_home)/stampede2/production/rj_sfe010_hn20/run \
+# 	                 $(runs_home)/stampede2/production/rj_sfe100_hn20/run 
 endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
 	sim_dirs_nbody =
-	sim_dirs_hydro = $(runs_home)/production/sfe100_hn00/run \
-	                 $(runs_home)/production/sfe100_hn05/run \
-	                 $(runs_home)/production/sfe100_hn20/run
+	sim_dirs_hydro = $(runs_home)/production/tl_sfe001_hn20/run \
+	                 $(runs_home)/production/tl_sfe010_hn20/run \
+	                 $(runs_home)/production/tl_sfe100_hn00/run \
+	                 $(runs_home)/production/tl_sfe100_hn05/run \
+	                 $(runs_home)/production/tl_sfe100_hn20/run \
+	                 $(runs_home)/production/rj_sfe010_hn20/run \
+	                 $(runs_home)/production/rj_sfe100_hn20/run 
 endif
 
 # combine the N-Body and Hydro into one big list
@@ -131,7 +127,7 @@ snapshots_hydro = $(foreach dir,$(sim_out_dirs_hydro),$(wildcard $(dir)/*_a*.art
 # Parse the snapshot names into halo catalogs 
 # replace the directory and suffix
 sim_to_halo = $(subst .art,.0.bin,$(subst out/continuous,halos/halos,$(1)))
-halos_catalogs = $(foreach snapshot,$(snapshots),$(call sim_to_halo,$(snapshot)))
+#halos_catalogs = $(foreach snapshot,$(snapshots),$(call sim_to_halo,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
@@ -146,6 +142,7 @@ rockstar_sentinels = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/sentinel.tx
 sentinel_to_sims = $(wildcard $(subst rockstar_halos/sentinel.txt,out/,$(1))*_a*.art)
 sentinel_to_out_dir = $(subst rockstar_halos/sentinel.txt,out/,$(1))
 sentinel_to_rh_dir = $(subst rockstar_halos/sentinel.txt,rockstar_halos/,$(1))
+sentinel_to_halos_dir = $(subst rockstar_halos/sentinel.txt,halos/,$(1))
 
 # Then some complex functions to find the rockstar sentinel file for a given 
 # halo catalog. This is hard and ugly since we have to mess around with
@@ -158,19 +155,6 @@ halo_words_to_rockstar_words = $(patsubst halos,rockstar_halos,$(1))
 rockstar_words_to_sentinel_words = $(patsubst %.0.bin,sentinel.txt,$(1))
 halo_words_to_sentinel_words = $(call halo_words_to_rockstar_words,$(call rockstar_words_to_sentinel_words,$(1)))
 halo_to_sentinel = $(call words_to_path,$(call halo_words_to_sentinel_words,$(call path_to_words,$(1))))
-
-# ------------------------------------------------------------------------------
-#
-#  Halo directory management
-# 
-# ------------------------------------------------------------------------------
-# On stampede2 we need to move the files out of the directory and modify the
-# restart file, while on shangrila we do nothing. Use sentinels for this
-halo_management_sentinels = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/clean_sentinel.txt)
-# We will call this script once we are done with the halo renaming. This 
-# wildcard will be acceptable since all the renamed halos will be present
-# at the point when it's called.
-halo_management_sentinel_to_halos = $(foreach snapshot,$(wildcard $(subst rockstar_halos/clean_sentinel.txt,out/,$(1))*_a*.art),$(call sim_to_halo,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
@@ -189,7 +173,7 @@ debugs = $(foreach snapshot,$(snapshots),$(call sim_to_debug,$(snapshot)))
 sim_to_galaxies = $(subst .art,.txt,$(subst out/continuous,checks/galaxy_summaries, $(1)))
 galaxies_to_sim = $(subst .txt,.art,$(subst checks/galaxy_summaries,out/continuous, $(1)))
 galaxies_to_halo = $(subst .txt,.0.bin,$(subst checks/galaxy_summaries,halos/halos, $(1)))
-galaxies = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_galaxies,$(snapshot)))
+galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
@@ -331,11 +315,11 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(halo_management_sentinels) $(sfh_plots) $(cimf_plots) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(movies) #  $(halo_growth_plot) $(age_spread_plots)
+all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_plots) $(cimf_plots) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(movies) $(halo_growth_plot) # $(age_spread_plots)
 
 .PHONY: clean
 clean:
-	rm -r $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_plots_dirs)
+	rm -r $(sim_checks_dirs) $(sim_plots_dirs)
 
 .PHONY: clean_all
 clean_all:
@@ -365,17 +349,7 @@ halos: $(rockstar_sentinels)
 # directory
 .SECONDEXPANSION:
 $(rockstar_sentinels): %: $$(call sentinel_to_sims, %) 
-	$(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@)
-
-# Rule to rename the halo catalogs into something more user-friendly
-.SECONDEXPANSION:
-$(halos_catalogs): %: $(rename_script) | $$(call halo_to_sentinel,%)
-	python $(rename_script) $@
-
-# then clean up this mess
-.SECONDEXPANSION:
-$(halo_management_sentinels): %: $$(call halo_management_sentinel_to_halos,%) $(halo_management_script)
-	python $(halo_management_script) $@ $(machine)
+	python $(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@) $(call sentinel_to_halos_dir, $@) $(machine)
 
 # Make the debug files
 .SECONDEXPANSION:
@@ -389,16 +363,16 @@ $(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(sfh_plots): $(sfh_plots_script) $(comparison_utils_script) $(snapshots_hydro) $(halos_catalogs)
+$(sfh_plots): $(sfh_plots_script) $(comparison_utils_script) $(snapshots_hydro) $(rockstar_sentinels)
 	python $(sfh_plots_script) $(sim_dirs_hydro)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(cimf_plots): $(cimf_plots_script) $(comparison_utils_script) $(snapshots_hydro) $(halos_catalogs)
+$(cimf_plots): $(cimf_plots_script) $(comparison_utils_script) $(snapshots_hydro) $(rockstar_sentinels)
 	python $(cimf_plots_script) $(sim_dirs_hydro)
 
 # Make the age spread plots. 
-$(age_spread_plots): $(age_plot_script) $(comparison_utils_script) $(snapshots_hydro) $(halos_catalogs)
+$(age_spread_plots): $(age_plot_script) $(comparison_utils_script) $(snapshots_hydro) $(rockstar_sentinels)
 	python $(age_plot_script) $(sim_dirs_hydro)
 
 # and the galaxy comparison plots
@@ -476,7 +450,7 @@ $(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 	$(read_tree_exe) $(call merger_to_tree,$@) && touch $@
 
 # Then use those to make the halo comparison plot
-$(halo_growth_plot): $(merger_sentinels) $(halo_growth_comp_script)
+$(halo_growth_plot): $(merger_sentinels) $(halo_growth_comp_script) $(comparison_utils_script)
 	python $(halo_growth_comp_script) $@
 
 # timing output

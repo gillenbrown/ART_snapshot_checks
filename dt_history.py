@@ -73,6 +73,8 @@ def find_first_timestep_number(log_file):
                 line = strip_mpi_rank_from_line(line)
                 if line.startswith("done with timestep"):
                     return int(line.split()[3])
+    print("no successfull timesteps")
+    return -999
 
 def is_end_of_header(line):
     """

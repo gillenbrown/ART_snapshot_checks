@@ -23,10 +23,7 @@ bpl.set_style()
 import yt
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
-from plot_utils import names, colors
-
-# if I have a lot of simulations to plot, I need to extend the color cycle
-color_cycle = bpl.color_cycle + [bpl.almost_black, "skyblue", "sienna", "orchid"]
+from plot_utils import names, colors, axis_number
 
 # make dictionary to store the resulting datasets
 all_ds = dict()
@@ -150,56 +147,70 @@ def sfh(data_obj):
 # =============================================================================
 label_redshifts = [10, 5, 3, 2, 1, 0.5, 0.3, 0.2, 0.1]
 
-fig, ax = bpl.subplots()
-# store data about times
-max_time = 0
-for idx, name in enumerate(all_halos):
-    c = colors[name]
-    for halo in all_halos[name]:
-        center = [halo.quantities["particle_position_x"],
-                  halo.quantities["particle_position_y"],
-                  halo.quantities["particle_position_z"]]
-        sphere = all_ds[name].sphere(center=center, radius=(30, "kpc"))
-        times, sfh_values = sfh(sphere)
+for split in [True, False]:
+    if split:
+        fig, axs = bpl.subplots(ncols=2, figsize=[16, 7])
+    else:
+        fig, ax = bpl.subplots()
+        axs = [ax]
 
-        # don't plot halos without few points
-        if len(times) < 2:
-            continue
+    # store data about times
+    max_time = 0
+    for idx, name in enumerate(all_halos):
+        c = colors[name]
+        if split:
+            ax = axs[axis_number[name]]
 
-        plot_times = times.to("Gyr").value
-        plot_sfh = sfh_values.to("msun/yr").value
-        dt = plot_times[1] - plot_times[0]
-        if halo.quantities["rank"] == 1:
-            label = name
-        else:
-            label = None
-        ax.errorbar(plot_times, plot_sfh, xerr=0.5 * dt, markersize=8,
-                    c=c, label=label)
-        ax.plot(plot_times, plot_sfh, lw=1.0, c=c)
+        for halo in all_halos[name]:
+            center = [halo.quantities["particle_position_x"],
+                      halo.quantities["particle_position_y"],
+                      halo.quantities["particle_position_z"]]
+            sphere = all_ds[name].sphere(center=center, radius=(30, "kpc"))
+            times, sfh_values = sfh(sphere)
 
-        # figure out the max time to use for the plot limit
-        if max(plot_times) > max_time:
-            max_time = max(plot_times)
-        
-# compare to Milky Way prediction
-zs, sfhs, hi_lim, lo_lim = um.get_sfh("halo", 0, 1E12)
-ages = [z_to_age(z).to("Gyr").value for z in zs]
-ax.fill_between(x=ages, y1=lo_lim, y2=hi_lim, alpha=0.4, lw=0,
-                color="0.3", label="MW-like")
+            # don't plot halos without few points
+            if len(times) < 2:
+                continue
 
-ax.legend(loc=2, fontsize=10)
-ax.set_yscale("log")
-ax.set_limits(0, 1.05*max_time, y_min=1E-1)
-ax.add_labels("Time [Gyr]", "SFR  [$M_\odot$/yr]")
+            plot_times = times.to("Gyr").value
+            plot_sfh = sfh_values.to("msun/yr").value
+            dt = plot_times[1] - plot_times[0]
+            if halo.quantities["rank"] == 1:
+                label = name
+            else:
+                label = None
+            ax.errorbar(plot_times, plot_sfh, xerr=0.5 * dt, markersize=8,
+                        c=c, label=label)
+            ax.plot(plot_times, plot_sfh, lw=1.0, c=c)
 
-# then add the redshift axis. The process of selecting the labels raises
-# warnings, so we can ignore that
-# with warnings.catch_warnings():
-#     warnings.simplefilter('ignore', UserWarning)
-ax.twin_axis("x", label_redshifts, "Redshift", 
-             new_to_old_func=z_to_age_Gyr)
+            # figure out the max time to use for the plot limit
+            if max(plot_times) > max_time:
+                max_time = max(plot_times)
 
-fig.savefig("./comparison_plots/sfh_comparison.png")
+    # compare to Milky Way prediction
+    zs, sfhs, hi_lim, lo_lim = um.get_sfh("halo", 0, 1E12)
+    ages = [z_to_age(z).to("Gyr").value for z in zs]
+    for ax in axs:
+        ax.fill_between(x=ages, y1=lo_lim, y2=hi_lim, alpha=0.4, lw=0,
+                        color="0.3", label="MW-like")
+
+        ax.legend(loc=2, fontsize=10)
+        ax.set_yscale("log")
+        ax.set_limits(0, 1.05*max_time, 0.1, 20)
+        ax.add_labels("Time [Gyr]", "SFR  [$M_\odot$/yr]")
+
+        # then add the redshift axis. The process of selecting the labels raises
+        # warnings, so we can ignore that
+        # with warnings.catch_warnings():
+        #     warnings.simplefilter('ignore', UserWarning)
+        ax.twin_axis("x", label_redshifts, "Redshift",
+                     new_to_old_func=z_to_age_Gyr)
+
+    if split:
+        name = "./comparison_plots/sfh_comparison_split.png"
+    else:
+        name = "./comparison_plots/sfh_comparison.png"
+    fig.savefig(name)
 
 
 # =============================================================================
@@ -235,50 +246,63 @@ def create_cumulative_mass(data_obj):
 # =============================================================================
 label_redshifts = [10, 5, 3, 2, 1, 0.5, 0.3, 0.2, 0.1]
 
-fig, ax = bpl.subplots()
-# store data about times
-max_time = 0
-for idx, name in enumerate(all_halos):
-    c = colors[name]
-    for halo in all_halos[name]:
-        center = [halo.quantities["particle_position_x"],
-                  halo.quantities["particle_position_y"],
-                  halo.quantities["particle_position_z"]]
-        sphere = all_ds[name].sphere(center=center, radius=(30, "kpc"))
-        times, cumulative_mass = create_cumulative_mass(sphere)
-        # handle halos with few points
-        if len(times) == 1:
-            times = np.concatenate([times, times])
-            cumulative_mass = np.concatenate([cumulative_mass, cumulative_mass])
-        elif len(times) == 0:
-            times = [0, 0, 0] * yt.units.Gyr
-            cumulative_mass = [0, 0, 0] * yt.units.Msun
+for split in [True, False]:
+    if split:
+        fig, axs = bpl.subplots(ncols=2, figsize=[16, 7])
+    else:
+        fig, ax = bpl.subplots()
+        axs = [ax]
+    # store data about times
+    max_time = 0
+    for idx, name in enumerate(all_halos):
+        c = colors[name]
+        if split:
+            ax = axs[axis_number[name]]
 
-        plot_times = times.to("Gyr").value
-        cumulative_mass = cumulative_mass.to("msun").value
-        dt = plot_times[1] - plot_times[0]
-        if halo.quantities["rank"] == 1:
-            label = f"{name}: z = {1 / all_ds[name].scale_factor - 1:.1f}"
-        else:
-            label = None
-        ax.plot(plot_times, cumulative_mass, c=c, label=label)
+        for halo in all_halos[name]:
+            center = [halo.quantities["particle_position_x"],
+                      halo.quantities["particle_position_y"],
+                      halo.quantities["particle_position_z"]]
+            sphere = all_ds[name].sphere(center=center, radius=(30, "kpc"))
+            times, cumulative_mass = create_cumulative_mass(sphere)
+            # handle halos with few points
+            if len(times) == 1:
+                times = np.concatenate([times, times])
+                cumulative_mass = np.concatenate([cumulative_mass, cumulative_mass])
+            elif len(times) == 0:
+                times = [0, 0, 0] * yt.units.Gyr
+                cumulative_mass = [0, 0, 0] * yt.units.Msun
 
-        # figure out the max time to use for the plot limit
-        if max(plot_times) > max_time:
-            max_time = max(plot_times)
+            plot_times = times.to("Gyr").value
+            cumulative_mass = cumulative_mass.to("msun").value
+            dt = plot_times[1] - plot_times[0]
+            if halo.quantities["rank"] == 1:
+                label = f"{name}: z = {1 / all_ds[name].scale_factor - 1:.1f}"
+            else:
+                label = None
+            ax.plot(plot_times, cumulative_mass, c=c, label=label)
 
-ax.legend(fontsize=10)
-ax.set_yscale("log")
-ax.set_limits(0, 1.05*max_time, y_min=1E6)
-ax.add_labels("Time [Gyr]", "Stellar Mass  [$M_\odot$]")
+            # figure out the max time to use for the plot limit
+            if max(plot_times) > max_time:
+                max_time = max(plot_times)
 
-# then add the redshift axis. The process of selecting the labels raises
-# warnings, so we can ignore that
-# with warnings.catch_warnings():
-#     warnings.simplefilter('ignore', UserWarning)
-ax.twin_axis("x", label_redshifts, "Redshift", 
-             new_to_old_func=z_to_age_Gyr)
+    for ax in axs:
+        ax.legend(fontsize=10)
+        ax.set_yscale("log")
+        ax.set_limits(0, 1.05*max_time, 2e7, 3e10)
+        ax.add_labels("Time [Gyr]", "Stellar Mass  [$M_\odot$]")
 
-fig.savefig("./comparison_plots/mass_growth_comparison.png")
+        # then add the redshift axis. The process of selecting the labels raises
+        # warnings, so we can ignore that
+        # with warnings.catch_warnings():
+        #     warnings.simplefilter('ignore', UserWarning)
+        ax.twin_axis("x", label_redshifts, "Redshift",
+                     new_to_old_func=z_to_age_Gyr)
+
+    if split:
+        name = "./comparison_plots/mass_growth_comparison_split.png"
+    else:
+        name = "./comparison_plots/mass_growth_comparison.png"
+    fig.savefig(name)
 
 

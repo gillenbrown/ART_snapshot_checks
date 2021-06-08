@@ -14,8 +14,7 @@ Takes 2 required and 1 optional parameter.
     if this is included.
 """
 
-import sys
-import os
+import sys, os, gc
 
 import yt
 from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
@@ -132,8 +131,7 @@ for level in grid_levels:
 # Particles
 # 
 # =============================================================================
-all_masses = ad[('N-BODY', 'MASS')].to("Msun")
-masses, num_particles = np.unique(all_masses, return_counts=True)
+masses, num_particles = np.unique(ad[('N-BODY', 'MASS')].to("Msun"), return_counts=True)
 # Do not reverse, since in ART species 0 is the lightest
 total_particles = np.sum(num_particles)
 
@@ -229,6 +227,9 @@ for level, cell_size, n_cells in zip(level_idxs, cell_sizes, num_in_grid):
         out(row_str.format(element, np.min(z_elt), np.median(z_elt), true_mean, 
                            np.max(z_elt)))
     out("")  # for spacing
+# delete unneeded variables
+del densities, volumes, metal_densities
+gc.collect()
 
 # =============================================================================
 #         
@@ -257,7 +258,11 @@ else:
 
         out(row_str.format(element, np.min(z_elt), np.median(z_elt), true_mean, 
                            np.max(z_elt)))
+        del z_elt
 out("")  # for spacing
+# delete unnecessary variables
+del star_elements, stellar_masses
+gc.collect()
 
 # =========================================================================
 #         
@@ -283,7 +288,9 @@ for unit in ["code_mass", "Msun"]:
         n_cell = len(level_idxs[level])
         mass_percentiles = np.percentile(gas_mass[idxs], percentiles)
         out(refine_row_str.format(level, n_cell, *mass_percentiles))
+    del gas_mass
     out("")  # for spacing
+gc.collect()
 
 # =========================================================================
 #         
@@ -319,6 +326,9 @@ for max_age in [15, 40]:
         temp_caps = [1E6, 1E7, 2E7, 4E7, 4.3E7, 5E7, 1E8, 1E9]
         for cap in temp_caps:
             out(f"{cap:11.2e}    {find_fraction_above(young_temps, cap):.2f}")
+        del young_positions, young_temps, young_idxs
+del star_ages, star_positions
+gc.collect()
 
 # =========================================================================
 #         
@@ -349,6 +359,12 @@ vx_dm = np.abs(ad[('N-BODY', 'particle_velocity_x')].to("km/s").value)
 vy_dm = np.abs(ad[('N-BODY', 'particle_velocity_y')].to("km/s").value)
 vz_dm = np.abs(ad[('N-BODY', 'particle_velocity_z')].to("km/s").value)
 velocity_dm = np.amax([vx_dm, vy_dm, vz_dm], axis=0)
+
+# delete full arrays that aren't needed
+del vx_gas, vy_gas, vz_gas
+del vx_star, vy_star, vz_star
+del vx_dm, vy_dm, vz_dm
+gc.collect()
 
 # We'll need to restrict this to a few particles. We wnat to find the cell a 
 # given particle is in, which is computationally expensive, so we'll restrict

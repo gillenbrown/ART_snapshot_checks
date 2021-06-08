@@ -44,6 +44,7 @@ ds = yt.load(ds_loc)
 ad = ds.all_data()
 
 is_zoom = ('N-BODY_0', 'POSITION_X') in ds.field_list
+has_baryons = ('STAR', 'MASS') in ds.field_list
 
 # get the location of where to write the file.
 sim_dir = os.path.dirname(ds_loc) + os.sep
@@ -124,6 +125,16 @@ for rank, idx in enumerate(rank_idxs, start=1):
     halo = hc.catalog[idx]
     halo["rank"] = rank
     halos.append(halo)
+
+# double check that the boundary conditions have been correctly respected. I'm not sure
+# why this happens, but it seems not to be respected at times.
+
+for halo in hc.catalog:
+    for position_name in ["particle_position_x", "particle_position_y", "particle_position_z"]:
+        while halo[position_name] > ds.domain_width[0]:
+            # make sure subtraction doesn't happen in code units
+            print(f"fixing halo {halo['rank']} position")
+            halo[position_name] = halo[position_name].to("cm") - ds.domain_width[0].to("cm")
 
 # get the N-body particle locations. These are different in the old and new
 # simulations, so we have to check 
@@ -223,6 +234,9 @@ for halo in halos[:n_halos]:
         total_mass = sphere_virial[('N-BODY', 'MASS')].to("Msun").value.sum()
         out("\nTotal DM particle mass within the virial radius = {:.3e} Msun".format(total_mass))
 
+    # then the baryon properties. Quit if we don't have baryons
+    if not has_baryons:
+        continue
     # print the stellar mass 
     stellar_mass_30kpc = np.sum(sphere_30_kpc[('STAR', 'MASS')].to("Msun").value)
     stellar_mass_virial = np.sum(sphere_virial[('STAR', 'MASS')].to("Msun").value)
