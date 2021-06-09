@@ -73,14 +73,6 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/shangrila/hui/sfe_50 \
 	                 $(runs_home)/shangrila/hui/sfe_100 \
  	                 $(runs_home)/shangrila/hui/sfe_200 \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn00/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn01/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn05/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn06/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn10/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn20/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50/run \
-	                 $(runs_home)/stampede2/old_ic_comparison/cap5000kms_hn50_v1/run \
 	                 $(runs_home)/stampede2/production/tl_sfe001_hn20/run \
 	                 $(runs_home)/stampede2/production/tl_sfe010_hn20/run \
 	                 $(runs_home)/stampede2/production/tl_sfe100_hn20/run \
@@ -181,18 +173,16 @@ galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
 # 
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
-	sfh_plots = $(comparison_plots_dir)/mass_growth_comparison.png \
-				$(comparison_plots_dir)/sfh_comparison.png
-	cimf_plots = $(comparison_plots_dir)/cimf_common.png \
-				 $(comparison_plots_dir)/cimf_last.png
+	sfh_sentinel = $(comparison_plots_dir)/sfh_sentinel.txt
+	cimf_sentinel = $(comparison_plots_dir)/cimf_sentinel
 	halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
 	age_spread_plots = $(comparison_plots_dir)/age_spread_common.png \
 	                   $(comparison_plots_dir)/age_spread_last.png
 	# one sentinel file for the script that makes a bunch of plots
 	galaxy_comparison_sentinel = $(comparison_plots_dir)/comparison_sentinel.txt
 else
-	sfh_plots =
-	cimf_plots =
+	sfh_sentinel =
+	cimf_sentinel =
 	halo_growth_plot =
 	age_spread_plots =
 	galaxy_comparison_sentinel =
@@ -315,7 +305,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_plots) $(cimf_plots) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(movies) $(halo_growth_plot) # $(age_spread_plots)
+all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_sentinel) $(cimf_sentinel) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(movies) $(halo_growth_plot) # $(age_spread_plots)
 
 .PHONY: clean
 clean:
@@ -363,20 +353,20 @@ $(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(sfh_plots): $(sfh_plots_script) $(comparison_utils_script) $(snapshots_hydro) $(rockstar_sentinels)
-	python $(sfh_plots_script) $(sim_dirs_hydro)
+$(sfh_sentinel): $(sfh_plots_script) $(comparison_utils_script) $(plot_utils) $(snapshots_hydro) $(rockstar_sentinels)
+	python $(sfh_plots_script) $(sfh_sentinel) $(sim_dirs_hydro)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(cimf_plots): $(cimf_plots_script) $(comparison_utils_script) $(snapshots_hydro) $(rockstar_sentinels)
-	python $(cimf_plots_script) $(sim_dirs_hydro)
+$(cimf_sentinel): $(cimf_plots_script) $(comparison_utils_script) $(plot_utils) $(snapshots_hydro) $(rockstar_sentinels)
+	python $(cimf_plots_script) $(cimf_sentinel) $(sim_dirs_hydro)
 
 # Make the age spread plots. 
-$(age_spread_plots): $(age_plot_script) $(comparison_utils_script) $(snapshots_hydro) $(rockstar_sentinels)
+$(age_spread_plots): $(age_plot_script) $(comparison_utils_script) $(plot_utils) $(snapshots_hydro) $(rockstar_sentinels)
 	python $(age_plot_script) $(sim_dirs_hydro)
 
 # and the galaxy comparison plots
-$(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(comparison_utils_script)
+$(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(plot_utils) $(comparison_utils_script)
 	python $(galaxies_comparison_script) $(galaxy_comparison_sentinel) $(galaxies)
 
 # Make the individual nbody plots - several examples of very similar things here

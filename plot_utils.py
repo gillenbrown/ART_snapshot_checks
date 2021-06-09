@@ -72,23 +72,31 @@ colors = {
     "R&J Collisionless 4x Trim": cmap_rj_collisionless(0.4),
 }
 
-axis_number = {
-    "NBm SFE10": 0,
-    "NBm SFE100": 0,
-    "Old IC SFE100 0% HN": 0,
-    "Old IC SFE100 1% HN": 0,
-    "Old IC SFE100 10% HN": 0,
-    "Old IC SFE100 20% HN": 0,
-    "Old IC SFE100 50% HN": 0,
-    "Old IC SFE100 50% HN new": 0,
-    "T&L SFE1 20% HN": 1,
-    "T&L SFE10 20% HN": 1,
-    "T&L SFE100 20% HN": 1,
-    "T&L SFE100 5% HN": 1,
-    "T&L SFE100 0% HN": 1,
-    "R&J SFE10 20% HN": 1,
-    "R&J SFE100 20% HN": 1,
-    "R&J Collisionless Original": 1,
-    "R&J Collisionless 2x Trim": 1,
-    "R&J Collisionless 4x Trim": 1,
+axes = {
+    "NBm SFE10": ["old_ic", "all"],
+    "NBm SFE100": ["old_ic", "all"],
+    "Old IC SFE100 0% HN": ["old_ic", "all"],
+    "Old IC SFE100 1% HN": ["old_ic", "all"],
+    "Old IC SFE100 10% HN": ["old_ic", "all"],
+    "Old IC SFE100 20% HN": ["old_ic", "all"],
+    "Old IC SFE100 50% HN": ["old_ic", "all"],
+    "Old IC SFE100 50% HN new": ["old_ic", "all"],
+    "T&L SFE1 20% HN": ["tl", "lg", "all"],
+    "T&L SFE10 20% HN": ["tl", "lg", "all"],
+    "T&L SFE100 20% HN": ["tl", "lg", "all"],
+    "T&L SFE100 5% HN": ["tl", "lg", "all"],
+    "T&L SFE100 0% HN": ["tl", "lg", "all"],
+    "R&J SFE10 20% HN": ["rj", "lg", "all"],
+    "R&J SFE100 20% HN": ["rj", "lg", "all"],
+    "R&J Collisionless Original": ["rj", "lg", "nbody", "all"],
+    "R&J Collisionless 2x Trim": ["rj", "lg", "nbody", "all"],
+    "R&J Collisionless 4x Trim": ["rj", "lg", "nbody", "all"],
 }
+
+
+def get_plot_names(sim_names):
+    all_plots = []
+    for name in sim_names:
+        for plot in axes[name]:
+            all_plots.append(plot)
+    return list(set(all_plots))
