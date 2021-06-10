@@ -240,6 +240,14 @@ all_art_files = [
 art_files = sorted(
     [art_file for art_file in all_art_files if not already_done(art_file)]
 )
+# do a check to exit if there aren't any files
+if len(art_files) == 0:
+    # make sure temp_dir is empty before deleting it
+    assert len([item for item in temp_dir.iterdir()]) == 0
+    temp_dir.rmdir()
+
+    # update the sentinel file
+    (rockstar_dir / "sentinel.txt").touch()
 
 # I want to do a check that the files were made correctly (since sometimes I find bugs
 # on shangrila that result in zero halos being found). I'll redo a set of halos if it
