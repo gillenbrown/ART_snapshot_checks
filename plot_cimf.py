@@ -356,7 +356,7 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
                 )
 
     # formax axes
-    ax.legend(loc=1, fontsize=10)
+    ax.legend(loc=1)
     ax.set_yscale("log")
     ax.set_xscale("log")
     # have different y limits for different versions of the plot
@@ -366,13 +366,13 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
     if not np.isinf(max_age_myr):
         # small timeframe, don't need to show much.
         y_min = 3
-        y_max = 1e5
-    elif masses_to_plot == "current":
+        y_max = 1e4
+    elif "current" in masses_to_plot:
         y_min = 10
-        y_max = 1e5
+        y_max = 1e4
     else:
         y_min = 10
-        y_max = 1e6
+        y_max = 1e5
     ax.set_limits(1e3, 1e7, y_min, y_max)
 
     # plot the guiding lines
