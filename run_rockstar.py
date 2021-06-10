@@ -249,6 +249,8 @@ if len(art_files) == 0:
     # update the sentinel file
     (rockstar_dir / "sentinel.txt").touch()
 
+    exit()
+
 # I want to do a check that the files were made correctly (since sometimes I find bugs
 # on shangrila that result in zero halos being found). I'll redo a set of halos if it
 # doesn't work. To do this, I'll use an index, then iterate it if the halo finding is

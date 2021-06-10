@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import betterplotlib as bpl
 
-import plot_utils
+from utils import plot_utils
 
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output

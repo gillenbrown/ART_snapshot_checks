@@ -7,61 +7,44 @@ The parameters passed to this script must be directories with the
 """
 import sys
 from pathlib import Path
-from collections import defaultdict
 
 import numpy as np
-from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
+import yt
 from astropy import cosmology
 from astropy import units as u
-
+import betterplotlib as bpl
 import abundance_matching
 
-um = abundance_matching.UniverseMachine()
-
-import betterplotlib as bpl
+from utils import load_galaxies, plot_utils
 
 bpl.set_style()
-
-import yt
-
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
-
-import plot_utils
+um = abundance_matching.UniverseMachine()
 
 sfh_sentinel = Path(sys.argv[1])
 
 # ======================================================================================
 #
-# Setup for precalculation of key quantities
+# load the simulations
 #
 # ======================================================================================
-class Galaxy(object):
-    def __init__(self, sphere, rank):
-        self.sphere = sphere
-        self.rank = rank
+sims = load_galaxies.get_simulations_last(sys.argv[2:])
 
-        # storing calculated quantities
-        self._precalc_sfh = None
-        self._precalc_growth = None
 
-    def sfh(self):
-        if self._precalc_sfh is None:
-            self._precalc_sfh = self._create_sfh()
-        return self._precalc_sfh
-
-    def mass_growth(self):
-        if self._precalc_growth is None:
-            self._precalc_growth = self._create_cumulative_mass()
-        return self._precalc_growth
-
-    def _create_sfh(self):
-        masses = self.sphere[("STAR", "INITIAL_MASS")].in_units("msun")
-        creation_times = self.sphere[("STAR", "creation_time")]
+# ======================================================================================
+#
+# functions to calculate key quantities
+#
+# ======================================================================================
+def sfh(galaxy):
+    if "sfh" not in galaxy.precalculated:
+        masses = galaxy.sphere[("STAR", "INITIAL_MASS")].in_units("msun")
+        creation_times = galaxy.sphere[("STAR", "creation_time")]
 
         # have the bins start with the last time, so that the final bin is not
         # strange due to only being incomplete
         dt = 300 * yt.units.Myr
-        max_bin = self.sphere.ds.current_time.to("Myr")
+        max_bin = galaxy.sphere.ds.current_time.to("Myr")
         bin_edges = [max_bin]
         while bin_edges[-1] > 0:
             bin_edges.append(bin_edges[-1] - dt)
@@ -87,20 +70,24 @@ class Galaxy(object):
             sfr_values.append(this_formed_mass / dt)
             bin_centers.append((min_age + max_age) / 2.0)
 
-        return yt.YTArray(bin_centers), yt.YTArray(sfr_values)
+        galaxy.precalculated["sfh"] = yt.YTArray(bin_centers), yt.YTArray(sfr_values)
 
-    def _create_cumulative_mass(self):
-        """
-        Create the cumulative stellar mass of the stars within some region.
+    return galaxy.precalculated["sfh"]
 
-        This will create many timesteps, then for each timestep record the mass
-        that formed earlier than this time.
 
-        :param data_obj: region of the simulation that stars will be selected from.
-                         Can be something like a sphere, or even all_data()
-        """
-        masses = self.sphere[("STAR", "INITIAL_MASS")].in_units("msun")
-        creation_times = self.sphere[("STAR", "creation_time")]
+def cumulative_growth(galaxy):
+    """
+    Create the cumulative stellar mass of the stars within some region.
+
+    This will create many timesteps, then for each timestep record the mass
+    that formed earlier than this time.
+
+    :param data_obj: region of the simulation that stars will be selected from.
+                     Can be something like a sphere, or even all_data()
+    """
+    if "mass_growth" not in galaxy.precalculated:
+        masses = galaxy.sphere[("STAR", "INITIAL_MASS")].in_units("msun")
+        creation_times = galaxy.sphere[("STAR", "creation_time")]
 
         sort_idxs = np.argsort(creation_times.to("Myr").value)
 
@@ -108,86 +95,12 @@ class Galaxy(object):
         mass_in_order = masses[sort_idxs]
         mass_cumulative = np.cumsum(mass_in_order)
 
-        return times.in_units("Gyr"), yt.YTArray(mass_cumulative)
-
-
-class Simulation(object):
-    def __init__(self, ds_path):
-        # get the dataset and corresponding halo file
-        run_dir = ds_path.parent.parent
-        halo_path = run_dir / "halos"
-        halo_name = ds_path.name.replace("continuous_", "halos_")
-        halo_name = halo_name.replace(".art", ".0.bin")
-
-        self.ds = yt.load(str(ds_path))
-        self.halos_ds = yt.load(str(halo_path / halo_name))
-
-        # get the axis names and other stuff
-        self.name = plot_utils.names[run_dir]
-        self.axes = plot_utils.axes[self.name]
-        self.color = plot_utils.colors[self.name]
-
-        # if we are the old IC set, we have one galaxy, otherwise two
-        # check what kind of particles are present
-        if ("N-BODY_0", "MASS") in self.ds.derived_field_list:
-            self.n_galaxies_each = 2
-        else:
-            self.n_galaxies_each = 1
-
-        # create halo catalog object
-        self.hc = HaloCatalog(halos_ds=self.halos_ds, data_ds=self.ds)
-        self.hc.create(save_halos=True, save_catalog=False)
-
-        # Do some parsing of the halo catalogs
-        # We get the indices that sort it. The reversing there makes the biggest
-        # halos first, like we want.
-        halo_masses = yt.YTArray(
-            [halo.quantities["particle_mass"] for halo in self.hc.halo_list]
+        galaxy.precalculated["mass_growth"] = times.in_units("Gyr"), yt.YTArray(
+            mass_cumulative
         )
-        rank_idxs = np.argsort(halo_masses)[::-1]
-        # Add this info to each halo object, and put the halos into a new sorted list,
-        # with the highest mass (lowest rank) halos first). We only keep the number
-        # the user requested
-        self.galaxies = []
-        for rank, idx in enumerate(rank_idxs[: self.n_galaxies_each], start=1):
-            halo = self.hc.halo_list[idx]
-            radius = min(halo.quantities["virial_radius"], 30 * yt.units.kpc)
-            center = [
-                halo.quantities["particle_position_x"],
-                halo.quantities["particle_position_y"],
-                halo.quantities["particle_position_z"],
-            ]
-            sphere = self.ds.sphere(center=center, radius=radius)
-            self.galaxies.append(Galaxy(sphere, rank))
 
+    return galaxy.precalculated["mass_growth"]
 
-# ======================================================================================
-#
-# Loading datasets
-#
-# ======================================================================================
-# make dictionary to store the resulting datasets
-sims = []
-for directory in sys.argv[1:]:
-    directory = Path(directory)
-    if directory not in plot_utils.names:
-        print(f"Skipping {directory}")
-        continue
-
-    out_dir = directory / "out"
-    halos_dir = directory / "halos"
-
-    last_out = sorted(
-        [
-            file
-            for file in out_dir.iterdir()
-            if file.is_file()
-            and str(file.name).endswith(".art")
-            and str(file.name).startswith("continuous_a")
-        ]
-    )[-1]
-
-    sims.append(Simulation(last_out))
 
 # ======================================================================================
 #
@@ -236,7 +149,7 @@ def plot_sfh(axis_name):
         if axis_name not in sim.axes:
             continue
         for galaxy in sim.galaxies:
-            times, sfh_values = galaxy.sfh()
+            times, sfh_values = sfh(galaxy)
             # don't plot halos without few points
             if len(times) < 2:
                 continue
@@ -298,7 +211,7 @@ def plot_cumulative_growth(axis_name):
         if axis_name not in sim.axes:
             continue
         for galaxy in sim.galaxies:
-            times, cumulative_mass = galaxy.mass_growth()
+            times, cumulative_mass = cumulative_growth(galaxy)
             # handle halos with few points
             if len(times) == 1:
                 times = np.concatenate([times, times])

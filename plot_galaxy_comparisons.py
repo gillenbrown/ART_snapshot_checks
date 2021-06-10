@@ -14,7 +14,7 @@ import numpy as np
 from astropy import units as u
 import betterplotlib as bpl
 
-from plot_utils import names, colors
+from utils.plot_utils import names, colors
 
 bpl.set_style()
 

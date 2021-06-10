@@ -10,117 +10,112 @@ from pathlib import Path
 import numpy as np
 from scipy import special
 import yt
-from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
-
 import betterplotlib as bpl
+
+from utils import load_galaxies, plot_utils
 
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
-
-import plot_utils
 
 cimf_sentinel = Path(sys.argv[1])
 
 # ======================================================================================
 #
-# Setup for precalculation of key quantities
+# load the simulations
 #
 # ======================================================================================
-class Galaxy(object):
-    def __init__(self, sphere, rank):
-        self.sphere = sphere
-        self.rank = rank
+sims_last = load_galaxies.get_simulations_last(sys.argv[2:])
+sims_common, common_scale = load_galaxies.get_simulations_common(sys.argv[2:])
 
-        # storing calculated cimfs
-        self._precalc_cimf = dict()
+# ======================================================================================
+#
+# CIMF calculations
+#
+# ======================================================================================
+# Then the functions to calculate the CIMF. Here we need to do some analysis
+# of the bound fraction.
+def f_bound(eps_int):
+    # Li et al 2019: https://ui.adsabs.harvard.edu/abs/2019MNRAS.487..364L/abstract
+    # equation 17
+    alpha_star = 0.48
+    f_sat = 0.94
+    term_a = special.erf(np.sqrt(3 * eps_int / alpha_star))
+    term_b = np.sqrt(12 * eps_int / (np.pi * alpha_star))
+    term_c = np.exp(-3 * eps_int / alpha_star)
+    return (term_a - (term_b * term_c)) * f_sat
 
-    # Then the functions to calculate the CIMF. Here we need to do some analysis
-    # of the bound fraction.
-    @staticmethod
-    def _f_bound(eps_int):
-        # Li et al 2019: https://ui.adsabs.harvard.edu/abs/2019MNRAS.487..364L/abstract
-        # equation 17
-        alpha_star = 0.48
-        f_sat = 0.94
-        term_a = special.erf(np.sqrt(3 * eps_int / alpha_star))
-        term_b = np.sqrt(12 * eps_int / (np.pi * alpha_star))
-        term_c = np.exp(-3 * eps_int / alpha_star)
-        return (term_a - (term_b * term_c)) * f_sat
 
-    def _get_initial_bound_fraction(self):
-        star_initial_mass = self.sphere[("STAR", "INITIAL_MASS")].to("Msun").value
-        # the variable named INITIAL_BOUND_FRACTION is not the initial_bound fraction,
-        # it's actually the accumulated mass nearby through the course of accretion, in
-        # code masses. This is used to calculate the formation efficiency, which is then
-        # used to get the bound fraction.
-        star_accumulated_mass = (
-            self.sphere[("STAR", "INITIAL_BOUND_FRACTION")].to("").value
-        )
-        star_accumulated_mass *= self.sphere.ds.mass_unit
-        star_accumulated_mass = star_accumulated_mass.to("Msun").value
+def get_initial_bound_fraction(galaxy):
+    star_initial_mass = galaxy.sphere[("STAR", "INITIAL_MASS")].to("Msun").value
+    # the variable named INITIAL_BOUND_FRACTION is not the initial_bound fraction,
+    # it's actually the accumulated mass nearby through the course of accretion, in
+    # code masses. This is used to calculate the formation efficiency, which is then
+    # used to get the bound fraction.
+    star_accumulated_mass = (
+        galaxy.sphere[("STAR", "INITIAL_BOUND_FRACTION")].to("").value
+    )
+    star_accumulated_mass *= galaxy.sphere.ds.mass_unit
+    star_accumulated_mass = star_accumulated_mass.to("Msun").value
 
-        eps_int = star_initial_mass / star_accumulated_mass
+    eps_int = star_initial_mass / star_accumulated_mass
 
-        return self._f_bound(eps_int)
+    return f_bound(eps_int)
 
-    def cimf(self, mass_type, max_age_myr):
-        id_string = f"{mass_type}_{max_age_myr}"
 
-        if id_string not in self._precalc_cimf:
-            self._precalc_cimf[id_string] = self._create_cimf(mass_type, max_age_myr)
+def cimf(galaxy, mass_type, max_age_myr):
+    """
+    Make the cluster initial mass function.
 
-        return self._precalc_cimf[id_string]
+    Notes on the different mass variables:
+    ('STAR', 'INITIAL_MASS') - initial stellar mass of the star particle
+    ('STAR', 'MASS') - current stellar mass of the star particle, accounting for
+        stellar evolution
+    ('STAR', 'INITIAL_BOUND_FRACTION') - NOT the actual initial_bound fraction. See
+        the `get_initial_bound_fraction` function above for more on how to use this,
+        but this variable is the accumulated mass near the cluster over the course
+        of accretion. This is used to calculate formation efficiency, which is then
+        used to get the actual initial_bound fraction
+    ('STAR', 'BOUND_FRACTION') - This is the actual bound fraction at the current
+        time, but NOT accounting for the proper initial_bound fraction
 
-    def _create_cimf(self, mass_type, max_age_myr):
-        """
-        Make the cluster initial mass function.
+    :param data_obj: Sphere object representing a galaxy
+    :param mass_type: String encoding which mass to get here. The options are:
+                      "initial" - just the initial stellar masses
+                      "initial_bound" - initial masses including initial_bound
+                                        fraction
+                      "current" - current bound mass, accounting for the initial
+                                  bound fraction, tidal disruption, and stellar
+                                  death
+    :param include_initial_bound: whether to incorporate the initial bound
+                                  fraction of clusters, or just get the
+                                  distribution of initial particle masses
+    :param max_age_myr: The maximum age to restrict the plot to. Is infinity as the
+                        default, which plots all stars.
+    :returns: Two lists. The first is f_i * M, representing the initial
+              bound mass, of M if include_initial_bound=False. This will be
+              binned values suitable to plot. The second is dN/dLogM for each
+              of the bins in the first list.
+    """
+    id_string = f"{mass_type}_{max_age_myr}"
 
-        Notes on the different mass variables:
-        ('STAR', 'INITIAL_MASS') - initial stellar mass of the star particle
-        ('STAR', 'MASS') - current stellar mass of the star particle, accounting for
-            stellar evolution
-        ('STAR', 'INITIAL_BOUND_FRACTION') - NOT the actual initial_bound fraction. See
-            the `get_initial_bound_fraction` function above for more on how to use this,
-            but this variable is the accumulated mass near the cluster over the course
-            of accretion. This is used to calculate formation efficiency, which is then
-            used to get the actual initial_bound fraction
-        ('STAR', 'BOUND_FRACTION') - This is the actual bound fraction at the current
-            time, but NOT accounting for the proper initial_bound fraction
+    if id_string not in galaxy.precalculated:
 
-        :param data_obj: Sphere object representing a galaxy
-        :param mass_type: String encoding which mass to get here. The options are:
-                          "initial" - just the initial stellar masses
-                          "initial_bound" - initial masses including initial_bound
-                                            fraction
-                          "current" - current bound mass, accounting for the initial
-                                      bound fraction, tidal disruption, and stellar
-                                      death
-        :param include_initial_bound: whether to incorporate the initial bound
-                                      fraction of clusters, or just get the
-                                      distribution of initial particle masses
-        :param max_age_myr: The maximum age to restrict the plot to. Is infinity as the
-                            default, which plots all stars.
-        :returns: Two lists. The first is f_i * M, representing the initial
-                  bound mass, of M if include_initial_bound=False. This will be
-                  binned values suitable to plot. The second is dN/dLogM for each
-                  of the bins in the first list.
-        """
         if mass_type == "initial":
-            mass = self.sphere[("STAR", "INITIAL_MASS")].to("Msun").value
+            mass = galaxy.sphere[("STAR", "INITIAL_MASS")].to("Msun").value
         elif mass_type == "initial_bound":
-            initial_mass = self.sphere[("STAR", "INITIAL_MASS")].to("Msun").value
-            star_initial_bound = self._get_initial_bound_fraction()
+            initial_mass = galaxy.sphere[("STAR", "INITIAL_MASS")].to("Msun").value
+            star_initial_bound = get_initial_bound_fraction(galaxy)
             mass = initial_mass * star_initial_bound
         elif mass_type == "current":
-            raw_mass = self.sphere[("STAR", "INITIAL_MASS")].to("Msun").value
-            star_initial_bound = self._get_initial_bound_fraction()
-            tidal_bound_fraction = self.sphere[("STAR", "BOUND_FRACTION")].value
+            raw_mass = galaxy.sphere[("STAR", "INITIAL_MASS")].to("Msun").value
+            star_initial_bound = get_initial_bound_fraction(galaxy)
+            tidal_bound_fraction = galaxy.sphere[("STAR", "BOUND_FRACTION")].value
             mass = raw_mass * star_initial_bound * tidal_bound_fraction
 
         # then restrict to recently formed clusters. This can be set to infinity, which
         # plots everything
         max_age = max_age_myr * yt.units.Myr
-        mask = self.sphere[("STAR", "age")] < max_age
+        mask = galaxy.sphere[("STAR", "age")] < max_age
         mass = mass[mask]
 
         # create bins with spacing of 0.16 dex
@@ -141,133 +136,9 @@ class Galaxy(object):
         # We have dN, make it per dLogM
         hist = np.array(hist) / (bin_width * np.log(10))
 
-        return m_centers, hist
+        galaxy.precalculated[id_string] = m_centers, hist
+    return galaxy.precalculated[id_string]
 
-
-class Simulation(object):
-    def __init__(self, ds_path):
-        # get the dataset and corresponding halo file
-        run_dir = ds_path.parent.parent
-        halo_path = run_dir / "halos"
-        halo_name = ds_path.name.replace("continuous_", "halos_")
-        halo_name = halo_name.replace(".art", ".0.bin")
-
-        self.ds = yt.load(str(ds_path))
-        self.halos_ds = yt.load(str(halo_path / halo_name))
-
-        # get the axis names and other stuff
-        self.name = plot_utils.names[run_dir]
-        self.axes = plot_utils.axes[self.name]
-        self.color = plot_utils.colors[self.name]
-
-        # if we are the old IC set, we have one galaxy, otherwise two
-        # check what kind of particles are present
-        if ("N-BODY_0", "MASS") in self.ds.derived_field_list:
-            self.n_galaxies_each = 2
-        else:
-            self.n_galaxies_each = 1
-
-        # create halo catalog object
-        self.hc = HaloCatalog(halos_ds=self.halos_ds, data_ds=self.ds)
-        self.hc.create(save_halos=True, save_catalog=False)
-
-        # Do some parsing of the halo catalogs
-        # We get the indices that sort it. The reversing there makes the biggest
-        # halos first, like we want.
-        halo_masses = yt.YTArray(
-            [halo.quantities["particle_mass"] for halo in self.hc.halo_list]
-        )
-        rank_idxs = np.argsort(halo_masses)[::-1]
-        # Add this info to each halo object, and put the halos into a new sorted list,
-        # with the highest mass (lowest rank) halos first). We only keep the number
-        # the user requested
-        self.galaxies = []
-        for rank, idx in enumerate(rank_idxs[: self.n_galaxies_each], start=1):
-            halo = self.hc.halo_list[idx]
-            radius = min(halo.quantities["virial_radius"], 30 * yt.units.kpc)
-            center = [
-                halo.quantities["particle_position_x"],
-                halo.quantities["particle_position_y"],
-                halo.quantities["particle_position_z"],
-            ]
-            sphere = self.ds.sphere(center=center, radius=radius)
-            self.galaxies.append(Galaxy(sphere, rank))
-
-
-# ======================================================================================
-#
-# Loading datasets
-#
-# ======================================================================================
-# Get the datasets and halo catalogs. When doing these we need to be a bit
-# careful about the datasets. We will make one set of comparisons at the last
-# common output of all simulations, then one with the last output of each
-# simulation. Those all need to be stored separately.
-def filename_to_scale_factor(filename):
-    return float(filename[-10:-4])
-
-
-# Start by getting the last common output among the production runs
-last_snapshots = []
-for directory in sys.argv[2:]:
-    directory = Path(directory)
-    if directory not in plot_utils.names or "stampede2/production" not in str(
-        directory
-    ):
-        continue
-
-    out_dir = directory / "out"
-
-    all_snapshots = [
-        file.name
-        for file in out_dir.iterdir()
-        if file.is_file()
-        and str(file.name).endswith(".art")
-        and str(file.name).startswith("continuous_a")
-    ]
-    # restrict to be a reasonable redshift
-    this_last_snapshot = sorted(all_snapshots)[-1]
-    if filename_to_scale_factor(this_last_snapshot) > 0.15:
-        last_snapshots.append(this_last_snapshot)
-
-earliest_last_snapshot = sorted(last_snapshots)[0]
-common_scale = filename_to_scale_factor(earliest_last_snapshot) + 0.001
-# include fudge factor for scale comparisons (so 0.1801 and 0.1802 match)
-
-# set up the dictionaries where we will store the datasets and halos
-sims_common = []
-sims_last = []
-
-for directory in sys.argv[2:]:
-    directory = Path(directory)
-    if directory not in plot_utils.names:
-        print(f"Skipping {directory}")
-        continue
-
-    out_dir = directory / "out"
-
-    all_snapshots = [
-        file
-        for file in out_dir.iterdir()
-        if file.is_file()
-        and str(file.name).endswith(".art")
-        and str(file.name).startswith("continuous_a")
-    ]
-    # get the actual last snapshot
-    last_snapshot = sorted(all_snapshots)[-1]
-    sims_last.append(Simulation(last_snapshot))
-
-    # then the last one that's in common with the other simulations
-    all_common_snapshots = [
-        file
-        for file in all_snapshots
-        if filename_to_scale_factor(file.name) <= common_scale
-        and abs(filename_to_scale_factor(file.name) - common_scale) < 0.02
-    ]
-    # if there are no snapshots early enough for this, don't add them
-    if len(all_common_snapshots) > 0:
-        last_common_snapshot = sorted(all_common_snapshots)[-1]
-        sims_common.append(Simulation(last_common_snapshot))
 
 # ======================================================================================
 #
@@ -336,7 +207,7 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
             continue
         for galaxy in sim.galaxies:
             for mass_type in masses_to_plot:
-                mass_plot, dn_dlogM = galaxy.cimf(mass_type, max_age_myr)
+                mass_plot, dn_dlogM = cimf(galaxy, mass_type, max_age_myr)
 
                 # make the label only for the biggest halo, and not for initial only
                 if galaxy.rank == 1 and mass_type != "initial":
