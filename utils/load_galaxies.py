@@ -4,7 +4,7 @@ import numpy as np
 import yt
 from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
 
-import plot_utils
+from . import plot_utils
 
 # ======================================================================================
 #
