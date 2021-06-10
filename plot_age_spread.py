@@ -19,6 +19,9 @@ yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
 from plot_utils import names, colors
 
+sentinel = Path(sys.argv[1]).resolve()
+plot_dir = sentinel.parent
+
 
 def filename_to_scale_factor(filename):
     return float(filename[-10:-4])
@@ -70,7 +73,7 @@ def get_ds_and_halos(ds_path):
 
 # Start by getting the last common output
 last_snapshots = []
-for directory in sys.argv[1:]:
+for directory in sys.argv[2:]:
     directory = Path(directory)
     if directory not in names:
         print(f"Skipping {directory}")
@@ -97,7 +100,7 @@ last_ds = dict()
 common_halos = dict()
 last_halos = dict()
 
-for directory in sys.argv[1:]:
+for directory in sys.argv[2:]:
     directory = Path(directory)
     if directory not in names:
         continue
@@ -212,8 +215,6 @@ def plot_age_growth(ds_dict, halos_dict, plot_name_suffix):
         ax_row[0].set_limits(0, 5, 0, 1)
         ax_row[1].set_limits(0, 8, 0, 1)
         for idx, name in enumerate(halos_dict):
-            if "T&L" in name:
-                continue
             c = colors[name]
             for halo in halos_dict[name]:
                 center = [
@@ -258,9 +259,11 @@ def plot_age_growth(ds_dict, halos_dict, plot_name_suffix):
     if plot_name_suffix == "common":
         axs[0][0].easy_add_text(f"z = {1/common_scale - 1:.1f}", "upper left")
 
-    fig.savefig(f"./comparison_plots/age_spread_{plot_name_suffix}.png")
+    fig.savefig(plot_dir / f"age_spread_{plot_name_suffix}.png")
 
 
 # then actually call this function to build the plots
 plot_age_growth(last_ds, last_halos, "last")
 plot_age_growth(common_ds, common_halos, "common")
+
+sentinel.touch()

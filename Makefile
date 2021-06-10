@@ -176,15 +176,14 @@ ifeq ($(machine),shangrila)
 	sfh_sentinel = $(comparison_plots_dir)/sfh_sentinel.txt
 	cimf_sentinel = $(comparison_plots_dir)/cimf_sentinel
 	halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
-	age_spread_plots = $(comparison_plots_dir)/age_spread_common.png \
-	                   $(comparison_plots_dir)/age_spread_last.png
+	age_spread_sentinel = $(comparison_plots_dir)/age_spread_sentinel.txt
 	# one sentinel file for the script that makes a bunch of plots
 	galaxy_comparison_sentinel = $(comparison_plots_dir)/comparison_sentinel.txt
 else
 	sfh_sentinel =
 	cimf_sentinel =
 	halo_growth_plot =
-	age_spread_plots =
+	age_spread_sentinel =
 	galaxy_comparison_sentinel =
 endif
 
@@ -305,7 +304,7 @@ movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 # 
 # ------------------------------------------------------------------------------
 movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_sentinel) $(cimf_sentinel) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(movies) $(halo_growth_plot) # $(age_spread_plots)
+all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_sentinel) $(cimf_sentinel) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(halo_growth_plot) $(age_spread_sentinel) $(movies) 
 
 .PHONY: clean
 clean:
@@ -362,8 +361,8 @@ $(cimf_sentinel): $(cimf_plots_script) $(comparison_utils_script) $(plot_utils) 
 	python $(cimf_plots_script) $(cimf_sentinel) $(sim_dirs_hydro)
 
 # Make the age spread plots. 
-$(age_spread_plots): $(age_plot_script) $(comparison_utils_script) $(plot_utils) $(snapshots_hydro) $(rockstar_sentinels)
-	python $(age_plot_script) $(sim_dirs_hydro)
+$(age_spread_sentinel): $(age_plot_script) $(comparison_utils_script) $(plot_utils) $(snapshots_hydro) $(rockstar_sentinels)
+	python $(age_plot_script) $(age_spread_sentinel) $(sim_dirs_hydro)
 
 # and the galaxy comparison plots
 $(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(plot_utils) $(comparison_utils_script)
