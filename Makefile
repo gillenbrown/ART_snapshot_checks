@@ -299,13 +299,19 @@ movie_to_plots = $(foreach sim,$(call movie_to_sims,$(1)),$(call $(2),$(sim)))
 movie_to_metal_summary = $(call sim_to_summary_metal,$(call dir_to_sims,$(subst plots/$(1).mp4,out,$(2))))
 movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 
+# only make the movies on shangrila
+ifeq ($(machine),shangrila)
+	movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
+else
+	movies =
+endif
+
 # ------------------------------------------------------------------------------
 #
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_sentinel) $(cimf_sentinel) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(halo_growth_plot) $(age_spread_sentinel) $(movies) 
+all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_sentinel) $(cimf_sentinel) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(halo_growth_plot) $(age_spread_sentinel) $(nbody_plots) $(movies)
 
 .PHONY: clean
 clean:
