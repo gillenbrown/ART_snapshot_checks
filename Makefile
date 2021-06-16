@@ -311,7 +311,7 @@ endif
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_sentinel) $(cimf_sentinel) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(halo_growth_plot) $(age_spread_sentinel) $(nbody_plots) $(movies)
+all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_sentinel) $(cimf_sentinel) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(halo_growth_plot) $(age_spread_sentinel) $(movies)
 
 .PHONY: clean
 clean:
