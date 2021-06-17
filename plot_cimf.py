@@ -111,11 +111,15 @@ def cimf(galaxy, mass_type, max_age_myr):
             star_initial_bound = get_initial_bound_fraction(galaxy)
             tidal_bound_fraction = galaxy.sphere[("STAR", "BOUND_FRACTION")].value
             mass = raw_mass * star_initial_bound * tidal_bound_fraction
+        else:
+            raise ValueError("Mass not recognized")
 
         # then restrict to recently formed clusters. This can be set to infinity, which
-        # plots everything
+        # plots everything. But only show clusters that are done forming
+        min_age = 15 * yt.units.Myr
         max_age = max_age_myr * yt.units.Myr
-        mask = galaxy.sphere[("STAR", "age")] < max_age
+        age = galaxy.sphere[("STAR", "age")]
+        mask = age < max_age & age > min_age
         mass = mass[mask]
 
         # create bins with spacing of 0.16 dex

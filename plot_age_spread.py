@@ -81,14 +81,14 @@ def time_cumulative_hist(galaxy, time_func, mask_name):
     if quantity_name not in galaxy.precalculated:
         sphere = galaxy.sphere
 
-        # make the mask
+        # make the mask. First is stars that are done forming
+        mask_done_forming = sphere[("STAR", "age")] > 15 * yt.units.Myr
         cluster_masses = sphere[("STAR", "initial_mass")]
         cluster_cut = 1e5 * yt.units.Msun
-        good_mask = sphere[("STAR", "AGE_SPREAD")] > 0
         if mask_name == "lo":
-            mask = good_mask & (cluster_masses <= cluster_cut)
+            mask = mask_done_forming & (cluster_masses <= cluster_cut)
         else:
-            mask = good_mask & (cluster_masses > cluster_cut)
+            mask = mask_done_forming & (cluster_masses > cluster_cut)
 
         # then calculate the age spreads, if we have objects in this category
         if np.sum(mask) > 0:
