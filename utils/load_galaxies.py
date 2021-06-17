@@ -17,8 +17,30 @@ class Galaxy(object):
     def __init__(self, sphere, rank):
         self.sphere = sphere
         self.rank = rank
+        self.ds = self.sphere.ds
 
+        # then get the mask showing which clusters are done forming
+        self.mask_done_forming = self.sphere[("STAR", "age")] > 15 * yt.units.Myr
+
+        # have a place for some things (like the CIMF) to be stored as a user
+        # calculates them.
         self.precalculated = dict()
+
+    def __getitem__(self, property):
+        """
+        Automatically apply the cut to only pick formed clusters
+        """
+        quantity = self.sphere[property]
+        if property[0] == "STAR":
+            quantity = quantity[self.mask_done_forming]
+        return quantity
+
+    def prop_all_clusters(self, property):
+        """
+        Like __getitem__, but does not apply the restriction that clusters must be
+        done forming
+        """
+        return self.sphere[property]
 
 
 class Simulation(object):
@@ -133,7 +155,7 @@ def get_common_scale_factor(sim_dirs, z_max):
     return filename_to_scale_factor(earliest_last_output.name) + 0.001
 
 
-def get_simulations_common(sim_dirs, z_max=4):
+def get_simulations_common(sim_dirs, z_max=5):
     common_scale = get_common_scale_factor(sim_dirs, z_max)
 
     sims_common = []

@@ -38,13 +38,13 @@ sims = load_galaxies.get_simulations_last(sys.argv[2:])
 # ======================================================================================
 def sfh(galaxy):
     if "sfh" not in galaxy.precalculated:
-        masses = galaxy.sphere[("STAR", "INITIAL_MASS")].in_units("msun")
-        creation_times = galaxy.sphere[("STAR", "creation_time")]
+        masses = galaxy.prop_all_clusters(("STAR", "INITIAL_MASS")).in_units("msun")
+        creation_times = galaxy.prop_all_clusters(("STAR", "creation_time"))
 
         # have the bins start with the last time, so that the final bin is not
         # strange due to only being incomplete
         dt = 300 * yt.units.Myr
-        max_bin = galaxy.sphere.ds.current_time.to("Myr")
+        max_bin = galaxy.ds.current_time.to("Myr")
         bin_edges = [max_bin]
         while bin_edges[-1] > 0:
             bin_edges.append(bin_edges[-1] - dt)
@@ -82,12 +82,11 @@ def cumulative_growth(galaxy):
     This will create many timesteps, then for each timestep record the mass
     that formed earlier than this time.
 
-    :param data_obj: region of the simulation that stars will be selected from.
-                     Can be something like a sphere, or even all_data()
+    :param galaxy: galaxy object
     """
     if "mass_growth" not in galaxy.precalculated:
-        masses = galaxy.sphere[("STAR", "INITIAL_MASS")].in_units("msun")
-        creation_times = galaxy.sphere[("STAR", "creation_time")]
+        masses = galaxy.prop_all_clusters(("STAR", "INITIAL_MASS")).in_units("msun")
+        creation_times = galaxy.prop_all_clusters(("STAR", "creation_time"))
 
         sort_idxs = np.argsort(creation_times.to("Myr").value)
 

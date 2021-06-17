@@ -38,26 +38,26 @@ def time_units(ds, array):
     return ds._handle.tphys_from_tcode_array(array) * yt.units.year
 
 
-def duration(region, mask):
-    end_time = time_units(region.ds, region[("STAR", "TERMINATION_TIME")][mask])
-    return end_time - region[("STAR", "creation_time")][mask]
+def duration(galaxy):
+    end_time = time_units(galaxy.ds, galaxy[("STAR", "TERMINATION_TIME")])
+    return end_time - galaxy[("STAR", "creation_time")]
 
 
-def ave_time(region, mask):
-    art_units_ave_age = region[("STAR", "AVERAGE_AGE")][mask]
-    art_units_birth = region[("STAR", "BIRTH_TIME")][mask]
+def ave_time(galaxy):
+    art_units_ave_age = galaxy[("STAR", "AVERAGE_AGE")]
+    art_units_birth = galaxy[("STAR", "BIRTH_TIME")]
 
-    ave_time = time_units(region.ds, art_units_birth + art_units_ave_age)
-    return ave_time - region[("STAR", "creation_time")][mask]
+    ave_time = time_units(galaxy.ds, art_units_birth + art_units_ave_age)
+    return ave_time - galaxy[("STAR", "creation_time")]
 
 
-def age_spread(region, mask):
-    initial_mass = region[("STAR", "initial_mass")][mask]
-    age_spread = region[("STAR", "AGE_SPREAD")][mask] * region.ds.arr(1, "code_mass**2")
-    birth_time = region[("STAR", "BIRTH_TIME")][mask]
-    creation_time = region[("STAR", "creation_time")][mask]
+def age_spread(galaxy):
+    initial_mass = galaxy[("STAR", "initial_mass")]
+    age_spread = galaxy[("STAR", "AGE_SPREAD")] * galaxy.ds.arr(1, "code_mass**2")
+    birth_time = galaxy[("STAR", "BIRTH_TIME")]
+    creation_time = galaxy[("STAR", "creation_time")]
 
-    time = time_units(region.ds, (initial_mass ** 2 / age_spread) + birth_time)
+    time = time_units(galaxy.ds, (initial_mass ** 2 / age_spread) + birth_time)
 
     return time - creation_time
 
@@ -79,20 +79,18 @@ def time_cumulative_hist(galaxy, time_func, mask_name):
     # check if precalculated
     quantity_name = f"{time_func.__name__}_{mask_name}"
     if quantity_name not in galaxy.precalculated:
-        sphere = galaxy.sphere
-
-        # make the mask. First is stars that are done forming
-        mask_done_forming = sphere[("STAR", "age")] > 15 * yt.units.Myr
-        cluster_masses = sphere[("STAR", "initial_mass")]
+        # make the mask. Note that the cut that the cluster must be done forming
+        # is automatically included in the galaxy object
+        cluster_masses = galaxy[("STAR", "initial_mass")]
         cluster_cut = 1e5 * yt.units.Msun
         if mask_name == "lo":
-            mask = mask_done_forming & (cluster_masses <= cluster_cut)
+            mask = cluster_masses <= cluster_cut
         else:
-            mask = mask_done_forming & (cluster_masses > cluster_cut)
+            mask = cluster_masses > cluster_cut
 
         # then calculate the age spreads, if we have objects in this category
         if np.sum(mask) > 0:
-            spreads = np.sort(time_func(sphere, mask).to("Myr").value)
+            spreads = np.sort(time_func(galaxy).to("Myr").value[mask])
             ranks = np.linspace(1 / len(spreads), 1, len(spreads))
         else:
             spreads, ranks = [], []

@@ -46,15 +46,13 @@ def f_bound(eps_int):
 
 
 def get_initial_bound_fraction(galaxy):
-    star_initial_mass = galaxy.sphere[("STAR", "INITIAL_MASS")].to("Msun").value
+    star_initial_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
     # the variable named INITIAL_BOUND_FRACTION is not the initial_bound fraction,
     # it's actually the accumulated mass nearby through the course of accretion, in
     # code masses. This is used to calculate the formation efficiency, which is then
     # used to get the bound fraction.
-    star_accumulated_mass = (
-        galaxy.sphere[("STAR", "INITIAL_BOUND_FRACTION")].to("").value
-    )
-    star_accumulated_mass *= galaxy.sphere.ds.mass_unit
+    star_accumulated_mass = galaxy[("STAR", "INITIAL_BOUND_FRACTION")].to("").value
+    star_accumulated_mass *= galaxy.ds.mass_unit
     star_accumulated_mass = star_accumulated_mass.to("Msun").value
 
     eps_int = star_initial_mass / star_accumulated_mass
@@ -78,7 +76,7 @@ def cimf(galaxy, mass_type, max_age_myr):
     ('STAR', 'BOUND_FRACTION') - This is the actual bound fraction at the current
         time, but NOT accounting for the proper initial_bound fraction
 
-    :param data_obj: Sphere object representing a galaxy
+    :param galaxy: galaxy object
     :param mass_type: String encoding which mass to get here. The options are:
                       "initial" - just the initial stellar masses
                       "initial_bound" - initial masses including initial_bound
@@ -101,25 +99,22 @@ def cimf(galaxy, mass_type, max_age_myr):
     if id_string not in galaxy.precalculated:
 
         if mass_type == "initial":
-            mass = galaxy.sphere[("STAR", "INITIAL_MASS")].to("Msun").value
+            mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
         elif mass_type == "initial_bound":
-            initial_mass = galaxy.sphere[("STAR", "INITIAL_MASS")].to("Msun").value
+            initial_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
             star_initial_bound = get_initial_bound_fraction(galaxy)
             mass = initial_mass * star_initial_bound
         elif mass_type == "current":
-            raw_mass = galaxy.sphere[("STAR", "INITIAL_MASS")].to("Msun").value
+            raw_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
             star_initial_bound = get_initial_bound_fraction(galaxy)
-            tidal_bound_fraction = galaxy.sphere[("STAR", "BOUND_FRACTION")].value
+            tidal_bound_fraction = galaxy[("STAR", "BOUND_FRACTION")].value
             mass = raw_mass * star_initial_bound * tidal_bound_fraction
         else:
             raise ValueError("Mass not recognized")
 
         # then restrict to recently formed clusters. This can be set to infinity, which
-        # plots everything. But only show clusters that are done forming
-        min_age = 15 * yt.units.Myr
-        max_age = max_age_myr * yt.units.Myr
-        age = galaxy.sphere[("STAR", "age")]
-        mask = age < max_age & age > min_age
+        # plots everything.
+        mask = galaxy[("STAR", "age")] < max_age_myr * yt.units.Myr
         mass = mass[mask]
 
         # create bins with spacing of 0.16 dex
