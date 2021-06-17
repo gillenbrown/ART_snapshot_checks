@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import yt
 from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
+yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
 from . import plot_utils
 
