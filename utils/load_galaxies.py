@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import yt
 from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
+
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
 from . import plot_utils
@@ -110,7 +111,7 @@ def get_simulations_last(sim_dirs):
     return sims_last
 
 
-def get_common_scale_factor(sim_dirs):
+def get_common_scale_factor(sim_dirs, z_max):
     # Start by getting the last common output among the production runs
     last_outputs = []
     for directory in sim_dirs:
@@ -122,8 +123,7 @@ def get_common_scale_factor(sim_dirs):
 
         all_outputs = get_outputs_in_dir(directory)
         # restrict to be a reasonable redshift
-        z_min = 4
-        a_min = 1 / (1 + z_min)
+        a_min = 1 / (1 + z_max)
         this_last_output = sorted(all_outputs)[-1]
         if filename_to_scale_factor(this_last_output.name) > a_min:
             last_outputs.append(this_last_output)
@@ -133,8 +133,8 @@ def get_common_scale_factor(sim_dirs):
     return filename_to_scale_factor(earliest_last_output.name) + 0.001
 
 
-def get_simulations_common(sim_dirs):
-    common_scale = get_common_scale_factor(sim_dirs)
+def get_simulations_common(sim_dirs, z_max=4):
+    common_scale = get_common_scale_factor(sim_dirs, z_max)
 
     sims_common = []
     for directory in sim_dirs:
