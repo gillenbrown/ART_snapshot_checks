@@ -62,7 +62,7 @@ def age_spread(galaxy):
     return time - creation_time
 
 
-def time_cumulative_hist(galaxy, time_func, mask_name):
+def time_cumulative_hist(sim, time_func, mask_name):
     """
     Make the cluster initial mass function.
 
@@ -78,25 +78,37 @@ def time_cumulative_hist(galaxy, time_func, mask_name):
 
     # check if precalculated
     quantity_name = f"{time_func.__name__}_{mask_name}"
-    if quantity_name not in galaxy.precalculated:
-        # make the mask. Note that the cut that the cluster must be done forming
-        # is automatically included in the galaxy object
-        cluster_masses = galaxy[("STAR", "initial_mass")]
-        cluster_cut = 1e5 * yt.units.Msun
-        if mask_name == "lo":
-            mask = cluster_masses <= cluster_cut
-        else:
-            mask = cluster_masses > cluster_cut
+    if quantity_name not in sim.precalculated:
+        spreads = []
+        for galaxy in sim.galaxies:
+            # make the mask. Note that the cut that the cluster must be done forming
+            # is automatically included in the galaxy object
+            cluster_masses = galaxy[("STAR", "initial_mass")]
+            cluster_cut = 1e5 * yt.units.Msun
+            if mask_name == "lo":
+                mask = cluster_masses <= cluster_cut
+            else:
+                mask = cluster_masses > cluster_cut
 
-        # then calculate the age spreads, if we have objects in this category
-        if np.sum(mask) > 0:
-            spreads = np.sort(time_func(galaxy).to("Myr").value[mask])
+            # then calculate the age spreads, if we have objects in this category
+            if np.sum(mask) > 0:
+                this_spreads = time_func(galaxy).to("Myr").value[mask]
+            else:
+                this_spreads = []
+
+            spreads = np.concatenate([this_spreads, spreads])
+
+        # sort the age spreads, so we can use them for the cumulative distribution
+        spreads = np.sort(spreads)
+
+        if len(spreads) > 0:
             ranks = np.linspace(1 / len(spreads), 1, len(spreads))
         else:
-            spreads, ranks = [], []
-        galaxy.precalculated[quantity_name] = spreads, ranks
+            ranks = []
 
-    return galaxy.precalculated[quantity_name]
+        sim.precalculated[quantity_name] = spreads, ranks
+
+    return sim.precalculated[quantity_name]
 
 
 # ======================================================================================
@@ -140,21 +152,17 @@ def plot_age_growth(axis_name, sim_share_type):
         for sim in sims:
             if axis_name not in sim.axes:
                 continue
-            for galaxy in sim.galaxies:
-                # make the label only for the biggest halo
-                if galaxy.rank == 1:
-                    # and include the redshift if it's different for each sim
-                    if sim_share_type == "last":
-                        label = f"{sim.name}: z = {1/sim.ds.scale_factor - 1:.1f}"
-                    else:
-                        label = sim.name
-                else:
-                    label = None
 
-                ages_lo, fractions_lo = time_cumulative_hist(galaxy, func, "lo")
-                ages_hi, fractions_hi = time_cumulative_hist(galaxy, func, "hi")
-                ax_row[1].plot(ages_hi, fractions_hi, c=sim.color, lw=2, label=label)
-                ax_row[0].plot(ages_lo, fractions_lo, c=sim.color, lW=2, label=label)
+            # include the redshift if it's different for each sim
+            if sim_share_type == "last":
+                label = f"{sim.name}: z = {1 / sim.ds.scale_factor - 1:.1f}"
+            else:
+                label = sim.name
+
+            ages_lo, fractions_lo = time_cumulative_hist(sim, func, "lo")
+            ages_hi, fractions_hi = time_cumulative_hist(sim, func, "hi")
+            ax_row[1].plot(ages_hi, fractions_hi, c=sim.color, lw=2, label=label)
+            ax_row[0].plot(ages_lo, fractions_lo, c=sim.color, lW=2, label=label)
 
     # put a legend in the top left panel
     axs[0][0].legend(loc=4, fontsize=14)

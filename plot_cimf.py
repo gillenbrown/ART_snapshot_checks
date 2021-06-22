@@ -60,7 +60,7 @@ def get_initial_bound_fraction(galaxy):
     return f_bound(eps_int)
 
 
-def cimf(galaxy, mass_type, max_age_myr):
+def cimf(sim, mass_type, max_age_myr):
     """
     Make the cluster initial mass function.
 
@@ -76,7 +76,7 @@ def cimf(galaxy, mass_type, max_age_myr):
     ('STAR', 'BOUND_FRACTION') - This is the actual bound fraction at the current
         time, but NOT accounting for the proper initial_bound fraction
 
-    :param galaxy: galaxy object
+    :param sim: simulation object object
     :param mass_type: String encoding which mass to get here. The options are:
                       "initial" - just the initial stellar masses
                       "initial_bound" - initial masses including initial_bound
@@ -96,26 +96,29 @@ def cimf(galaxy, mass_type, max_age_myr):
     """
     id_string = f"{mass_type}_{max_age_myr}"
 
-    if id_string not in galaxy.precalculated:
+    if id_string not in sim.precalculated:
+        mass = []
+        for galaxy in sim.galaxies:
+            if mass_type == "initial":
+                this_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
+            elif mass_type == "initial_bound":
+                initial_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
+                star_initial_bound = get_initial_bound_fraction(galaxy)
+                this_mass = initial_mass * star_initial_bound
+            elif mass_type == "current":
+                raw_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
+                star_initial_bound = get_initial_bound_fraction(galaxy)
+                tidal_bound_fraction = galaxy[("STAR", "BOUND_FRACTION")].value
+                this_mass = raw_mass * star_initial_bound * tidal_bound_fraction
+            else:
+                raise ValueError("Mass not recognized")
 
-        if mass_type == "initial":
-            mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
-        elif mass_type == "initial_bound":
-            initial_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
-            star_initial_bound = get_initial_bound_fraction(galaxy)
-            mass = initial_mass * star_initial_bound
-        elif mass_type == "current":
-            raw_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
-            star_initial_bound = get_initial_bound_fraction(galaxy)
-            tidal_bound_fraction = galaxy[("STAR", "BOUND_FRACTION")].value
-            mass = raw_mass * star_initial_bound * tidal_bound_fraction
-        else:
-            raise ValueError("Mass not recognized")
+            # then restrict to recently formed clusters. This can be set to infinity,
+            # which plots everything.
+            mask = galaxy[("STAR", "age")] < max_age_myr * yt.units.Myr
+            this_mass = this_mass[mask]
 
-        # then restrict to recently formed clusters. This can be set to infinity, which
-        # plots everything.
-        mask = galaxy[("STAR", "age")] < max_age_myr * yt.units.Myr
-        mass = mass[mask]
+            mass = np.concatenate([this_mass, mass])
 
         # create bins with spacing of 0.16 dex
         bin_width = 0.16  # dex
@@ -135,8 +138,11 @@ def cimf(galaxy, mass_type, max_age_myr):
         # We have dN, make it per dLogM
         hist = np.array(hist) / (bin_width * np.log(10))
 
-        galaxy.precalculated[id_string] = m_centers, hist
-    return galaxy.precalculated[id_string]
+        # Also normalize for the number of galaxies
+        hist = hist / sim.n_galaxies
+
+        sim.precalculated[id_string] = m_centers, hist
+    return sim.precalculated[id_string]
 
 
 # ======================================================================================
@@ -204,26 +210,23 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
     for sim in sims:
         if axis_name not in sim.axes:
             continue
-        for galaxy in sim.galaxies:
-            for mass_type in masses_to_plot:
-                mass_plot, dn_dlogM = cimf(galaxy, mass_type, max_age_myr)
+        for mass_type in masses_to_plot:
+            mass_plot, dn_dlogM = cimf(sim, mass_type, max_age_myr)
 
-                # make the label only for the biggest halo, and not for initial only
-                if galaxy.rank == 1 and mass_type != "initial":
-                    # and include the redshift if it's different for each sim
-                    if sim_share_type == "last":
-                        label = f"{sim.name}: z = {1/sim.ds.scale_factor - 1:.1f}"
-                    else:
-                        label = sim.name
+            # make the label only for the biggest halo, and not for initial only
+            if mass_type != "initial":
+                # and include the redshift if it's different for each sim
+                if sim_share_type == "last":
+                    label = f"{sim.name}: z = {1/sim.ds.scale_factor - 1:.1f}"
                 else:
-                    label = None
+                    label = sim.name
+            else:
+                label = None
 
-                # have different line styles
-                lss = {"initial": ":", "initial_bound": "-", "current": "-"}
+            # have different line styles
+            lss = {"initial": ":", "initial_bound": "-", "current": "-"}
 
-                ax.plot(
-                    mass_plot, dn_dlogM, c=sim.color, ls=lss[mass_type], label=label
-                )
+            ax.plot(mass_plot, dn_dlogM, c=sim.color, ls=lss[mass_type], label=label)
 
     # formax axes
     ax.legend(loc=1)

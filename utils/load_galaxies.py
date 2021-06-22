@@ -59,12 +59,16 @@ class Simulation(object):
         self.axes = plot_utils.axes[self.name]
         self.color = plot_utils.colors[self.name]
 
+        # have the place to store some precalculated things, particularly those that
+        # include all galaxies in the simulation
+        self.precalculated = dict()
+
         # if we are the old IC set, we have one galaxy, otherwise two
         # check what kind of particles are present
         if ("N-BODY_0", "MASS") in self.ds.derived_field_list:
-            self.n_galaxies_each = 2
+            self.n_galaxies = 2
         else:
-            self.n_galaxies_each = 1
+            self.n_galaxies = 1
 
         # create halo catalog object
         self.hc = HaloCatalog(halos_ds=self.halos_ds, data_ds=self.ds)
@@ -81,7 +85,7 @@ class Simulation(object):
         # with the highest mass (lowest rank) halos first). We only keep the number
         # the user requested
         self.galaxies = []
-        for rank, idx in enumerate(rank_idxs[: self.n_galaxies_each], start=1):
+        for rank, idx in enumerate(rank_idxs[: self.n_galaxies], start=1):
             halo = self.hc.halo_list[idx]
             radius = min(halo.quantities["virial_radius"], 30 * yt.units.kpc)
             center = [
