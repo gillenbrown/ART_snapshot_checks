@@ -12,7 +12,12 @@ def full_dir(partial_path):
 
 def prod_fmt(ic, eps_ff, f_hn):
     name = f"{ic} "
-    name += "$\epsilon_{ff} = $" + f"{eps_ff:<3}%, "
+    name += "$\epsilon_{ff} = $" + f"{eps_ff:}%, "
+    # add spaces to pad lower percents:
+    if eps_ff < 10:
+        name += " " * 4
+    elif eps_ff < 100:
+        name += " " * 2
     name += "$f_{HN} = $" + f"{f_hn}%"
     return name
 
