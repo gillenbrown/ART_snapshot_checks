@@ -44,7 +44,7 @@ class Galaxy(object):
 
 
 class Simulation(object):
-    def __init__(self, ds_path):
+    def __init__(self, ds_path, sphere_radius_kpc):
         # get the dataset and corresponding halo file
         run_dir = ds_path.parent.parent
         halo_path = run_dir / "halos"
@@ -87,7 +87,9 @@ class Simulation(object):
         self.galaxies = []
         for rank, idx in enumerate(rank_idxs[: self.n_galaxies], start=1):
             halo = self.hc.halo_list[idx]
-            radius = min(halo.quantities["virial_radius"], 30 * yt.units.kpc)
+            radius = min(
+                halo.quantities["virial_radius"], sphere_radius_kpc * yt.units.kpc
+            )
             center = [
                 halo.quantities["particle_position_x"],
                 halo.quantities["particle_position_y"],
@@ -126,13 +128,13 @@ def get_outputs_in_dir(sim_dir):
     ]
 
 
-def get_simulations_last(sim_dirs):
+def get_simulations_last(sim_dirs, sphere_radius_kpc=30):
     sims_last = []
     for directory in sim_dirs:
         all_outputs = get_outputs_in_dir(directory)
         if len(all_outputs) > 0:
             last_output = sorted(all_outputs)[-1]
-            sims_last.append(Simulation(last_output))
+            sims_last.append(Simulation(last_output, sphere_radius_kpc))
 
     return sims_last
 
@@ -159,7 +161,7 @@ def get_common_scale_factor(sim_dirs, z_max):
     return filename_to_scale_factor(earliest_last_output.name) + 0.001
 
 
-def get_simulations_common(sim_dirs, z_max=5):
+def get_simulations_common(sim_dirs, z_max=5, sphere_radius_kpc=30):
     common_scale = get_common_scale_factor(sim_dirs, z_max)
 
     sims_common = []
@@ -176,6 +178,6 @@ def get_simulations_common(sim_dirs, z_max=5):
         # if there are no snapshots early enough for this, don't add them
         if len(all_common_outputs) > 0:
             last_common_snapshot = sorted(all_common_outputs)[-1]
-            sims_common.append(Simulation(last_common_snapshot))
+            sims_common.append(Simulation(last_common_snapshot, sphere_radius_kpc))
 
     return sims_common, common_scale
