@@ -160,15 +160,16 @@ def plot_sfh(axis_name):
                 label = sim.name
             else:
                 label = None
-            ax.errorbar(
+            ax.scatter(
                 plot_times,
                 plot_sfh,
-                xerr=0.5 * dt,
-                markersize=8,
+                s=100,
                 c=sim.color,
+                alpha=1,
                 label=label,
+                zorder=10,
             )
-            ax.plot(plot_times, plot_sfh, lw=1.0, c=sim.color)
+            ax.plot(plot_times, plot_sfh, lw=1.0, c=sim.color, zorder=9)
 
             # figure out the max time to use for the plot limit
             if max(plot_times) > max_time:
@@ -178,12 +179,19 @@ def plot_sfh(axis_name):
     zs, sfhs, hi_lim, lo_lim = um.get_sfh("halo", 0, 1e12)
     ages = [z_to_age(z).to("Gyr").value for z in zs]
     ax.fill_between(
-        x=ages, y1=lo_lim, y2=hi_lim, alpha=0.4, lw=0, color="0.3", label="MW-like"
+        x=ages,
+        y1=lo_lim,
+        y2=hi_lim,
+        alpha=0.4,
+        lw=0,
+        color="0.3",
+        zorder=0,
+        label="MW-like (Universe Machine)",
     )
 
-    ax.legend(loc=2, fontsize=10)
+    ax.legend(loc=2, fontsize=12, frameon=False)
     ax.set_yscale("log")
-    ax.set_limits(0, 1.05 * max_time, 0.1, 20)
+    ax.set_limits(0, 1.05 * max_time, 0.05, 5)
     ax.add_labels("Time [Gyr]", "SFR  [$M_\odot$/yr]")
 
     # then add the redshift axis. The process of selecting the labels raises
@@ -231,9 +239,9 @@ def plot_cumulative_growth(axis_name):
             if max(plot_times) > max_time:
                 max_time = max(plot_times)
 
-    ax.legend(fontsize=10)
+    ax.legend(loc=2, fontsize=12, frameon=False)
     ax.set_yscale("log")
-    ax.set_limits(0, 1.05 * max_time, 2e7, 3e10)
+    ax.set_limits(0, 1.05 * max_time, 2e7, 5e9)
     ax.add_labels("Time [Gyr]", "Stellar Mass  [$M_\odot$]")
 
     # then add the redshift axis. The process of selecting the labels raises
