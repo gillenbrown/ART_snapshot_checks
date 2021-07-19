@@ -12,6 +12,7 @@ import numpy as np
 import yt
 from astropy import cosmology
 from astropy import units as u
+from scipy import integrate
 import betterplotlib as bpl
 import abundance_matching
 
@@ -238,6 +239,21 @@ def plot_cumulative_growth(axis_name):
             # figure out the max time to use for the plot limit
             if max(plot_times) > max_time:
                 max_time = max(plot_times)
+
+    # compare to Milky Way prediction
+    zs, sfhs, hi_lim, lo_lim = um.get_sfh("halo", 0, 1e12)
+    um_ages_gyr = [z_to_age_Gyr(z) for z in zs]
+    um_ages_yr = [a * 1e9 for a in um_ages_gyr]
+    # integrate the cumulative mass as a function of time
+    um_mass = integrate.cumulative_trapezoid(y=sfhs, x=um_ages_yr, initial=0)
+    ax.plot(
+        um_ages_gyr,
+        um_mass,
+        c=bpl.almost_black,
+        ls="--",
+        zorder=0,
+        label="MW-like (Universe Machine)",
+    )
 
     ax.legend(loc=2, fontsize=12, frameon=False)
     ax.set_yscale("log")
