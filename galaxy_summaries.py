@@ -144,10 +144,10 @@ for halo in hc.catalog:
         "particle_position_y",
         "particle_position_z",
     ]:
-        while halo[position_name] > ds.domain_width[0]:
+        if halo[position_name] > ds.domain_width[0]:
             # make sure subtraction doesn't happen in code units
             print(f"fixing halo {halo['rank']} position")
-            halo[position_name] = halo[position_name].to("cm") - ds.domain_width[0].to(
+            halo[position_name] = halo[position_name].to("cm") % ds.domain_width[0].to(
                 "cm"
             )
 
