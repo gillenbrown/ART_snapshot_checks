@@ -33,6 +33,11 @@ temp_dir = rockstar_dir.parent / "temp_output_dir_for_halo_finding"
 if not temp_dir.is_dir() and yt.is_root():
     temp_dir.mkdir()
 
+# check that we're not doing this on shangrila. I don't want to overwrite halos from
+# Stampede2 or Frontera
+if machine != "stampede2":
+    raise RuntimeError("Trying to do halo finding somewhere other than Stampede2!")
+
 # ==============================================================================
 #
 # Key functions to be used later
