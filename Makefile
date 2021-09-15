@@ -119,7 +119,7 @@ snapshots = $(foreach dir,$(sim_out_dirs),$(call dir_to_sims,$(dir)))
 snapshots_hydro = $(foreach dir,$(sim_out_dirs_hydro),$(wildcard $(dir)/*_a*.art))
 # Parse the snapshot names into halo catalogs 
 # replace the directory and suffix
-sim_to_halo = $(subst .art,.0.bin,$(subst out/continuous,halos/halos,$(1)))
+#sim_to_halo = $(subst .art,.0.bin,$(subst out/continuous,halos/halos,$(1)))
 #halos_catalogs = $(foreach snapshot,$(snapshots),$(call sim_to_halo,$(snapshot)))
 
 # ------------------------------------------------------------------------------
@@ -210,15 +210,6 @@ refined_full_to_sim = $(subst .png,.art,$(subst plots/n_body_refined,out/continu
 refined_split_to_sim = $(subst .png,.art,$(subst plots/n_body_split_refined,out/continuous, $(1)))
 local_group_full_to_sim = $(subst .png,.art,$(subst plots/n_body_local_group,out/continuous, $(1)))
 local_group_split_to_sim = $(subst .png,.art,$(subst plots/n_body_split_local_group,out/continuous, $(1)))
-
-halo_1_full_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_halo_rank_1,halos/halos, $(1)))
-halo_2_full_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_halo_rank_2,halos/halos, $(1)))
-halo_1_split_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_split_halo_rank_1,halos/halos, $(1)))
-halo_2_split_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_split_halo_rank_2,halos/halos, $(1)))
-refined_full_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_refined,halos/halos, $(1)))
-refined_split_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_split_refined,halos/halos, $(1)))
-local_group_full_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_local_group,halos/halos, $(1)))
-local_group_split_to_halo = $(subst .png,.0.bin,$(subst plots/n_body_split_local_group,halos/halos, $(1)))
 
 halo_1_full_plots = $(foreach snapshot,$(snapshots),$(call sim_to_halo_1_full,$(snapshot)))
 halo_2_full_plots = $(foreach snapshot,$(snapshots),$(call sim_to_halo_2_full,$(snapshot)))
@@ -377,36 +368,36 @@ $(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(plot_
 
 # Make the individual nbody plots - several examples of very similar things here
 .SECONDEXPANSION:
-$(halo_1_full_plots): %: $$(call halo_1_full_to_halo, %) $(nbody_single_halo_plots_script) $(nbody_full_plot_script)
-	python $(nbody_single_halo_plots_script) $(call halo_1_full_to_sim, $@) $(call halo_1_full_to_halo, $@) 1 full
+$(halo_1_full_plots): %: $(nbody_single_halo_plots_script) $(nbody_full_plot_script)
+	python $(nbody_single_halo_plots_script) $(call halo_1_full_to_sim, $@) 1 full
 
 .SECONDEXPANSION:
-$(halo_2_full_plots): %: $$(call halo_2_full_to_halo, %) $(nbody_single_halo_plots_script) $(nbody_full_plot_script)
-	python $(nbody_single_halo_plots_script) $(call halo_2_full_to_sim, $@) $(call halo_2_full_to_halo, $@) 2 full
+$(halo_2_full_plots): %: $(nbody_single_halo_plots_script) $(nbody_full_plot_script)
+	python $(nbody_single_halo_plots_script) $(call halo_2_full_to_sim, $@) 2 full
 
 .SECONDEXPANSION:
-$(halo_1_split_plots): %: $$(call halo_1_split_to_halo, %) $(nbody_single_halo_plots_script) $(nbody_split_plot_script)
-	python $(nbody_single_halo_plots_script) $(call halo_1_split_to_sim, $@) $(call halo_1_split_to_halo, $@) 1 split
+$(halo_1_split_plots): %: $(nbody_single_halo_plots_script) $(nbody_split_plot_script)
+	python $(nbody_single_halo_plots_script) $(call halo_1_split_to_sim, $@) 1 split
 
 .SECONDEXPANSION:
-$(halo_2_split_plots): %: $$(call halo_2_split_to_halo, %) $(nbody_single_halo_plots_script) $(nbody_split_plot_script)
-	python $(nbody_single_halo_plots_script) $(call halo_2_split_to_sim, $@) $(call halo_2_split_to_halo, $@) 2 split
+$(halo_2_split_plots): %: $(nbody_single_halo_plots_script) $(nbody_split_plot_script)
+	python $(nbody_single_halo_plots_script) $(call halo_2_split_to_sim, $@) 2 split
 
 .SECONDEXPANSION:
-$(refined_full_plots): %: $$(call refined_full_to_halo, %) $(nbody_refined_plot_script) $(nbody_full_plot_script)
-	python $(nbody_refined_plot_script) $(call refined_full_to_sim, $@) $(call refined_full_to_halo, $@) full
+$(refined_full_plots): %: $(nbody_refined_plot_script) $(nbody_full_plot_script)
+	python $(nbody_refined_plot_script) $(call refined_full_to_sim, $@) full
 
 .SECONDEXPANSION:
-$(refined_split_plots): %: $$(call refined_split_to_halo, %) $(nbody_refined_plot_script) $(nbody_split_plot_script)
-	python $(nbody_refined_plot_script) $(call refined_split_to_sim, $@) $(call refined_split_to_halo, $@) split
+$(refined_split_plots): %: $(nbody_refined_plot_script) $(nbody_split_plot_script)
+	python $(nbody_refined_plot_script) $(call refined_split_to_sim, $@) split
 
 .SECONDEXPANSION:
-$(local_group_full_plots): %: $$(call local_group_full_to_halo, %) $(nbody_local_group_plot_script) $(nbody_full_plot_script)
-	python $(nbody_local_group_plot_script) $(call local_group_full_to_sim, $@) $(call local_group_full_to_halo, $@) full
+$(local_group_full_plots): %: $(nbody_local_group_plot_script) $(nbody_full_plot_script)
+	python $(nbody_local_group_plot_script) $(call local_group_full_to_sim, $@) full
 
 .SECONDEXPANSION:
-$(local_group_split_plots): %: $$(call local_group_split_to_halo, %) $(nbody_local_group_plot_script) $(nbody_split_plot_script)
-	python $(nbody_local_group_plot_script) $(call local_group_split_to_sim, $@) $(call local_group_split_to_halo, $@) split
+$(local_group_split_plots): %: $(nbody_local_group_plot_script) $(nbody_split_plot_script)
+	python $(nbody_local_group_plot_script) $(call local_group_split_to_sim, $@) split
 
 
 # Make the movies. We can't parametrize this all since there is no third expansion 

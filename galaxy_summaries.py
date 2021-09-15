@@ -6,27 +6,25 @@ Reports the properties of the galaxies in the simulation.
 Takes 2 required and 1 optional parameter.
 1 - Location of the simulation output. Can be relative to the working directory
     where this code was called from, or an absolute path.
-2 - Location of the halo finder outputs from ROCKSTAR. This file should be the
-    *.0.bin file. Can be relative or absolute.
-3 - Optional argument. Must be "clobber" if included. This will bypass the 
+2 - Optional argument. Must be "clobber" if included. This will bypass the
     check whether we overwrite a previously existing output file.
-4 - Optional argument. Must be "silent" if included. Will print info and 
+3 - Optional argument. Must be "silent" if included. Will print info and
     write it to the file if this is not included. Will only write to file
     if this is included.
 """
+from utils import load_galaxies
 
 import sys
-import os
+from pathlib import Path
 
 import yt
-from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
 import numpy as np
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
 # Check that the third argument is correct
-if len(sys.argv) == 4 and sys.argv[3] not in ["clobber", "silent"]:
-    raise ValueError("Argument 3 (if used), must be 'clobber' or 'silent'")
+if len(sys.argv) == 3 and sys.argv[2] not in ["clobber", "silent"]:
+    raise ValueError("Argument 2 (if used), must be 'clobber' or 'silent'")
 if "silent" in sys.argv:
     silent = True
 else:
@@ -40,26 +38,25 @@ def print_and_write(info, file_obj):
         print(info)
 
 
-ds_loc = os.path.abspath(sys.argv[1])
-scale_factor = ds_loc[-10:-4]
-ds = yt.load(ds_loc)
-ad = ds.all_data()
+ds_loc = Path(sys.argv[1]).resolve()
+sim = load_galaxies.Simulation(ds_loc, sphere_radius_kpc=None, n_galaxies=10)
+ad = sim.ds.all_data()
 
-is_zoom = ("N-BODY_0", "POSITION_X") in ds.field_list
-has_baryons = ("STAR", "MASS") in ds.field_list
+is_zoom = ("N-BODY_0", "POSITION_X") in sim.ds.field_list
+has_baryons = ("STAR", "MASS") in sim.ds.field_list
 
 # get the location of where to write the file.
-sim_dir = os.path.dirname(ds_loc) + os.sep
-file_dir = sim_dir.replace("/out/", "/checks/")
-file_path = file_dir + "galaxy_summaries_a" + scale_factor + ".txt"
-plots_dir = sim_dir.replace("/out/", "/plots/")
+sim_dir = ds_loc.parent
+file_dir = sim_dir.parent / "checks"
+file_path = file_dir / f"galaxy_summaries_a{sim.scale_factor:.4f}.txt"
+plots_dir = sim_dir.parent / "plots"
 
 print_and_write("Output being written to:", None)
 print_and_write(file_path, None)
 
 # see if there is an existing file here that we don't want to replace.
 if "clobber" not in sys.argv:
-    if os.path.isfile(file_path):
+    if file_path.is_file():
         good = False
         while not good:
             choice = input("This output file already exists. " "Overwrite? (y/n): ")
@@ -89,67 +86,13 @@ def out(info):
 # Halo analysis
 #
 # =========================================================================
-halo_file = os.path.abspath(sys.argv[2])
-ds_halos = yt.load(halo_file)
-
-# Then create the halo catalogs
-hc = HaloCatalog(halos_ds=ds_halos, data_ds=ds, output_dir="./")
-# Restrict to things about LMC mass and above
-hc.add_filter("quantity_value", "particle_mass", ">", 1e9, "Msun")
-hc.create(save_catalog=False)
-
-# make better names for the quantities in the halo catalog
-quantity_names = {
-    "virial_radius": "Virial Radius",
-    "particle_position_x": "Position X",
-    "particle_position_y": "Position Y",
-    "particle_position_z": "Position Z",
-    "particle_mass": "Virial Mass",
-}
-# and decide what order we want to print them in
-ordered_quantities = [
-    "particle_mass",
-    "virial_radius",
-    "particle_position_x",
-    "particle_position_y",
-    "particle_position_z",
-]
-
 # check that we have any halos at all. If not, we can exit. This can happen
 # for early outputs where nothing has collapsed yet.
-halo_masses = yt.YTArray([item["particle_mass"] for item in hc.catalog])
-if len(halo_masses) == 0:
-    out("No DM halos above 10^9 Msun at this redshift.")
-    out_file.close()
-    exit()
-
-# We get the indices that sort it. The reversing there makes the biggest halos
-# first, like we want.
-rank_idxs = np.argsort(halo_masses)[::-1]
-
-# Add this info to each halo object, and put the halos into a new sorted list,
-# with the highest mass (lowest rank) halos first)
-halos = []
-for rank, idx in enumerate(rank_idxs, start=1):
-    halo = hc.catalog[idx]
-    halo["rank"] = rank
-    halos.append(halo)
-
-# double check that the boundary conditions have been correctly respected. I'm not sure
-# why this happens, but it seems not to be respected at times.
-
-for halo in hc.catalog:
-    for position_name in [
-        "particle_position_x",
-        "particle_position_y",
-        "particle_position_z",
-    ]:
-        if halo[position_name] > ds.domain_width[0]:
-            # make sure subtraction doesn't happen in code units
-            print(f"fixing halo {halo['rank']} position")
-            halo[position_name] = halo[position_name].to("cm") % ds.domain_width[0].to(
-                "cm"
-            )
+for gal in sim.galaxies:
+    if gal.rank == 1 and gal.m_vir.to("Msun").value < 1e9:
+        out("No DM halos above 10^9 Msun at this redshift.")
+        out_file.close()
+        exit()
 
 # get the N-body particle locations. These are different in the old and new
 # simulations, so we have to check
@@ -170,17 +113,6 @@ else:  # old sims
     species_x[0] = ad[("N-BODY", "POSITION_X")].to("Mpc").value
     species_y[0] = ad[("N-BODY", "POSITION_Y")].to("Mpc").value
     species_z[0] = ad[("N-BODY", "POSITION_Z")].to("Mpc").value
-
-# define some helper functions that will be used for contamination calculations
-def get_center(halo, with_units):
-    x_cen = halo["particle_position_x"]
-    y_cen = halo["particle_position_y"]
-    z_cen = halo["particle_position_z"]
-    if not with_units:
-        x_cen = x_cen.to("Mpc").value
-        y_cen = y_cen.to("Mpc").value
-        z_cen = z_cen.to("Mpc").value
-    return (x_cen, y_cen, z_cen)
 
 
 def distance(x_0, y_0, z_0, x_1, y_1, z_1):
@@ -214,34 +146,30 @@ def mass_fractions(sphere):
 # Then we go through and print information about the halos present
 #
 # =========================================================================
-n_halos = 10
-for halo in halos[:n_halos]:
+for gal in sim.galaxies:
     out("\n==================================\n")
-    out("Rank {} halo:".format(halo["rank"]))
-    # First print the important quantities
-    for quantity in ordered_quantities:
-        q_name = quantity_names[quantity]
-        if q_name == "Virial Radius" or "Position" in q_name:
-            value_kpc = halo[quantity].to("kpc").value
-            value_code = (halo[quantity] / ds.length_unit).value
-            out("{}: {:>7.3f} kpc, {:>7.3f} code".format(q_name, value_kpc, value_code))
-        elif "Mass" in q_name:
-            value = halo[quantity].to("Msun")
-            out("{}: {:<2.3e}".format(q_name, value))
+    out("Rank {} halo:".format(gal.rank))
+    # First print the important quantities - position, virial mass, virial radius
+    for name, idx in zip(["X", "Y", "Z"], [0, 1, 2]):
+        out(
+            f"{name}: "
+            f"{gal.center[idx].to('kpc').value:>7.3f} kpc, "
+            f"{gal.center[idx].to('code_length').value:>7.3f} code"
+        )
+    out(f"Virial Mass: {gal.m_vir.to('Msun').value:<2.3e} Msun")
+    out(f"Virial Radius: {gal.r_vir.to('kpc').value:>7.3f} kpc")
 
     # get some spheres that will be used in the calculations of galaxy
     # properties
-    virial_radius = halo["virial_radius"]
-    center = get_center(halo, with_units=True)
-    sphere_virial = ds.sphere(center=center, radius=virial_radius)
-    sphere_mpc = ds.sphere(center=center, radius=1 * yt.units.Mpc)
-    sphere_30_kpc = ds.sphere(center=center, radius=30 * yt.units.kpc)
+    sphere_virial = sim.ds.sphere(center=gal.center, radius=gal.r_vir)
+    sphere_mpc = sim.ds.sphere(center=gal.center, radius=1 * yt.units.Mpc)
+    sphere_30_kpc = sim.ds.sphere(center=gal.center, radius=30 * yt.units.kpc)
 
     # then print information about contamination, if we need to
     if is_zoom:
         out("\nClosest particle of each low-res DM species")
         # First we calculate the closest particle of each unrefined DM species
-        x_cen, y_cen, z_cen = get_center(halo, with_units=False)
+        x_cen, y_cen, z_cen = gal.center.to("Mpc").value
         for idx in species_x:
             distances = distance(
                 x_cen, y_cen, z_cen, species_x[idx], species_y[idx], species_z[idx]
@@ -284,7 +212,7 @@ for halo in halos[:n_halos]:
     gas_mass_H2 = (
         2
         * sphere_30_kpc[("artio", "RT_HVAR_H2")]
-        * ds.arr(1, "code_mass/code_length**3")
+        * sim.ds.arr(1, "code_mass/code_length**3")
         * cell_volumes
     )
     gas_mass_HeI = 4 * sphere_30_kpc[("gas", "HeI density")] * cell_volumes
@@ -315,7 +243,7 @@ for halo in halos[:n_halos]:
     # Metallicity
     metallicity = sphere_30_kpc[("STAR", "METALLICITY_SNII")].value
     metallicity += sphere_30_kpc[("STAR", "METALLICITY_SNIa")].value
-    if ("STAR", "METALLICITY_AGB") in ds.field_list:
+    if ("STAR", "METALLICITY_AGB") in sim.ds.field_list:
         metallicity += sphere_30_kpc[("STAR", "METALLICITY_AGB")].value
     # get the masses so we can mass-weight it
     masses = sphere_30_kpc[("STAR", "MASS")].to("Msun").value
@@ -346,14 +274,15 @@ for halo in halos[:n_halos]:
 out("\n==================================\n")
 
 # Then print the separation of the two biggest halos
-if len(halos) >= 2:
-    halo_1 = halos[0]
-    halo_2 = halos[1]
-    dx = halo_1["particle_position_x"] - halo_2["particle_position_x"]
-    dy = halo_1["particle_position_y"] - halo_2["particle_position_y"]
-    dz = halo_1["particle_position_z"] - halo_2["particle_position_z"]
-    dist = np.sqrt(dx ** 2 + dy ** 2 + dz ** 2).to("kpc")
-    out("\nSeparation of two largest halos: {:.2f}".format(dist))
+if len(sim.galaxies) >= 2:
+    for gal in sim.galaxies:
+        if gal.rank == 1:
+            gal_1 = gal
+        elif gal.rank == 2:
+            gal_2 = gal
+    dx, dy, dz = (gal_1.center - gal_2.center).to("kpc").value
+    dist = np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+    out("\nSeparation of two largest halos: {:.2f} kpc".format(dist))
 
 
 # Saving this for posterity - way to get multiple species into one field

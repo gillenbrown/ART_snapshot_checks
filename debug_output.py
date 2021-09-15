@@ -17,7 +17,6 @@ Takes 2 required and 1 optional parameter.
 import sys, os, gc
 
 import yt
-from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
 import numpy as np
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import yt
-from yt.extensions.astro_analysis.halo_analysis.api import HaloCatalog
+from astropy import table
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
@@ -14,13 +14,20 @@ from . import plot_utils
 #
 # ======================================================================================
 class Galaxy(object):
-    def __init__(self, sphere, rank):
-        self.sphere = sphere
+    def __init__(self, ds, center, sphere_radius, m_vir, r_vir, rank):
+        self.ds = ds
+        self.center = center
+        self.m_vir = m_vir
+        self.r_vir = r_vir
         self.rank = rank
-        self.ds = self.sphere.ds
 
-        # then get the mask showing which clusters are done forming
-        self.mask_done_forming = self.sphere[("STAR", "age")] > 15 * yt.units.Myr
+        # only create the sphere if the user wants to
+        if sphere_radius is not None:
+            self.sphere = self.ds.sphere(center=self.center, radius=sphere_radius)
+            # then get the mask showing which clusters are done forming
+            self.mask_done_forming = self.sphere[("STAR", "age")] > 15 * yt.units.Myr
+        else:
+            self.sphere = None
 
         # have a place for some things (like the CIMF) to be stored as a user
         # calculates them.
@@ -30,6 +37,9 @@ class Galaxy(object):
         """
         Automatically apply the cut to only pick formed clusters
         """
+        if self.sphere is None:
+            raise ValueError("No sphere set on galaxy initialization")
+
         quantity = self.sphere[property]
         if property[0] == "STAR":
             quantity = quantity[self.mask_done_forming]
@@ -40,19 +50,29 @@ class Galaxy(object):
         Like __getitem__, but does not apply the restriction that clusters must be
         done forming
         """
+        if self.sphere is None:
+            raise ValueError("No sphere set on galaxy initialization")
+
         return self.sphere[property]
 
 
 class Simulation(object):
-    def __init__(self, ds_path, sphere_radius_kpc, min_virial):
+    def __init__(
+        self, ds_path, sphere_radius_kpc=None, min_virial=False, n_galaxies=None
+    ):
+        """
+        ds_path must be a Path object
+        """
         # get the dataset and corresponding halo file
         run_dir = ds_path.parent.parent
         halo_path = run_dir / "halos"
-        halo_name = ds_path.name.replace("continuous_", "halos_")
-        halo_name = halo_name.replace(".art", ".0.bin")
+        halo_name = ds_path.name.replace("continuous_", "out_")
+        halo_name = halo_name.replace(".art", ".list")
 
         self.ds = yt.load(str(ds_path))
-        self.halos_ds = yt.load(str(halo_path / halo_name))
+
+        self.z = self.ds.current_redshift
+        self.scale_factor = 1 / (1 + self.z)
 
         # get the axis names and other stuff
         self.name = plot_utils.names[run_dir]
@@ -65,41 +85,82 @@ class Simulation(object):
 
         # if we are the old IC set, we have one galaxy, otherwise two
         # check what kind of particles are present
-        if ("N-BODY_0", "MASS") in self.ds.derived_field_list:
-            self.n_galaxies = 2
+        if n_galaxies is None:
+            if ("N-BODY_0", "MASS") in self.ds.derived_field_list:
+                self.n_galaxies = 2
+            else:
+                self.n_galaxies = 1
         else:
-            self.n_galaxies = 1
+            self.n_galaxies = n_galaxies
 
-        # create halo catalog object
-        self.hc = HaloCatalog(halos_ds=self.halos_ds, data_ds=self.ds)
-        self.hc.create(save_halos=True, save_catalog=False)
+        # load halo catalogs
+        cat = table.Table.read(halo_path / halo_name, format="ascii.commented_header")
+        # delete some unneeded quantities. If I want to inlcude these later, I'll need
+        # to verify I'm doing the units correctly.
+        for col in cat.colnames:
+            if col not in ["Mvir", "Vmax", "Vrms", "Rvir", "X", "Y", "Z"]:
+                del cat[col]
+        # To modify the units of things, we need to know little h. It's in the
+        # file header. We also want a, to turn things into physical units.
+        with open(halo_path / halo_name, "r") as in_file:
+            line_num = 1
+            for line in in_file:
+                if line_num == 2:
+                    a = float(line.split()[-1])
+                elif line_num == 3:
+                    h = float(line.split()[-1])
+                    break
+
+                line_num += 1
+        assert 0 < a < 1
+        assert 0.6 < h < 0.8
+
+        # Masses are in Msun / h
+        cat["Mvir"] = cat["Mvir"] / h
+        # Positions in Mpc / h (comoving)
+        for col in ["X", "Y", "Z"]:
+            cat[col] = cat[col] / h
+        # Halo Distances, Lengths, and Radii in kpc / h (comoving)
+        cat["Rvir"] = cat["Rvir"] / h
+        # Velocities in km / s (physical, peculiar) -- no change needed
+
+        # add units to names
+        cat.rename_column("Mvir", "Mvir_msun")
+        cat.rename_column("X", "X_mpccm")
+        cat.rename_column("Y", "Y_mpccm")
+        cat.rename_column("Z", "Z_mpccm")
+        cat.rename_column("Rvir", "Rvir_kpccm")
+        cat.rename_column("Vmax", "Vmax_kms")
+        cat.rename_column("Vrms", "Vrms_kms")
 
         # Do some parsing of the halo catalogs
         # We get the indices that sort it. The reversing there makes the biggest
         # halos first, like we want.
-        halo_masses = yt.YTArray(
-            [halo.quantities["particle_mass"] for halo in self.hc.halo_list]
-        )
-        rank_idxs = np.argsort(halo_masses)[::-1]
+        rank_idxs = np.argsort(cat["Mvir_msun"])[::-1]
         # Add this info to each halo object, and put the halos into a new sorted list,
         # with the highest mass (lowest rank) halos first). We only keep the number
         # the user requested
         self.galaxies = []
         for rank, idx in enumerate(rank_idxs[: self.n_galaxies], start=1):
-            halo = self.hc.halo_list[idx]
-            if min_virial:
-                radius = min(
-                    halo.quantities["virial_radius"], sphere_radius_kpc * yt.units.kpc
-                )
+            row = cat[idx]
+
+            r_vir = self.ds.arr(row["Rvir_kpccm"], "kpccm")
+            M_vir = self.ds.arr(row["Mvir_msun"], "Msun")
+            center = self.ds.arr(
+                [row["X_mpccm"], row["Y_mpccm"], row["Z_mpccm"]], "Mpccm"
+            )
+
+            if sphere_radius_kpc is None:
+                radius = None
             else:
-                radius = sphere_radius_kpc * yt.units.kpc
-            center = [
-                halo.quantities["particle_position_x"],
-                halo.quantities["particle_position_y"],
-                halo.quantities["particle_position_z"],
-            ]
-            sphere = self.ds.sphere(center=center, radius=radius)
-            self.galaxies.append(Galaxy(sphere, rank))
+                if min_virial:
+                    radius = self.ds.arr(
+                        min(r_vir.to("kpc").value, sphere_radius_kpc), "kpc"
+                    )
+                else:
+                    radius = self.ds.arr(sphere_radius_kpc, "kpc")
+
+            self.galaxies.append(Galaxy(self.ds, center, radius, M_vir, r_vir, rank))
 
 
 # ======================================================================================
