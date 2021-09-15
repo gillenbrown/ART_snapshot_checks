@@ -18,7 +18,7 @@ for d in log_dir.iterdir():
 star_files = defaultdict(list)
 for tidal_file in all_tidal:
     # the star ID is the name of the file
-    star_files[tidal_file.stem].append(tidal_file) 
+    star_files[tidal_file.stem].append(tidal_file)
 
 # then combine these particles.
 for star, file_list in tqdm(star_files.items()):

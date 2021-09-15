@@ -281,7 +281,15 @@ cfl_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)/cfl_cell_speeds.png)
 #  tidal file consolidation
 # 
 # ------------------------------------------------------------------------------
-tidal_sentinels = $(foreach dir,$(sim_tidal_dirs),$(dir)/sentinel.txt)
+# Take the tidal ouput files from each run and consolidate them together into one
+# big file for each star.
+# only do this on shangrila
+ifeq ($(machine),shangrila)
+	tidal_sentinels = $(foreach dir,$(sim_tidal_dirs),$(dir)/sentinel.txt)
+else
+	tidal_sentinels =
+endif
+
 
 # ------------------------------------------------------------------------------
 #
