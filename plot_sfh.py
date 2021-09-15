@@ -92,8 +92,30 @@ def cumulative_growth(galaxy):
         sort_idxs = np.argsort(creation_times.to("Myr").value)
 
         times = creation_times[sort_idxs]
-        mass_in_order = masses[sort_idxs]
-        mass_cumulative = np.cumsum(mass_in_order)
+        mass_cumulative = np.cumsum(masses[sort_idxs])
+
+        # add the current time to this, duplicating the last mass entry. This is to make
+        # the plot go all the way to the current simulation epoch, even if no stars
+        # have formed lately. I have to do this mess with units since I'm using an
+        # intermediate numpy array
+        times = (
+            np.concatenate(
+                [
+                    times.in_units("Gyr").value,
+                    [galaxy.ds.current_time.in_units("Myr").value],
+                ]
+            )
+            * yt.units.Gyr
+        )
+        mass_cumulative = (
+            np.concatenate(
+                [
+                    mass_cumulative.in_units("Msun").value,
+                    [mass_cumulative[-1].in_units("Msun").value],
+                ]
+            )
+            * yt.units.Msun
+        )
 
         galaxy.precalculated["mass_growth"] = times.in_units("Gyr"), yt.YTArray(
             mass_cumulative
