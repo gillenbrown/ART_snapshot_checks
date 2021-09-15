@@ -55,6 +55,7 @@ plot_utils_script = ./utils/plot_utils.py
 gal_readin_script = ./utils/load_galaxies.py
 dt_history_script = ./dt_history.py
 cfl_script = ./cfl_violations.py
+tidal_consolidation_script = ./tidal_consolidation.py
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
 read_tree_src = $(read_tree_dir)/halo_history.c
@@ -107,7 +108,10 @@ sim_rockstar_halos_dirs = $(foreach dir,$(sim_dirs),$(dir)/rockstar_halos)
 sim_human_halos_dirs = $(foreach dir,$(sim_dirs),$(dir)/halos)
 sim_checks_dirs = $(foreach dir,$(sim_dirs),$(dir)/checks)
 sim_plots_dirs = $(foreach dir,$(sim_dirs),$(dir)/plots)
-my_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos_dirs) $(sim_plots_dirs) $(comparison_plots_dir)
+# tidal directories are only needed for production runs
+prod_sim_dirs = $(filter $(runs_home)/stampede2/production%,$(sim_dirs))
+sim_tidal_dirs = $(foreach dir,$(prod_sim_dirs),$(dir)/tidal)
+my_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos_dirs) $(sim_plots_dirs) $(sim_tidal_dirs) $(comparison_plots_dir)
 
 # ------------------------------------------------------------------------------
 #
@@ -274,6 +278,13 @@ cfl_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)/cfl_cell_speeds.png)
 
 # ------------------------------------------------------------------------------
 #
+#  tidal file consolidation
+# 
+# ------------------------------------------------------------------------------
+tidal_sentinels = $(foreach dir,$(sim_tidal_dirs),$(dir)/sentinel.txt)
+
+# ------------------------------------------------------------------------------
+#
 #  Movies
 # 
 # ------------------------------------------------------------------------------
@@ -302,7 +313,7 @@ endif
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(my_directories) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_sentinel) $(cimf_sentinel) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(halo_growth_plot) $(age_spread_sentinel) $(movies)
+all: $(my_directories) $(tidal_sentinels) $(timings) $(dt_history_plots) $(cfl_plots) $(sfh_sentinel) $(cimf_sentinel) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(halo_growth_plot) $(age_spread_sentinel) $(movies)
 
 .PHONY: clean
 clean:
@@ -339,12 +350,10 @@ $(rockstar_sentinels): %: $$(call sentinel_to_sims, %)
 	python $(halo_finding_script) $(call sentinel_to_out_dir, $@) $(call sentinel_to_rh_dir, $@) $(call sentinel_to_halos_dir, $@) $(machine)
 
 # Make the debug files
-.SECONDEXPANSION:
 $(debugs): %: $(debug_script)
 	python $(debug_script) $(call debug_to_sim, $@) clobber silent
 
 # Make the summary files
-.SECONDEXPANSION:
 $(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
 	python $(galaxies_script) $(call galaxies_to_sim, $@) $(call galaxies_to_halo, $@) clobber silent
 
@@ -367,63 +376,49 @@ $(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(plot_
 	python $(galaxies_comparison_script) $(galaxy_comparison_sentinel) $(galaxies)
 
 # Make the individual nbody plots - several examples of very similar things here
-.SECONDEXPANSION:
 $(halo_1_full_plots): %: $(nbody_single_halo_plots_script) $(nbody_full_plot_script)
 	python $(nbody_single_halo_plots_script) $(call halo_1_full_to_sim, $@) 1 full
 
-.SECONDEXPANSION:
 $(halo_2_full_plots): %: $(nbody_single_halo_plots_script) $(nbody_full_plot_script)
 	python $(nbody_single_halo_plots_script) $(call halo_2_full_to_sim, $@) 2 full
 
-.SECONDEXPANSION:
 $(halo_1_split_plots): %: $(nbody_single_halo_plots_script) $(nbody_split_plot_script)
 	python $(nbody_single_halo_plots_script) $(call halo_1_split_to_sim, $@) 1 split
 
-.SECONDEXPANSION:
 $(halo_2_split_plots): %: $(nbody_single_halo_plots_script) $(nbody_split_plot_script)
 	python $(nbody_single_halo_plots_script) $(call halo_2_split_to_sim, $@) 2 split
 
-.SECONDEXPANSION:
 $(refined_full_plots): %: $(nbody_refined_plot_script) $(nbody_full_plot_script)
 	python $(nbody_refined_plot_script) $(call refined_full_to_sim, $@) full
 
-.SECONDEXPANSION:
 $(refined_split_plots): %: $(nbody_refined_plot_script) $(nbody_split_plot_script)
 	python $(nbody_refined_plot_script) $(call refined_split_to_sim, $@) split
 
-.SECONDEXPANSION:
 $(local_group_full_plots): %: $(nbody_local_group_plot_script) $(nbody_full_plot_script)
 	python $(nbody_local_group_plot_script) $(call local_group_full_to_sim, $@) full
 
-.SECONDEXPANSION:
 $(local_group_split_plots): %: $(nbody_local_group_plot_script) $(nbody_split_plot_script)
 	python $(nbody_local_group_plot_script) $(call local_group_split_to_sim, $@) split
 
 
 # Make the movies. We can't parametrize this all since there is no third expansion 
-.SECONDEXPANSION:
 $(call movies_all,n_body_refined): %: $$(call movie_to_plots,%,sim_to_refined_full)
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_refined,$@)/n_body_refined*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
-SECONDEXPANSION:
 $(call movies_all,n_body_split_refined): %: $$(call movie_to_plots,%,sim_to_refined_split)
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_split_refined,$@)/n_body_split_refined*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
-.SECONDEXPANSION:
 $(call movies_all,n_body_local_group): %: $$(call movie_to_plots,%,sim_to_local_group_full)
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_local_group,$@)/n_body_local_group*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
-SECONDEXPANSION:
 $(call movies_all,n_body_split_local_group): %: $$(call movie_to_plots,%,sim_to_local_group_split)
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_split_local_group,$@)/n_body_split_local_group*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
 # Make the consistent trees config files
-.SECONDEXPANSION:
 $(tree_cfgs): %: $$(call tree_cfg_to_sentinel,%)
 	perl $(tree_config_script) $(call tree_cfg_to_rockstar_cfg,$@)
 
 # Then build the merger trees
-.SECONDEXPANSION:
 $(trees): %: $$(call tree_to_tree_cfg,%)
 	cd $(tree_dir) && perl do_merger_tree.pl $<
 
@@ -432,7 +427,6 @@ $(read_tree_exe): $(read_tree_src)
 	cd $(read_tree_dir) && make
 
 # Build the accretion history output files
-.SECONDEXPANSION:
 $(merger_sentinels): %: $$(call merger_to_tree,%) $(read_tree_exe)
 	$(read_tree_exe) $(call merger_to_tree,$@) && touch $@
 
@@ -456,3 +450,7 @@ $(dt_history_plots): $(snapshots) $(dt_history_script)
 
 $(cfl_plots): $(snapshots) $(cfl_script)
 	python $(cfl_script) $(dir $@)
+
+# tidal output consolidation
+$(tidal_sentinels): $(snapshots) $(tidal_consolidation_script)
+	python $(tidal_consolidation_script) $@
