@@ -102,7 +102,7 @@ def cumulative_growth(galaxy):
             np.concatenate(
                 [
                     times.in_units("Gyr").value,
-                    [galaxy.ds.current_time.in_units("Myr").value],
+                    [galaxy.ds.current_time.in_units("Gyr").value],
                 ]
             )
             * yt.units.Gyr
