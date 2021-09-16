@@ -1,5 +1,4 @@
 from pathlib import Path
-import socket
 
 import numpy as np
 import yt
@@ -75,11 +74,12 @@ class Simulation(object):
         self.z = self.ds.current_redshift
         self.scale_factor = 1 / (1 + self.z)
 
-        # get the axis names and other stuff. This is only done on shangrila.
-        if socket.gethostname() == "shangrila":
-            self.name = plot_utils.names[run_dir]
-            self.axes = plot_utils.axes[self.name]
-            self.color = plot_utils.colors[self.name]
+        # get the axis names and other stuff. There are times where these aren't
+        # defined, but when it's not defined it's not needed. Using .get returns none
+        # as the default value.
+        self.name = plot_utils.names.get(run_dir)
+        self.axes = plot_utils.axes.get(self.name)
+        self.color = plot_utils.colors.get(self.name)
 
         # have the place to store some precalculated things, particularly those that
         # include all galaxies in the simulation
