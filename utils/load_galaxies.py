@@ -112,7 +112,7 @@ class Simulation(object):
                     break
 
                 line_num += 1
-        assert 0 < a < 1
+        assert 0 < a < 1.01  # slight buffer for last output
         assert 0.6 < h < 0.8
 
         # Masses are in Msun / h
