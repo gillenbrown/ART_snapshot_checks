@@ -14,7 +14,7 @@ import numpy as np
 from astropy import units as u
 import betterplotlib as bpl
 
-from utils.plot_utils import names, colors
+from utils import load_galaxies
 
 bpl.set_style()
 
@@ -143,7 +143,7 @@ for summary_path in sys.argv[2:]:
 # =============================================================================
 binned_summaries = defaultdict(list)
 for summary_path in parsed_summaries:
-    for full_dir, short_name in names.items():
+    for full_dir, short_name in load_galaxies.names.items():
         if summary_path.startswith(str(full_dir / "checks")):
             binned_summaries[short_name].append(summary_path)
 # then sort them to get the summaries in order
@@ -166,7 +166,7 @@ def get_scale_factor(summary_path):
 # define some helper functions first
 def plot_quantities(quantity, unit, ax):
     for idx, sim_name in enumerate(binned_summaries):
-        color = colors[sim_name]
+        color = load_galaxies.colors[sim_name]
         summaries = binned_summaries[sim_name]
         # the number of halos to plot will not change throughout the history
         # of the simulation
@@ -195,7 +195,7 @@ def plot_quantities(quantity, unit, ax):
 
 def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, ax):
     for idx, sim_name in enumerate(binned_summaries):
-        color = colors[sim_name]
+        color = load_galaxies.colors[sim_name]
         summaries = binned_summaries[sim_name]
         # the number of halos to plot will not change throughout the history
         # of the simulation

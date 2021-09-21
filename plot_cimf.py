@@ -12,7 +12,7 @@ from scipy import special
 import yt
 import betterplotlib as bpl
 
-from utils import load_galaxies, plot_utils
+from utils import load_galaxies
 
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -272,7 +272,7 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
 #
 # ======================================================================================
 # then actually call this function to build the plots
-for plot_name in plot_utils.get_plot_names([sim.name for sim in sims_last]):
+for plot_name in load_galaxies.get_plot_names([sim.name for sim in sims_last]):
     for share_type in ["common", "last"]:
         # plot main CIMF and unbound CIMF
         plot_cimf(plot_name, share_type, ["initial_bound", "initial"])

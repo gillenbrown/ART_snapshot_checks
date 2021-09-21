@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import betterplotlib as bpl
 
-from utils import plot_utils
+from utils import load_galaxies
 
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -139,9 +139,9 @@ class Simulation(object):
         growth_2 = self.dirname / "growth_2.txt"
 
         try:
-            name_base = plot_utils.names[Path(output_dir)]
+            name_base = load_galaxies.names[Path(output_dir)]
         except KeyError:
-            raise ValueError("Sim name not found in plot_utils.py", output_dir)
+            raise ValueError("Sim name not found in load_galaxies.py", output_dir)
 
         self.g1 = Halo(mergers_1, growth_1, name_base)
         self.g2 = Halo(mergers_2, growth_2, name_base)

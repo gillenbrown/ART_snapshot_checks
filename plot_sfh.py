@@ -16,7 +16,7 @@ from scipy import integrate
 import betterplotlib as bpl
 import abundance_matching
 
-from utils import load_galaxies, plot_utils
+from utils import load_galaxies
 
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -296,7 +296,7 @@ def plot_cumulative_growth(axis_name):
 # then actually do the plotting
 #
 # ======================================================================================
-for plot_name in plot_utils.get_plot_names([sim.name for sim in sims]):
+for plot_name in load_galaxies.get_plot_names([sim.name for sim in sims]):
     plot_sfh(plot_name)
     plot_cumulative_growth(plot_name)
 

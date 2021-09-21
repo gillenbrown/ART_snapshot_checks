@@ -12,7 +12,7 @@ import numpy as np
 import yt
 import betterplotlib as bpl
 
-from utils import load_galaxies, plot_utils
+from utils import load_galaxies
 
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -176,7 +176,7 @@ def plot_age_growth(axis_name, sim_share_type):
 
 
 # then actually call this function to build the plots
-for plot_name in plot_utils.get_plot_names([sim.name for sim in sims_last]):
+for plot_name in load_galaxies.get_plot_names([sim.name for sim in sims_last]):
     for share_type in ["common", "last"]:
         plot_age_growth(plot_name, share_type)
 
