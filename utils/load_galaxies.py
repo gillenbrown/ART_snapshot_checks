@@ -374,3 +374,34 @@ def get_simulations_common(sim_dirs, z_max=5, sphere_radius_kpc=30, min_virial=T
             )
 
     return sims_common, common_scale
+
+
+def get_simulations_same_scale(
+    sim_dirs, desired_z, z_tolerance=0.1, sphere_radius_kpc=30, min_virial=True
+):
+    sims_common = []
+    for directory in sorted(sim_dirs):
+        all_outputs = get_outputs_in_dir(directory)
+
+        if len(all_outputs) == 0:
+            # happens when skipped
+            continue
+
+        closest_z = np.inf
+        closest_snapshot = None
+        for out in all_outputs:
+            a = filename_to_scale_factor(out.name)
+            z = (1 / a) - 1
+
+            if abs(z - desired_z) < abs(closest_z - desired_z):
+                closest_z = z
+                closest_snapshot = out
+
+        # then validate that we got close enough.
+        if abs(closest_z - desired_z) / desired_z < z_tolerance:
+            sims_common.append(
+                Simulation(closest_snapshot, sphere_radius_kpc, min_virial)
+            )
+        else:
+            print(f"No outputs close to z={desired_z} in {directory}")
+    return sims_common
