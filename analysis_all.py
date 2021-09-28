@@ -68,6 +68,8 @@ for d in directories:
 
         del sim
         del ad
+        del cell_volumes
+        del gas_mass_H2
         gc.collect()
 
 
