@@ -375,11 +375,11 @@ def get_simulations_last(sim_dirs, sphere_radius_kpc=30, min_virial=True):
 
 
 def get_common_scale_factor(sim_dirs, z_max):
-    # Start by getting the last common output among the production runs
+    # Start by getting the last common output among the provided runs
     last_outputs = []
     for directory in sim_dirs:
         directory = Path(directory)
-        if directory not in names or "stampede2/production" not in str(directory):
+        if directory not in names:
             continue
 
         all_outputs = get_outputs_in_dir(directory)
@@ -387,11 +387,10 @@ def get_common_scale_factor(sim_dirs, z_max):
         a_min = 1 / (1 + z_max)
         this_last_output = sorted(all_outputs)[-1]
         if filename_to_scale_factor(this_last_output.name) > a_min:
-            last_outputs.append(this_last_output)
+            last_outputs.append(filename_to_scale_factor(this_last_output.name))
 
-    earliest_last_output = sorted(last_outputs)[0]
     # include fudge factor for scale comparisons (so 0.1801 and 0.1802 match)
-    return filename_to_scale_factor(earliest_last_output.name) + 0.001
+    return min(last_outputs) + 0.001
 
 
 def get_simulations_common(sim_dirs, z_max=5, sphere_radius_kpc=30, min_virial=True):
@@ -400,6 +399,9 @@ def get_simulations_common(sim_dirs, z_max=5, sphere_radius_kpc=30, min_virial=T
     sims_common = []
     for directory in sorted(sim_dirs):
         all_outputs = get_outputs_in_dir(directory)
+        if len(all_outputs) == 0:
+            # happens when skipped by get_outputs_in_dir
+            continue
 
         # get the last one that's in common with the other simulations
         all_common_outputs = [
@@ -424,9 +426,8 @@ def get_simulations_same_scale(
     sims_common = []
     for directory in sorted(sim_dirs):
         all_outputs = get_outputs_in_dir(directory)
-
         if len(all_outputs) == 0:
-            # happens when skipped
+            # happens when skipped by get_outputs_in_dir
             continue
 
         closest_z = np.inf
