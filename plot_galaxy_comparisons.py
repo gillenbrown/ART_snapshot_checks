@@ -40,8 +40,8 @@ def check_for_virial_mass(line, halo_dict):
 def check_for_virial_radius(line, halo_dict):
     if line.startswith("Virial Radius: "):
         # have code units here, so need to get those, and throw awway the comma
-        value = line.split()[-4]
-        unit = line.split()[-3].replace(",", "")
+        value = line.split()[-2]
+        unit = line.split()[-1]
         quantity = u.Quantity(value, unit)
         halo_dict["virial_radius"] = quantity
 
