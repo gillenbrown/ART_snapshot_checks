@@ -36,7 +36,8 @@ if not temp_dir.is_dir() and yt.is_root():
 # check that we're not doing this on shangrila. I don't want to overwrite halos from
 # Stampede2 or Frontera
 if machine != "stampede2":
-    raise RuntimeError("Trying to do halo finding somewhere other than Stampede2!")
+    if "old_ic_comparison_production_analog" not in str(sim_dir):
+        raise RuntimeError("Trying to do halo finding somewhere other than Stampede2!")
 
 # ==============================================================================
 #
