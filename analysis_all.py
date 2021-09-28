@@ -18,6 +18,7 @@ directories = [
     scratch_dir / "tl_sfe001_hn20",
     scratch_dir / "tl_sfe010_hn20",
     scratch_dir / "tl_sfe100_hn00",
+    scratch_dir / "tl_sfe100_hn00_fboost3",
     scratch_dir / "tl_sfe100_hn05",
     scratch_dir / "tl_sfe100_hn20",
 ]

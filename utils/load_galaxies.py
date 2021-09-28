@@ -79,6 +79,8 @@ names = {
     full_dir("stampede2/production/tl_sfe100_hn20/run"): prod_fmt("T&L", 100, 20),
     full_dir("stampede2/production/tl_sfe100_hn05/run"): prod_fmt("T&L", 100, 5),
     full_dir("stampede2/production/tl_sfe100_hn00/run"): prod_fmt("T&L", 100, 0),
+    full_dir("stampede2/production/tl_sfe100_hn00_fboost3/run"): prod_fmt("T&L", 100, 0)
+    + " $f_{boost}=3",
     full_dir("stampede2/production/rj_sfe010_hn20/run"): prod_fmt("R&J", 10, 20),
     full_dir("stampede2/production/rj_sfe100_hn20/run"): prod_fmt("R&J", 100, 20),
     full_dir(
@@ -129,6 +131,7 @@ colors = {
     prod_fmt("T&L", 100, 20): hsv_to_hex(0.65, 0.80, 0.50),
     prod_fmt("T&L", 100, 5): hsv_to_hex(0.70, 0.30, 0.65),
     prod_fmt("T&L", 100, 0): hsv_to_hex(0.70, 0.15, 0.85),
+    prod_fmt("T&L", 100, 0) + " $f_{boost}=3": hsv_to_hex(0.90, 0.15, 0.85),
     prod_fmt("R&J", 10, 20): hsv_to_hex(0.35, 0.20, 0.70),
     prod_fmt("R&J", 100, 20): hsv_to_hex(0.35, 0.30, 0.50),
     "R&J Collisionless Original": cmap_rj_collisionless(1.0),
@@ -158,6 +161,7 @@ axes = {
     prod_fmt("T&L", 100, 20): ["tl", "lg", "all"],
     prod_fmt("T&L", 100, 5): ["tl", "lg", "all"],
     prod_fmt("T&L", 100, 0): ["tl", "lg", "all"],
+    prod_fmt("T&L", 100, 0) + " $f_{boost}=3": ["tl", "lg", "all"],
     prod_fmt("R&J", 10, 20): ["rj", "lg", "all"],
     prod_fmt("R&J", 100, 20): ["rj", "lg", "all"],
     "R&J Collisionless Original": ["rj", "lg", "nbody", "all"],
