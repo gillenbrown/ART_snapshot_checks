@@ -6,6 +6,8 @@ from astropy import table
 from matplotlib import cm
 from matplotlib import colors as mpl_col
 
+import betterplotlib as bpl
+
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
 # ======================================================================================
@@ -48,6 +50,30 @@ names = {
     full_dir(
         "stampede2/old_ic_comparison/cap5000kms_hn50/run"
     ): "Old IC SFE100 50% HN new",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/continuous_hn00_novirial/run"
+    ): "Continuous",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/continuoushui_hn00_novirial/run"
+    ): "Continuous Hui",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/continuouspopmcluster_hn00_novirial/run"
+    ): "Continuous PopM",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/continuoussnr_hn00_novirial/run"
+    ): "Continuous SNR",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial/run"
+    ): "Discrete",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10/run"
+    ): "Discrete $\\alpha<10$",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_fboost3/run"
+    ): "Discrete $\\alpha<10, f_{boost}=3$",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn20_virial10/run"
+    ): "Discrete $\\alpha<10$ HN20",
     full_dir("stampede2/production/tl_sfe001_hn20/run"): prod_fmt("T&L", 1, 20),
     full_dir("stampede2/production/tl_sfe010_hn20/run"): prod_fmt("T&L", 10, 20),
     full_dir("stampede2/production/tl_sfe100_hn20/run"): prod_fmt("T&L", 100, 20),
@@ -84,6 +110,14 @@ colors = {
     "Old IC SFE100 20% HN": cmap_rerun(0.6),
     "Old IC SFE100 50% HN": cmap_rerun(0.7),
     "Old IC SFE100 50% HN new": cmap_rerun(0.8),
+    "Continuous": bpl.color_cycle[0],
+    "Continuous Hui": bpl.color_cycle[1],
+    "Continuous PopM": "lightblue",
+    "Continuous SNR": bpl.color_cycle[3],
+    "Discrete": bpl.color_cycle[4],
+    "Discrete $\\alpha<10$": bpl.color_cycle[5],
+    "Discrete $\\alpha<10, f_{boost}=3$": bpl.color_cycle[6],
+    "Discrete $\\alpha<10$ HN20": bpl.color_cycle[7],
     # These colors are very carefully chosen to avoid colorblindness issues. The hue
     # changes between the SFE variations (blue) to the HN variations (purple), with
     # the shared SFE 100 HN 20 run in the middle. The blues are more saturated, while
@@ -111,6 +145,14 @@ axes = {
     "Old IC SFE100 20% HN": ["old_ic", "all"],
     "Old IC SFE100 50% HN": ["old_ic", "all"],
     "Old IC SFE100 50% HN new": ["old_ic", "all"],
+    "Continuous": ["old_ic"],
+    "Continuous Hui": ["old_ic"],
+    "Continuous PopM": ["old_ic"],
+    "Continuous SNR": ["old_ic"],
+    "Discrete": ["old_ic"],
+    "Discrete $\\alpha<10$": ["old_ic"],
+    "Discrete $\\alpha<10, f_{boost}=3$": ["old_ic"],
+    "Discrete $\\alpha<10$ HN20": ["old_ic"],
     prod_fmt("T&L", 1, 20): ["tl", "lg", "all"],
     prod_fmt("T&L", 10, 20): ["tl", "lg", "all"],
     prod_fmt("T&L", 100, 20): ["tl", "lg", "all"],
