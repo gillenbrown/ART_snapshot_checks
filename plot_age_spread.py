@@ -13,6 +13,7 @@ import yt
 import betterplotlib as bpl
 
 from utils import load_galaxies
+from analysis_functions import age_spreads
 
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -27,39 +28,6 @@ plot_dir = sentinel.parent
 # ======================================================================================
 sims_last = load_galaxies.get_simulations_last(sys.argv[2:])
 sims_common, common_scale = load_galaxies.get_simulations_common(sys.argv[2:])
-
-
-# ======================================================================================
-#
-# functions to calculate key quantities
-#
-# ======================================================================================
-def time_units(ds, array):
-    return ds._handle.tphys_from_tcode_array(array) * yt.units.year
-
-
-def duration(galaxy):
-    end_time = time_units(galaxy.ds, galaxy[("STAR", "TERMINATION_TIME")])
-    return end_time - galaxy[("STAR", "creation_time")]
-
-
-def ave_time(galaxy):
-    art_units_ave_age = galaxy[("STAR", "AVERAGE_AGE")]
-    art_units_birth = galaxy[("STAR", "BIRTH_TIME")]
-
-    ave_time = time_units(galaxy.ds, art_units_birth + art_units_ave_age)
-    return ave_time - galaxy[("STAR", "creation_time")]
-
-
-def age_spread(galaxy):
-    initial_mass = galaxy[("STAR", "initial_mass")]
-    age_spread = galaxy[("STAR", "AGE_SPREAD")] * galaxy.ds.arr(1, "code_mass**2")
-    birth_time = galaxy[("STAR", "BIRTH_TIME")]
-    creation_time = galaxy[("STAR", "creation_time")]
-
-    time = time_units(galaxy.ds, (initial_mass ** 2 / age_spread) + birth_time)
-
-    return time - creation_time
 
 
 def time_cumulative_hist(sim, time_func, mask_name):
@@ -136,7 +104,7 @@ def plot_age_growth(axis_name, sim_share_type):
 
     fig, axs = bpl.subplots(figsize=[13, 17], ncols=2, nrows=3)
 
-    funcs = [duration, ave_time, age_spread]
+    funcs = [age_spreads.duration, age_spreads.ave_time, age_spreads.age_spread]
     names = ["Duration", "Average Age", "Age Spread"]
 
     for ax_row, func, name in zip(axs, funcs, names):
