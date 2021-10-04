@@ -7,7 +7,8 @@ import yt
 #
 # ==============================================================================
 def get_gas_density(region):
-    return region[("gas", "density")].to("g/cm**3").value / yt.units.mass_hydrogen
+    n = region[("gas", "density")] / yt.units.mass_hydrogen
+    return n.to("cm**(-3)").value
 
 
 def get_gas_volume(region):
@@ -20,6 +21,35 @@ def get_gas_mass(region):
 
 def get_gas_temp(region):
     return region[("gas", "temperature")].to("K").value
+
+
+def get_gas_p_over_k(region):
+    p_over_k = region[("gas", "pressure")] / yt.units.kboltz
+    return p_over_k.to("K/cm**3").value
+
+
+def get_gas_turbulent_temp(region):
+    # Taken from src/core/hydro_sgst.c
+    gamma = 5 / 3
+    wmu = 4.0 / (8.0 - 5.0 * 0.24)
+    density = region[("artio", "HVAR_GAS_DENSITY")]
+    # add units. energy density is
+    # energy / length^3 = mass * velocity^2 / length^3
+    turbulent_energy_density = (
+        region[("artio", "HVAR_GAS_TURBULENT_ENERGY")]
+        * region.ds.mass_unit
+        * region.ds.velocity_unit ** 2
+        / region.ds.length_unit ** 3
+    )
+    # then use the equation from ART. Also need to use unit conversions.
+    temp = (
+        (gamma - 1)
+        * wmu
+        * turbulent_energy_density
+        * yt.units.mass_hydrogen  # technically is mb in ART, but that's basically m_H
+        / (density * yt.units.kboltz)
+    )
+    return temp.to("K").value
 
 
 def get_gas_velocity(region):
