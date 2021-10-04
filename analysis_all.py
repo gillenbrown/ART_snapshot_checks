@@ -56,20 +56,25 @@ for d in directories:
         ad = sim.ds.all_data()
 
         # Print the molecular gas mass
-        cell_volumes = ad[("index", "cell_volume")]
-        gas_mass_H2 = (
-            2
-            * ad[("artio", "RT_HVAR_H2")]
-            * sim.ds.arr(1, "code_mass/code_length**3")
-            * cell_volumes
-        )
+        try:
+            cell_volumes = ad[("index", "cell_volume")]
+            gas_mass_H2 = (
+                2
+                * ad[("artio", "RT_HVAR_H2")]
+                * sim.ds.arr(1, "code_mass/code_length**3")
+                * cell_volumes
+            )
 
-        write(run_name, sim.z, np.sum(gas_mass_H2.to("Msun").value))
+            write(run_name, sim.z, np.sum(gas_mass_H2.to("Msun").value))
+
+            del cell_volumes
+            del gas_mass_H2
+
+        except:
+            write(run_name, sim.z, np.nan)
 
         del sim
         del ad
-        del cell_volumes
-        del gas_mass_H2
         gc.collect()
 
 
