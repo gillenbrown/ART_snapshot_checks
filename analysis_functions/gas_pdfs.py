@@ -52,6 +52,12 @@ def get_gas_turbulent_temp(region):
     return temp.to("K").value
 
 
+def get_gas_metallicity_ii(region):
+    z_density = region[("artio", "HVAR_METAL_DENSITY_II")]
+    gas_density = region[("artio", "HVAR_GAS_DENSITY")]
+    return (z_density / gas_density).to("").value
+
+
 def get_gas_velocity(region):
     vx = region[("gas", "velocity_x")].to("km/s").value
     vy = region[("gas", "velocity_y")].to("km/s").value
