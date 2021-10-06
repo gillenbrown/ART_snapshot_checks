@@ -77,6 +77,10 @@ def get_gas_velocity(region):
     return gas_velocity
 
 
+def get_gas_level(region):
+    return region[("index", "grid_level")].to("").value
+
+
 def cumulative_property(region, prop_func, weight_func):
     """
     Create the cumulative distribution of the given property.
