@@ -37,7 +37,7 @@ ad = sim.ds.all_data()
 
 # get the location of where to write the plot
 plots_dir = ds_loc.parent.parent / "plots"
-scale_save = round(sim.scale_factor, 4)
+scale_save = ds_loc.stem.split("_")[-1].replace("a", "")
 
 # =========================================================================
 #

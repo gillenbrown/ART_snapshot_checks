@@ -36,7 +36,7 @@ else:
 
 ds_loc = Path(sys.argv[1]).resolve()
 sim = load_galaxies.Simulation(ds_loc, sphere_radius_kpc=None, n_galaxies=2)
-scale_factor = round(sim.scale_factor, 4)
+scale_factor = ds_loc.stem.split("_")[-1].replace("a", "")
 
 # get the location of where to write the plot
 plots_dir = ds_loc.parent.parent / "plots"
