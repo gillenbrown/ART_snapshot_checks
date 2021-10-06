@@ -90,7 +90,12 @@ ifeq ($(machine),shangrila)
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_fboost3/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn20_virial10/run
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn20_virial10/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_advect/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_advect/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_elements/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_nostars/run
 endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
@@ -335,7 +340,7 @@ endif
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(my_directories) $(tidal_sentinels) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(halo_growth_plot) $(age_spread_sentinel) $(movies)
+all: $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(halo_growth_plot) $(age_spread_sentinel) $(movies)
 # $(dt_history_plots) $(cfl_plots)
 
 .PHONY: clean
@@ -363,6 +368,9 @@ movies: $(movies)
 # that come later
 .PHONY: halos
 halos: $(rockstar_sentinels)
+
+.PHONY: tidal
+tidal: $(tidal_sentinels)
 
 # Throughout I use Make's static pattern rules to parameterize over my different
 # outputs
