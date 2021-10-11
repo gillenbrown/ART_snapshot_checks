@@ -52,6 +52,23 @@ def get_gas_turbulent_temp(region):
     return temp.to("K").value
 
 
+def get_gas_turbulent_velocity_dispersion(region):
+    # taken from sf_recipe.turbulent.c
+    density = region[("artio", "HVAR_GAS_DENSITY")]
+    # add units. energy density is
+    # energy / length^3 = mass * velocity^2 / length^3
+    turbulent_energy_density = (
+        region[("artio", "HVAR_GAS_TURBULENT_ENERGY")]
+        * region.ds.mass_unit
+        * region.ds.velocity_unit ** 2
+        / region.ds.length_unit ** 3
+    )
+
+    sigma_squared = 2 * turbulent_energy_density / density
+    sigma = np.sqrt(sigma_squared).to("km/s")
+    return sigma
+
+
 def get_gas_metallicity_ii(region):
     z_density = region[("artio", "HVAR_METAL_DENSITY_II")]
     gas_density = region[("artio", "HVAR_GAS_DENSITY")]
