@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 import os
 import gc
@@ -12,16 +13,17 @@ out_file = open("./molecular_gas.txt", "w")
 
 scratch_dir = Path("/scratch/06912/tg862118/art_runs/analysis/production")
 
-directories = [
-    scratch_dir / "rj_sfe010_hn20",
-    scratch_dir / "rj_sfe100_hn20",
-    scratch_dir / "tl_sfe001_hn20",
-    scratch_dir / "tl_sfe010_hn20",
-    scratch_dir / "tl_sfe100_hn00",
-    scratch_dir / "tl_sfe100_hn00_fboost3",
-    scratch_dir / "tl_sfe100_hn05",
-    scratch_dir / "tl_sfe100_hn20",
-]
+# directories = [
+#     scratch_dir / "rj_sfe010_hn20",
+#     scratch_dir / "rj_sfe100_hn20",
+#     scratch_dir / "tl_sfe001_hn20",
+#     scratch_dir / "tl_sfe010_hn20",
+#     scratch_dir / "tl_sfe100_hn00",
+#     scratch_dir / "tl_sfe100_hn00_fboost3",
+#     scratch_dir / "tl_sfe100_hn05",
+#     scratch_dir / "tl_sfe100_hn20",
+# ]
+directories = [scratch_dir / d for d in sys.argv[1:]]
 
 
 def write(run_name, redshift, value1):
