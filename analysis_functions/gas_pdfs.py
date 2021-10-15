@@ -20,7 +20,21 @@ def get_gas_mass(region):
 
 
 def get_gas_temp(region):
-    return region[("gas", "temperature")].to("K").value
+    try:
+        return region[("gas", "temperature")].to("K").value
+    except:
+        # The runs with Vadim's entropy scheme do not have temperature. I have to
+        # calculate it, based on cell_gas_temperature in hydro.c
+        # return (gamma - 1.0) * constants->wmu * internal_energy / rho;
+        gamma = 5 / 3
+        yp = 0.24
+        wmu = 4.0 / (8.0 - 5.0 * yp)
+        mb = yt.units.mass_hydrogen
+        internal_energy = region[("artio", "HVAR_INTERNAL_ENERGY")]
+        rho = region[("artio", "HVAR_GAS_DENSITY")]
+        # there's also a m_H / k_B correction factor in the ART temp units
+        temp = (gamma - 1) * wmu * internal_energy * mb / (rho * yt.units.kboltz)
+        return temp.to("K").value
 
 
 def get_gas_p_over_k(region):
