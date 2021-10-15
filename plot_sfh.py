@@ -277,9 +277,9 @@ def plot_cumulative_growth(axis_name):
         label="MW-like (Universe Machine)",
     )
 
-    ax.legend(loc=2, fontsize=12, frameon=False)
+    ax.legend(loc=4, fontsize=10, frameon=False)
     ax.set_yscale("log")
-    ax.set_limits(0, 1.05 * max_time, 2e7, 5e9)
+    ax.set_limits(0, 1.05 * max_time, 2e7, 1e10)
     ax.add_labels("Time [Gyr]", "Stellar Mass  [$M_\odot$]")
 
     # then add the redshift axis. The process of selecting the labels raises

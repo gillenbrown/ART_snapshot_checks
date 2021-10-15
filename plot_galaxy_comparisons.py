@@ -166,6 +166,9 @@ def get_scale_factor(summary_path):
 # define some helper functions first
 def plot_quantities(quantity, unit, ax):
     for idx, sim_name in enumerate(binned_summaries):
+        plots = load_galaxies.axes[sim_name]
+        if len(plots) == 0:
+            continue
         color = load_galaxies.colors[sim_name]
         summaries = binned_summaries[sim_name]
         # the number of halos to plot will not change throughout the history
@@ -275,6 +278,9 @@ for gas_type in gas_types:
     ax.set_yscale("log")
     ax.legend(fontsize=10)
     ax.add_labels("Scale Factor", f"{gas_type} Gas Mass [M$_\odot$] within 30 kpc")
+    if "H2" in gas_type:
+        ax.set_limits(y_min=1e5)
+
     fig.savefig(plot_dir / f"galaxy_comparison_gas_mass_{gas_type}.png")
 
 # =============================================================================

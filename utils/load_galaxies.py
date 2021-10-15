@@ -74,6 +74,42 @@ names = {
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn20_virial10/run"
     ): "Discrete $\\alpha<10$ HN20",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19/run"
+    ): "ART 1.9 Adiabatic",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_advect/run"
+    ): "ART 1.9 Advect",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_advect/run"
+    ): "Discrete $\\alpha<10$ Advect",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_elements/run"
+    ): "ART 2.0 Adiabatic All Elements",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_nostars/run"
+    ): "ART 2.0 Adiabatic No Stars",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_old/run"
+    ): "ART 1.9 Hui's version Adiabatic",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_advect_nostars/run"
+    ): "ART 2.0 Advect No Stars",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noadvoradia_nostars/run"
+    ): "ART 2.0 No Flags",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy/run"
+    ): "ART 2.1 Entropy",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_nosync/run"
+    ): "ART 2.1 Entropy No Sync",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noturb_adi/run"
+    ): "ART 2.0 No Turbulence Adiabatic",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noturb_adv/run"
+    ): "ART 2.0 No Turbulence Advect",
     full_dir("stampede2/production/tl_sfe001_hn20/run"): prod_fmt("T&L", 1, 20),
     full_dir("stampede2/production/tl_sfe010_hn20/run"): prod_fmt("T&L", 10, 20),
     full_dir("stampede2/production/tl_sfe100_hn20/run"): prod_fmt("T&L", 100, 20),
@@ -120,6 +156,19 @@ colors = {
     "Discrete $\\alpha<10$": bpl.color_cycle[5],
     "Discrete $\\alpha<10, f_{boost}=3$": bpl.color_cycle[6],
     "Discrete $\\alpha<10$ HN20": bpl.color_cycle[7],
+    "Discrete $\\alpha<10$ Advect": "k",
+    "ART 1.9": bpl.color_cycle[0],
+    "ART 1.9 Advect": bpl.color_cycle[1],
+    "ART 1.9 Adiabatic": bpl.color_cycle[2],
+    "ART 2.0 Adiabatic All Elements": bpl.color_cycle[3],
+    "ART 2.0 Adiabatic No Stars": bpl.color_cycle[4],
+    "ART 1.9 Hui's version Adiabatic": bpl.color_cycle[5],
+    "ART 2.0 Advect No Stars": bpl.color_cycle[6],
+    "ART 2.0 No Flags": bpl.color_cycle[7],
+    "ART 2.0 No Turbulence Adiabatic": "red",
+    "ART 2.0 No Turbulence Advect": "green",
+    "ART 2.1 Entropy": "blue",
+    "ART 2.1 Entropy No Sync": "purple",
     # These colors are very carefully chosen to avoid colorblindness issues. The hue
     # changes between the SFE variations (blue) to the HN variations (purple), with
     # the shared SFE 100 HN 20 run in the middle. The blues are more saturated, while
@@ -156,6 +205,19 @@ axes = {
     "Discrete $\\alpha<10$": ["old_ic"],
     "Discrete $\\alpha<10, f_{boost}=3$": ["old_ic"],
     "Discrete $\\alpha<10$ HN20": ["old_ic"],
+    "Discrete $\\alpha<10$ Advect": ["old_ic"],
+    "ART 1.9": [],
+    "ART 1.9 Advect": [],
+    "ART 1.9 Adiabatic": [],
+    "ART 2.0 Adiabatic All Elements": [],
+    "ART 2.0 Adiabatic No Stars": [],
+    "ART 1.9 Hui's version Adiabatic": [],
+    "ART 2.0 Advect No Stars": [],
+    "ART 2.0 No Flags": [],
+    "ART 2.0 No Turbulence Adiabatic": [],
+    "ART 2.0 No Turbulence Advect": [],
+    "ART 2.1 Entropy": [],
+    "ART 2.1 Entropy No Sync": [],
     prod_fmt("T&L", 1, 20): ["tl", "lg", "all"],
     prod_fmt("T&L", 10, 20): ["tl", "lg", "all"],
     prod_fmt("T&L", 100, 20): ["tl", "lg", "all"],
@@ -425,7 +487,7 @@ def get_simulations_common(sim_dirs, z_max=5, sphere_radius_kpc=30, min_virial=T
 
 
 def get_simulations_same_scale(
-    sim_dirs, desired_z, z_tolerance=0.1, sphere_radius_kpc=30, min_virial=True
+    sim_dirs, desired_z, z_tolerance=0.05, sphere_radius_kpc=30, min_virial=True
 ):
     sims_common = []
     for directory in sorted(sim_dirs):
