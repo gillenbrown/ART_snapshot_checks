@@ -361,7 +361,10 @@ vz_gas = np.abs(ad[("gas", "velocity_z")].to("km/s").value)
 # and z components. The next function call does this for each cell.
 velocity_bulk_gas = np.amax([vx_gas, vy_gas, vz_gas], axis=0)
 # and sound speed
-gamma = ad[("gas", "gamma")]
+try:
+    gamma = ad[("gas", "gamma")]
+except:  # field not found in the entropy based scheme. May want to double check this.
+    gamma = 5 / 3
 sound_speed_gas = (
     np.sqrt(
         gamma
