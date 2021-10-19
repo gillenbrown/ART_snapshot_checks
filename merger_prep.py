@@ -38,9 +38,11 @@ for n, f in enumerate(sorted(all_halos)):
     shutil.copy2(f, new_path)
 
 # I also need to modify the rockstar file. Specifically, for the production runs I
-# need to change the Stampede2 directory into the shangrila directory.
+# need to change the Stampede2 directory into the shangrila directory, and replace
+# the number of snapshots with the actual value.
 rockstar_config_file = rockstar_dir / "rockstar.cfg"
 rockstar_config_file_temp = rockstar_dir / "rockstar.cfg.temp"
+num_halos = len(all_halos)
 with open(rockstar_config_file, "r") as cfg_old:
     with open(rockstar_config_file_temp, "w") as cfg_new:
         for line in cfg_old:
@@ -53,12 +55,7 @@ with open(rockstar_config_file, "r") as cfg_old:
             # also update the number of files:
             if line.startswith("NUM_SNAPS"):
                 value = int(line.split()[-1])
-                if value == n + 1:
-                    pass
-                elif value == 2:
-                    line = line.replace(str(value), str(n + 1))
-                else:
-                    raise RuntimeError("NUM_SNAPS doesn't make sense")
+                line = line.replace(str(value), str(num_halos))
             cfg_new.write(line)
 # then replace the old with the new
 rockstar_config_file_temp.replace(rockstar_config_file)
