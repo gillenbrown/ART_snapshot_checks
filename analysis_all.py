@@ -1,6 +1,5 @@
 import sys
 from pathlib import Path
-import os
 import gc
 import numpy as np
 import yt
@@ -9,7 +8,7 @@ from utils import load_galaxies
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
-out_file = open("./molecular_gas.txt", "w")
+# out_file = open("./molecular_gas.txt", "w")
 
 scratch_dir = Path("/scratch/06912/tg862118/art_runs/analysis/production")
 
@@ -27,21 +26,20 @@ directories = [scratch_dir / d for d in sys.argv[1:]]
 
 
 def write(run_name, redshift, value1):
-    this_str = f"{run_name} {redshift:.4f} {value1:.3e}\n"
-    out_file.write(this_str)
-    out_file.flush()  # this and next line ensure writing happens now
-    os.fsync(out_file.fileno())
+    # I got rid of writing to the file for now, since when parallelizing with launcher
+    # I don't want the output of different runs interleaved. Just printing to stdout is
+    # fine with me. Note that if you do want to write to a file, add a newline to the
+    # end of the string to print.
+    this_str = f"{run_name} {redshift:.4f} {value1:.3e}"
+    # out_file.write(this_str)
+    # out_file.flush()  # this and next line ensure writing happens now
+    # os.fsync(out_file.fileno())
     print(this_str, flush=True)
 
 
 for d in directories:
     out_dir = d / "run" / "out"
     art_files = sorted([f for f in out_dir.iterdir() if f.suffix == ".art"])
-
-    print("", flush=True)
-    print(d, flush=True)
-    print("", flush=True)
-
     run_name = d.name
 
     # then parse this to get the halo files
@@ -80,4 +78,4 @@ for d in directories:
         gc.collect()
 
 
-out_file.close()
+# out_file.close()
