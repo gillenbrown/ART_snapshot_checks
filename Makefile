@@ -89,13 +89,22 @@ ifeq ($(machine),shangrila)
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/continuoussnr_hn00_novirial/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_fboost3/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn20_virial10/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_advect/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_old/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_advect/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_advect_nostars/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_elements/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_nostars/run
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost3/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_nosync/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_fboost3/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noadvoradia_nostars/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_nostars/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noturb_adi/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noturb_adv/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn20_virial10/run 
 endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
