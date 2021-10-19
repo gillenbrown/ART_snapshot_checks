@@ -449,6 +449,10 @@ def get_common_scale_factor(sim_dirs, z_max):
             continue
 
         all_outputs = get_outputs_in_dir(directory)
+        if len(all_outputs) == 0:
+            print(f"This has no outputs: {directory}")
+            continue
+
         # restrict to be a reasonable redshift
         a_min = 1 / (1 + z_max)
         this_last_output = sorted(all_outputs)[-1]
