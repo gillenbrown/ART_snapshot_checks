@@ -15,21 +15,18 @@
 # will stop conda from recognizing my distribution somehow.
 # We do need to source bashrc, as it holds the code to activate conda and
 # activate the correct env
- module load remora
+# module load remora
 source ~/.bashrc
 # Make sure the system python is not accessible
 unset PYTHONPATH
-
 # double check these variables
 # echo $(which python)
 # echo $PYTHONPATH
-# -u stops output buffering
-remora python -u analysis_all.py rj_sfe010_hn20
-remora python -u analysis_all.py rj_sfe100_hn20
-remora python -u analysis_all.py tl_sfe001_hn20
-remora python -u analysis_all.py tl_sfe010_hn20
-remora python -u analysis_all.py tl_sfe100_hn00
-remora python -u analysis_all.py tl_sfe100_hn00_fboost3
-remora python -u analysis_all.py tl_sfe100_hn05
-remora python -u analysis_all.py tl_sfe100_hn20
 
+# slurm setup, copied from example at $LAUNCHER_DIR/extras/batch-scripts
+export LAUNCHER_RMI=SLURM
+export LAUNCHER_PLUGIN_DIR=$LAUNCHER_DIR/plugins
+# setup of my tasks
+export LAUNCHER_WORKDIR="/work/06912/tg862118/stampede2/ART_snapshot_checks/all_analysis"
+export LAUNCHER_JOB_FILE="job_list.txt"
+$LAUNCHER_DIR/paramrun

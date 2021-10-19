@@ -4,7 +4,9 @@ import gc
 import numpy as np
 import yt
 
-from utils import load_galaxies
+# add path to sys to import utils
+sys.path.append(str(Path("..").resolve() / "utils"))
+import load_galaxies
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
