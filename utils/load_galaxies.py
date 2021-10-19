@@ -100,7 +100,13 @@ names = {
     ): "ART 2.0 No Flags",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy/run"
-    ): "ART 2.1 Entropy",
+    ): "ART 2.1 Entropy $f_{boost}=5$",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost3/run"
+    ): "ART 2.1 Entropy $f_{boost}=3$",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1/run"
+    ): "ART 2.1 Entropy $f_{boost}=1$",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_nosync/run"
     ): "ART 2.1 Entropy No Sync",
@@ -167,7 +173,9 @@ colors = {
     "ART 2.0 No Flags": bpl.color_cycle[7],
     "ART 2.0 No Turbulence Adiabatic": "red",
     "ART 2.0 No Turbulence Advect": "green",
-    "ART 2.1 Entropy": "blue",
+    "ART 2.1 Entropy $f_{boost}=5$": "blue",
+    "ART 2.1 Entropy $f_{boost}=3$": "orange",
+    "ART 2.1 Entropy $f_{boost}=1$": "brown",
     "ART 2.1 Entropy No Sync": "purple",
     # These colors are very carefully chosen to avoid colorblindness issues. The hue
     # changes between the SFE variations (blue) to the HN variations (purple), with
@@ -216,7 +224,9 @@ axes = {
     "ART 2.0 No Flags": [],
     "ART 2.0 No Turbulence Adiabatic": [],
     "ART 2.0 No Turbulence Advect": [],
-    "ART 2.1 Entropy": [],
+    "ART 2.1 Entropy $f_{boost}=5$": ["old_ic"],
+    "ART 2.1 Entropy $f_{boost}=3$": ["old_ic"],
+    "ART 2.1 Entropy $f_{boost}=1$": ["old_ic"],
     "ART 2.1 Entropy No Sync": [],
     prod_fmt("T&L", 1, 20): ["tl", "lg", "all"],
     prod_fmt("T&L", 10, 20): ["tl", "lg", "all"],
