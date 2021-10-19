@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=analysis_all
+#SBATCH --job-name=all_analysis
 #SBATCH --account=TG-AST200017
 #SBATCH --mail-user=gillenb@umich.edu
 #SBATCH --mail-type=ALL
