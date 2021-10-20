@@ -11,6 +11,11 @@ Takes 2 required and 1 optional parameter.
 3 - Optional argument. Must be "silent" if included. Will print info and
     write it to the file if this is not included. Will only write to file
     if this is included.
+
+Note that much of this is borrowed from Molly's scripts. Specifically, this is from
+/work2/08197/tg874967/stampede2/newbox/writebasic_halonum_short.py
+If I want to do the star centering too, I should use:
+/work2/08197/tg874967/stampede2/newbox/yt_tools/tests/usethisone-Copy1.py
 """
 from utils import load_galaxies
 
@@ -143,33 +148,27 @@ def mass_fractions(sphere):
 
 # =========================================================================
 #
-# Then we go through and print information about the halos present
+# Functions to write quantities
 #
 # =========================================================================
-for gal in sim.galaxies:
-    out("\n==================================\n")
-    out("Rank {} halo:".format(gal.rank))
+def write_halo_properties(galaxy):
     # First print the important quantities - position, virial mass, virial radius
     for name, idx in zip(["X", "Y", "Z"], [0, 1, 2]):
         out(
             f"{name}: "
-            f"{gal.center[idx].to('kpc').value:>7.3f} kpc, "
-            f"{gal.center[idx].to('code_length').value:>7.3f} code"
+            f"{galaxy.center[idx].to('kpc').value:>7.3f} kpc, "
+            f"{galaxy.center[idx].to('code_length').value:>7.3f} code"
         )
-    out(f"Virial Mass: {gal.m_vir.to('Msun').value:<2.3e} Msun")
-    out(f"Virial Radius: {gal.r_vir.to('kpc').value:>7.3f} kpc")
+    out(f"Virial Mass: {galaxy.m_vir.to('Msun').value:<2.3e} Msun")
+    out(f"Virial Radius: {galaxy.r_vir.to('kpc').value:>7.3f} kpc")
 
-    # get some spheres that will be used in the calculations of galaxy
-    # properties
-    sphere_virial = sim.ds.sphere(center=gal.center, radius=gal.r_vir)
-    sphere_mpc = sim.ds.sphere(center=gal.center, radius=1 * yt.units.Mpc)
-    sphere_30_kpc = sim.ds.sphere(center=gal.center, radius=30 * yt.units.kpc)
 
+def write_halo_contamination(galaxy):
     # then print information about contamination, if we need to
     if is_zoom:
         out("\nClosest particle of each low-res DM species")
         # First we calculate the closest particle of each unrefined DM species
-        x_cen, y_cen, z_cen = gal.center.to("Mpc").value
+        x_cen, y_cen, z_cen = galaxy.center.to("Mpc").value
         for idx in species_x:
             distances = distance(
                 x_cen, y_cen, z_cen, species_x[idx], species_y[idx], species_z[idx]
@@ -177,7 +176,7 @@ for gal in sim.galaxies:
             out("{}: {:.0f} kpc".format(idx, np.min(distances) * 1000))
 
         for sphere, name in zip(
-            [sphere_virial, sphere_mpc], ["the virial radius", "1 Mpc"]
+            [galaxy.sphere_virial, galaxy.sphere_mpc], ["the virial radius", "1 Mpc"]
         ):
             out(
                 "\nDM mass and fraction of total from different "
@@ -185,40 +184,42 @@ for gal in sim.galaxies:
             )
             mass_fractions(sphere)
     else:
-        total_mass = sphere_virial[("N-BODY", "MASS")].to("Msun").value.sum()
+        total_mass = galaxy.sphere_virial[("N-BODY", "MASS")].to("Msun").value.sum()
         out(
             "\nTotal DM particle mass within the virial radius = {:.3e} Msun".format(
                 total_mass
             )
         )
 
-    # then the baryon properties. Quit if we don't have baryons
-    if not has_baryons:
-        continue
-    # print the stellar mass
-    stellar_mass_30kpc = np.sum(sphere_30_kpc[("STAR", "MASS")].to("Msun").value)
-    stellar_mass_virial = np.sum(sphere_virial[("STAR", "MASS")].to("Msun").value)
+
+def write_stellar_masses(galaxy):
+    stellar_mass_30kpc = np.sum(galaxy.sphere_30_kpc[("STAR", "MASS")].to("Msun").value)
+    stellar_mass_virial = np.sum(
+        galaxy.sphere_virial[("STAR", "MASS")].to("Msun").value
+    )
     out("")
     out("Stellar Mass within 30 kpc: {:.2e} Msun".format(stellar_mass_30kpc))
     out(
         "Stellar Mass within the virial radius: {:.2e} Msun".format(stellar_mass_virial)
     )
 
+
+def write_gas_masses(galaxy):
     # Print the masses in various states
-    cell_volumes = sphere_30_kpc[("index", "cell_volume")]
-    gas_mass = sphere_30_kpc[("gas", "cell_mass")]
-    gas_mass_HI = sphere_30_kpc[("gas", "HI density")] * cell_volumes
-    gas_mass_HII = sphere_30_kpc[("gas", "HII density")] * cell_volumes
+    cell_volumes = galaxy.sphere_30_kpc[("index", "cell_volume")]
+    gas_mass = galaxy.sphere_30_kpc[("gas", "cell_mass")]
+    gas_mass_HI = galaxy.sphere_30_kpc[("gas", "HI density")] * cell_volumes
+    gas_mass_HII = galaxy.sphere_30_kpc[("gas", "HII density")] * cell_volumes
     gas_mass_H2 = (
         2
-        * sphere_30_kpc[("artio", "RT_HVAR_H2")]
+        * galaxy.sphere_30_kpc[("artio", "RT_HVAR_H2")]
         * sim.ds.arr(1, "code_mass/code_length**3")
         * cell_volumes
     )
-    gas_mass_HeI = 4 * sphere_30_kpc[("gas", "HeI density")] * cell_volumes
-    gas_mass_HeII = 4 * sphere_30_kpc[("gas", "HeII density")] * cell_volumes
-    gas_mass_HeIII = 4 * sphere_30_kpc[("gas", "HeIII density")] * cell_volumes
-    gas_mass_metals = sphere_30_kpc[("gas", "metal_density")] * cell_volumes
+    gas_mass_HeI = 4 * galaxy.sphere_30_kpc[("gas", "HeI density")] * cell_volumes
+    gas_mass_HeII = 4 * galaxy.sphere_30_kpc[("gas", "HeII density")] * cell_volumes
+    gas_mass_HeIII = 4 * galaxy.sphere_30_kpc[("gas", "HeIII density")] * cell_volumes
+    gas_mass_metals = galaxy.sphere_30_kpc[("gas", "metal_density")] * cell_volumes
 
     gas_mass_total = np.sum(gas_mass.to("Msun").value)
     gas_mass_HI_total = np.sum(gas_mass_HI.to("Msun").value)
@@ -240,13 +241,15 @@ for gal in sim.galaxies:
     out("HeIII:  {:.2e} Msun".format(gas_mass_HeIII_total))
     out("Metals: {:.2e} Msun".format(gas_mass_metals_total))
 
+
+def write_stellar_metallicity(galaxy):
     # Metallicity
-    metallicity = sphere_30_kpc[("STAR", "METALLICITY_SNII")].value
-    metallicity += sphere_30_kpc[("STAR", "METALLICITY_SNIa")].value
+    metallicity = galaxy.sphere_30_kpc[("STAR", "METALLICITY_SNII")].value
+    metallicity += galaxy.sphere_30_kpc[("STAR", "METALLICITY_SNIa")].value
     if ("STAR", "METALLICITY_AGB") in sim.ds.field_list:
-        metallicity += sphere_30_kpc[("STAR", "METALLICITY_AGB")].value
+        metallicity += galaxy.sphere_30_kpc[("STAR", "METALLICITY_AGB")].value
     # get the masses so we can mass-weight it
-    masses = sphere_30_kpc[("STAR", "MASS")].to("Msun").value
+    masses = galaxy.sphere_30_kpc[("STAR", "MASS")].to("Msun").value
     metal_mass = masses * metallicity
 
     out("")
@@ -258,7 +261,7 @@ for gal in sim.galaxies:
         else:
             descriptor = f"stars younger than {max_age} Myr"
 
-        star_ages = sphere_30_kpc[("STAR", "age")].to("Myr").value
+        star_ages = galaxy.sphere_30_kpc[("STAR", "age")].to("Myr").value
         # get the mass-weighted metallicity
         if len(star_ages) == 0 or np.min(star_ages) > max_age:
             mean_metallicity = np.nan
@@ -267,8 +270,42 @@ for gal in sim.galaxies:
             mean_metallicity = np.sum(metal_mass[star_mask]) / np.sum(masses[star_mask])
 
         out(
-            f"{descriptor:>25} = {mean_metallicity:.2e} -> log(Z/Z_sun) = {np.log10(mean_metallicity/0.02):.2f}"
+            f"{descriptor:>25} = {mean_metallicity:.2e} -> "
+            f"log(Z/Z_sun) = {np.log10(mean_metallicity / 0.02):.2f}"
         )
+
+
+# =========================================================================
+#
+# Then we go through and print information about the halos present
+#
+# =========================================================================
+for gal in sim.galaxies:
+    # get some spheres that will be used in the calculations of galaxy
+    # properties
+    gal.sphere_virial = sim.ds.sphere(center=gal.center, radius=gal.r_vir)
+    gal.sphere_mpc = sim.ds.sphere(center=gal.center, radius=1 * yt.units.Mpc)
+    gal.sphere_30_kpc = sim.ds.sphere(center=gal.center, radius=30 * yt.units.kpc)
+
+    gal.sp_large = sim.ds.sphere(center=gal.center, radius=1.2 * gal.r_vir)
+    gal.sp2 = sim.ds.sphere(center=gal.center, radius=0.3 * gal.r_vir)
+    gal.sp1 = sim.ds.sphere(center=gal.center, radius=0.1 * gal.r_vir)
+    gal.sp_small = sim.ds.sphere(center=gal.center, radius=0.05 * gal.r_vir)
+    gal.spquar = sim.ds.sphere(center=gal.center, radius=0.25 * gal.r_vir)
+
+    out("\n==================================\n")
+    out("Rank {} halo:".format(gal.rank))
+
+    write_halo_properties(gal)
+    write_halo_contamination(gal)
+
+    # then the baryon properties. Quit if we don't have baryons
+    if not has_baryons:
+        continue
+
+    write_stellar_masses(gal)
+    write_stellar_metallicity(gal)
+    write_gas_masses(gal)
 
 
 out("\n==================================\n")
