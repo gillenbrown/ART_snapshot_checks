@@ -231,7 +231,7 @@ axes = {
     "ART 2.1 Entropy $f_{boost}=5$": ["old_ic"],
     "ART 2.1 Entropy $f_{boost}=3$": ["old_ic"],
     "ART 2.1 Entropy $f_{boost}=1$": ["old_ic"],
-    "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": ["old_ic"]
+    "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": ["old_ic"],
     "ART 2.1 Entropy No Sync": ["old_ic"],
     prod_fmt("T&L", 1, 20): ["tl", "lg", "all"],
     prod_fmt("T&L", 10, 20): ["tl", "lg", "all"],
