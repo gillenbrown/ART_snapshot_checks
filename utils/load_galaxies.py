@@ -108,7 +108,7 @@ names = {
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1/run"
     ): "ART 2.1 Entropy $f_{boost}=1$",
     full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy/run"
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_noagediff/run"
     ): "ART 2.1 Entropy $f_{boost}=5$ No Age Diff",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_nosync/run"
