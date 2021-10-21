@@ -277,7 +277,9 @@ for gas_type in gas_types:
     plot_quantities(f"gas_mass_{gas_type}", u.Msun, ax)
     ax.set_yscale("log")
     ax.legend(fontsize=10)
-    ax.add_labels("Scale Factor", f"{gas_type} Gas Mass [M$_\odot$] within 30 kpc")
+    ax.add_labels(
+        "Scale Factor", f"{gas_type} Gas Mass [M$_\odot$] within" + " R$_{vir}$"
+    )
     if "H2" in gas_type:
         ax.set_limits(y_min=1e5)
 

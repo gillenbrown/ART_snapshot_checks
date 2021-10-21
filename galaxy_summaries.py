@@ -206,20 +206,20 @@ def write_stellar_masses(galaxy):
 
 def write_gas_masses(galaxy):
     # Print the masses in various states
-    cell_volumes = galaxy.sphere_30_kpc[("index", "cell_volume")]
-    gas_mass = galaxy.sphere_30_kpc[("gas", "cell_mass")]
-    gas_mass_HI = galaxy.sphere_30_kpc[("gas", "HI density")] * cell_volumes
-    gas_mass_HII = galaxy.sphere_30_kpc[("gas", "HII density")] * cell_volumes
+    cell_volumes = galaxy.sphere_virial[("index", "cell_volume")]
+    gas_mass = galaxy.sphere_virial[("gas", "cell_mass")]
+    gas_mass_HI = galaxy.sphere_virial[("gas", "HI density")] * cell_volumes
+    gas_mass_HII = galaxy.sphere_virial[("gas", "HII density")] * cell_volumes
     gas_mass_H2 = (
         2
-        * galaxy.sphere_30_kpc[("artio", "RT_HVAR_H2")]
+        * galaxy.sphere_virial[("artio", "RT_HVAR_H2")]
         * sim.ds.arr(1, "code_mass/code_length**3")
         * cell_volumes
     )
-    gas_mass_HeI = 4 * galaxy.sphere_30_kpc[("gas", "HeI density")] * cell_volumes
-    gas_mass_HeII = 4 * galaxy.sphere_30_kpc[("gas", "HeII density")] * cell_volumes
-    gas_mass_HeIII = 4 * galaxy.sphere_30_kpc[("gas", "HeIII density")] * cell_volumes
-    gas_mass_metals = galaxy.sphere_30_kpc[("gas", "metal_density")] * cell_volumes
+    gas_mass_HeI = 4 * galaxy.sphere_virial[("gas", "HeI density")] * cell_volumes
+    gas_mass_HeII = 4 * galaxy.sphere_virial[("gas", "HeII density")] * cell_volumes
+    gas_mass_HeIII = 4 * galaxy.sphere_virial[("gas", "HeIII density")] * cell_volumes
+    gas_mass_metals = galaxy.sphere_virial[("gas", "metal_density")] * cell_volumes
 
     gas_mass_total = np.sum(gas_mass.to("Msun").value)
     gas_mass_HI_total = np.sum(gas_mass_HI.to("Msun").value)
@@ -231,7 +231,7 @@ def write_gas_masses(galaxy):
     gas_mass_metals_total = np.sum(gas_mass_metals.to("Msun").value)
 
     out("")
-    out("Gas masses within 30 kpc:")
+    out("Gas masses within the virial radius:")
     out("Total:  {:.2e} Msun".format(gas_mass_total))
     out("HI:     {:.2e} Msun".format(gas_mass_HI_total))
     out("HII:    {:.2e} Msun".format(gas_mass_HII_total))
@@ -275,6 +275,17 @@ def write_stellar_metallicity(galaxy):
         )
 
 
+def write_star_formation_rate(galaxy, timescale_myr):
+    star_ages = galaxy.sphere_virial[("STAR", "age")].to("Myr").value
+    mask = star_ages < timescale_myr
+
+    stellar_masses = galaxy.sphere_virial[("STAR", "MASS")]
+    mass_formed = np.sum(stellar_masses[mask].to("Msun").value)
+    sfr = mass_formed / (timescale_myr * 1e6)
+
+    out(f"SFR in last {timescale_myr} Myr: {sfr:.3e} Msun / yr")
+
+
 # =========================================================================
 #
 # Then we go through and print information about the halos present
@@ -306,6 +317,9 @@ for gal in sim.galaxies:
     write_stellar_masses(gal)
     write_stellar_metallicity(gal)
     write_gas_masses(gal)
+    write_star_formation_rate(gal, 10)
+    write_star_formation_rate(gal, 50)
+    write_star_formation_rate(gal, 100)
 
 
 out("\n==================================\n")
