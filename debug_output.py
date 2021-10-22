@@ -331,19 +331,22 @@ for max_age in [15, 40]:
             np.random.shuffle(young_idxs)  # get a random 1000
             young_idxs = young_idxs[:1000]
         # then get the temperature at the positions of all these young stars
-        young_positions = star_positions[young_idxs]
-        young_temps = ds.find_field_values_at_points(
-            [("gas", "temperature")], young_positions
-        )
-        # then see how many stars have temperatures above certain values
-        def find_fraction_above(temps, temp_max):
-            num_above = np.sum(temps > temp_max)
-            return 100 * num_above / len(temps)
+        try:
+            young_positions = star_positions[young_idxs]
+            young_temps = ds.find_field_values_at_points(
+                [("gas", "temperature")], young_positions
+            )
+            # then see how many stars have temperatures above certain values
+            def find_fraction_above(temps, temp_max):
+                num_above = np.sum(temps > temp_max)
+                return 100 * num_above / len(temps)
 
-        temp_caps = [1e6, 1e7, 2e7, 4e7, 4.3e7, 5e7, 1e8, 1e9]
-        for cap in temp_caps:
-            out(f"{cap:11.2e}    {find_fraction_above(young_temps, cap):.2f}")
-        del young_positions, young_temps, young_idxs
+            temp_caps = [1e6, 1e7, 2e7, 4e7, 4.3e7, 5e7, 1e8, 1e9]
+            for cap in temp_caps:
+                out(f"{cap:11.2e}    {find_fraction_above(young_temps, cap):.2f}")
+            del young_positions, young_temps, young_idxs
+        except:
+            out("no easy temp information")
 del star_ages, star_positions
 gc.collect()
 

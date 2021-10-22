@@ -14,7 +14,7 @@ import numpy as np
 from astropy import units as u
 import betterplotlib as bpl
 
-from utils import load_galaxies
+from utils import load_galaxies, plot_utils
 
 bpl.set_style()
 
@@ -231,7 +231,7 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, ax):
 fig, ax = bpl.subplots()
 plot_quantities("virial_mass", u.Msun, ax)
 ax.set_yscale("log")
-ax.legend(fontsize=10)
+plot_utils.add_legend(ax, fontsize=10)
 ax.add_labels("Scale Factor", "Virial Mass [M$_\odot$] ")
 fig.savefig(plot_dir / "galaxy_comparison_virial_mass.png")
 
@@ -241,7 +241,7 @@ fig.savefig(plot_dir / "galaxy_comparison_virial_mass.png")
 fig, ax = bpl.subplots()
 plot_quantities("stellar_mass_30_kpc", u.Msun, ax)
 ax.set_yscale("log")
-ax.legend(fontsize=10)
+plot_utils.add_legend(ax, fontsize=10)
 ax.add_labels("Scale Factor", "Stellar Mass [M$_\odot$] within 30 kpc")
 ax.set_limits(y_min=2e7)
 fig.savefig(plot_dir / "galaxy_comparison_stellar_mass.png")
@@ -261,7 +261,7 @@ ax.plot(masses, fe_h_kirby, c=bpl.almost_black, ls=":", label="Kirby+2013 (z=0)"
 ax.fill_between(masses, fe_h_kirby - 0.17, fe_h_kirby + 0.17, color="0.97", zorder=0)
 
 ax.set_xscale("log")
-ax.legend(fontsize=10, frameon=False)
+plot_utils.add_legend(ax, fontsize=10, frameon=False)
 ax.add_labels(
     "Stellar Mass [M$_\odot$] within 30 kpc",
     "Mean Stellar Metallicity [log(Z/$Z_\odot$)]",
@@ -276,7 +276,7 @@ for gas_type in gas_types:
     fig, ax = bpl.subplots()
     plot_quantities(f"gas_mass_{gas_type}", u.Msun, ax)
     ax.set_yscale("log")
-    ax.legend(fontsize=10)
+    plot_utils.add_legend(ax, fontsize=10)
     ax.add_labels(
         "Scale Factor", f"{gas_type} Gas Mass [M$_\odot$] within" + " R$_{vir}$"
     )

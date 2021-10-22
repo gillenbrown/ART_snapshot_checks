@@ -12,7 +12,7 @@ from scipy import special
 import yt
 import betterplotlib as bpl
 
-from utils import load_galaxies
+from utils import load_galaxies, plot_utils
 
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -229,7 +229,7 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
             ax.plot(mass_plot, dn_dlogM, c=sim.color, ls=lss[mass_type], label=label)
 
     # formax axes
-    ax.legend(loc=1)
+    plot_utils.add_legend(ax, loc=1, fontsize=10)
     ax.set_yscale("log")
     ax.set_xscale("log")
     # have different y limits for different versions of the plot

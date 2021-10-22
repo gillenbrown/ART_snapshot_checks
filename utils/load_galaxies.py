@@ -56,9 +56,9 @@ names = {
     full_dir(
         "stampede2/old_ic_comparison_production_analog/continuoushui_hn00_novirial/run"
     ): "Continuous Hui",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/continuouspopmcluster_hn00_novirial/run"
-    ): "Continuous PopM",
+    # full_dir(
+    #     "stampede2/old_ic_comparison_production_analog/continuouspopmcluster_hn00_novirial/run"
+    # ): "Continuous PopM",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/continuoussnr_hn00_novirial/run"
     ): "Continuous SNR",
@@ -82,7 +82,7 @@ names = {
     ): "ART 1.9 Advect",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_advect/run"
-    ): "Discrete $\\alpha<10$ Advect",
+    ): "ART 2.0 Advect",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_elements/run"
     ): "ART 2.0 Adiabatic All Elements",
@@ -108,11 +108,14 @@ names = {
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1/run"
     ): "ART 2.1 Entropy $f_{boost}=1$",
     full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim/run"
+    ): "ART 2.1 Entropy Molecular Changes",
+    full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_noagediff/run"
     ): "ART 2.1 Entropy $f_{boost}=5$ No Age Diff",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_nosync/run"
-    ): "ART 2.1 Entropy No Sync",
+    ): "ART 2.1 No Sync",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noturb_adi/run"
     ): "ART 2.0 No Turbulence Adiabatic",
@@ -165,22 +168,23 @@ colors = {
     "Discrete $\\alpha<10$": bpl.color_cycle[5],
     "Discrete $\\alpha<10, f_{boost}=3$": bpl.color_cycle[6],
     "Discrete $\\alpha<10$ HN20": bpl.color_cycle[7],
-    "Discrete $\\alpha<10$ Advect": "k",
-    "ART 1.9": bpl.color_cycle[0],
-    "ART 1.9 Advect": bpl.color_cycle[1],
-    "ART 1.9 Adiabatic": bpl.color_cycle[2],
-    "ART 2.0 Adiabatic All Elements": bpl.color_cycle[3],
-    "ART 2.0 Adiabatic No Stars": bpl.color_cycle[4],
-    "ART 1.9 Hui's version Adiabatic": bpl.color_cycle[5],
-    "ART 2.0 Advect No Stars": bpl.color_cycle[6],
-    "ART 2.0 No Flags": bpl.color_cycle[7],
-    "ART 2.0 No Turbulence Adiabatic": "red",
-    "ART 2.0 No Turbulence Advect": "green",
-    "ART 2.1 Entropy $f_{boost}=5$": "blue",
-    "ART 2.1 Entropy $f_{boost}=3$": "orange",
-    "ART 2.1 Entropy $f_{boost}=1$": "brown",
-    "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": "yellow",
-    "ART 2.1 Entropy No Sync": "purple",
+    "ART 1.9": "red",
+    "ART 1.9 Advect": "green",
+    "ART 1.9 Adiabatic": "blue",
+    "ART 2.0 Adiabatic All Elements": "orange",
+    "ART 2.0 Adiabatic No Stars": "brown",
+    "ART 1.9 Hui's version Adiabatic": "yellow",
+    "ART 2.0 Advect No Stars": "purple",
+    "ART 2.0 No Flags": "cyan",
+    "ART 2.0 Advect": bpl.color_cycle[0],
+    "ART 2.0 No Turbulence Adiabatic": bpl.color_cycle[4],
+    "ART 2.0 No Turbulence Advect": bpl.color_cycle[6],
+    "ART 2.1 Entropy $f_{boost}=5$": bpl.color_cycle[1],
+    "ART 2.1 Entropy $f_{boost}=3$": bpl.color_cycle[0],
+    "ART 2.1 Entropy $f_{boost}=1$": bpl.color_cycle[3],
+    "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": bpl.color_cycle[4],
+    "ART 2.1 Entropy Molecular Changes": bpl.color_cycle[5],
+    "ART 2.1 No Sync": bpl.color_cycle[3],
     # These colors are very carefully chosen to avoid colorblindness issues. The hue
     # changes between the SFE variations (blue) to the HN variations (purple), with
     # the shared SFE 100 HN 20 run in the middle. The blues are more saturated, while
@@ -201,23 +205,22 @@ colors = {
 }
 
 axes = {
-    "NBm SFE10": ["old_ic", "all"],
-    "NBm SFE100": ["old_ic", "all"],
+    "NBm SFE10": ["old_ic_code", "old_ic_20_feedback", "old_ic_21_feedback", "all"],
+    "NBm SFE100": ["old_ic_code", "old_ic_20_feedback", "old_ic_21_feedback", "all"],
     "Old IC SFE100 0% HN": ["old_ic", "all"],
     "Old IC SFE100 1% HN": ["old_ic", "all"],
     "Old IC SFE100 10% HN": ["old_ic", "all"],
     "Old IC SFE100 20% HN": ["old_ic", "all"],
     "Old IC SFE100 50% HN": ["old_ic", "all"],
     "Old IC SFE100 50% HN new": ["old_ic", "all"],
-    "Continuous": ["old_ic"],
-    "Continuous Hui": ["old_ic"],
-    "Continuous PopM": ["old_ic"],
-    "Continuous SNR": ["old_ic"],
-    "Discrete": ["old_ic"],
-    "Discrete $\\alpha<10$": ["old_ic"],
-    "Discrete $\\alpha<10, f_{boost}=3$": ["old_ic"],
-    "Discrete $\\alpha<10$ HN20": ["old_ic"],
-    "Discrete $\\alpha<10$ Advect": ["old_ic"],
+    "Continuous": ["old_ic_20_feedback"],
+    "Continuous Hui": ["old_ic_20_feedback"],
+    "Continuous PopM": ["old_ic_20_feedback"],
+    "Continuous SNR": ["old_ic_20_feedback"],
+    "Discrete": ["old_ic_20_feedback"],
+    "Discrete $\\alpha<10$": ["old_ic_20_feedback", "old_ic_code"],
+    "Discrete $\\alpha<10, f_{boost}=3$": ["old_ic_20_feedback"],
+    "Discrete $\\alpha<10$ HN20": ["old_ic_20_feedback"],
     "ART 1.9": [],
     "ART 1.9 Advect": [],
     "ART 1.9 Adiabatic": [],
@@ -226,13 +229,15 @@ axes = {
     "ART 1.9 Hui's version Adiabatic": [],
     "ART 2.0 Advect No Stars": [],
     "ART 2.0 No Flags": [],
-    "ART 2.0 No Turbulence Adiabatic": ["old_ic"],
-    "ART 2.0 No Turbulence Advect": ["old_ic"],
-    "ART 2.1 Entropy $f_{boost}=5$": ["old_ic"],
-    "ART 2.1 Entropy $f_{boost}=3$": ["old_ic"],
-    "ART 2.1 Entropy $f_{boost}=1$": ["old_ic"],
-    "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": ["old_ic"],
-    "ART 2.1 Entropy No Sync": ["old_ic"],
+    "ART 2.0 Advect": ["old_ic_code"],
+    "ART 2.0 No Turbulence Adiabatic": ["old_ic_code"],
+    "ART 2.0 No Turbulence Advect": ["old_ic_code"],
+    "ART 2.1 Entropy $f_{boost}=5$": ["old_ic_code", "old_ic_21_feedback"],
+    "ART 2.1 Entropy $f_{boost}=3$": ["old_ic_21_feedback"],
+    "ART 2.1 Entropy $f_{boost}=1$": ["old_ic_21_feedback"],
+    "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": ["old_ic_21_feedback"],
+    "ART 2.1 Entropy Molecular Changes": ["old_ic_21_feedback"],
+    "ART 2.1 No Sync": ["old_ic_code"],
     prod_fmt("T&L", 1, 20): ["tl", "lg", "all"],
     prod_fmt("T&L", 10, 20): ["tl", "lg", "all"],
     prod_fmt("T&L", 100, 20): ["tl", "lg", "all"],

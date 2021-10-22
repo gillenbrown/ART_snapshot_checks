@@ -52,6 +52,7 @@ cimf_plots_script = ./plot_cimf.py
 age_plot_script = ./plot_age_spread.py
 galaxies_comparison_script = ./plot_galaxy_comparisons.py
 gal_readin_script = ./utils/load_galaxies.py
+plot_utils_script = ./utils/plot_utils.py
 dt_history_script = ./dt_history.py
 cfl_script = ./cfl_violations.py
 tidal_consolidation_script = ./tidal_consolidation.py
@@ -98,6 +99,7 @@ ifeq ($(machine),shangrila)
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost3/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_noagediff/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_nosync/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_fboost3/run \
@@ -400,20 +402,20 @@ $(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(sfh_sentinel): $(sfh_plots_script) $(gal_readin_script) $(snapshots_hydro) $(rockstar_sentinels)
+$(sfh_sentinel): $(sfh_plots_script) $(gal_readin_script) $(plot_utils_script) $(snapshots_hydro) $(rockstar_sentinels)
 	python $(sfh_plots_script) $(sfh_sentinel) $(sim_dirs_hydro)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(cimf_sentinel): $(cimf_plots_script) $(gal_readin_script) $(snapshots_hydro) $(rockstar_sentinels)
+$(cimf_sentinel): $(cimf_plots_script) $(gal_readin_script) $(plot_utils_script) $(snapshots_hydro) $(rockstar_sentinels)
 	python $(cimf_plots_script) $(cimf_sentinel) $(sim_dirs_hydro)
 
 # Make the age spread plots. 
-$(age_spread_sentinel): $(age_plot_script) $(gal_readin_script) $(snapshots_hydro) $(rockstar_sentinels)
+$(age_spread_sentinel): $(age_plot_script) $(gal_readin_script) $(plot_utils_script) $(snapshots_hydro) $(rockstar_sentinels)
 	python $(age_plot_script) $(age_spread_sentinel) $(sim_dirs_hydro)
 
 # and the galaxy comparison plots
-$(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(gal_readin_script)
+$(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(gal_readin_script) $(plot_utils_script)
 	python $(galaxies_comparison_script) $(galaxy_comparison_sentinel) $(galaxies)
 
 # Make the individual nbody plots - several examples of very similar things here

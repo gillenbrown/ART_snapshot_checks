@@ -16,7 +16,7 @@ from scipy import integrate
 import betterplotlib as bpl
 import abundance_matching
 
-from utils import load_galaxies
+from utils import load_galaxies, plot_utils
 
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -212,7 +212,7 @@ def plot_sfh(axis_name):
         label="MW-like (Universe Machine)",
     )
 
-    ax.legend(loc=2, fontsize=12, frameon=False)
+    plot_utils.add_legend(ax, loc=2, frameon=False, fontsize=12)
     ax.set_yscale("log")
     ax.set_limits(0, 1.05 * max_time, 0.05, 5)
     ax.add_labels("Time [Gyr]", "SFR  [$M_\odot$/yr]")
@@ -237,9 +237,16 @@ def plot_cumulative_growth(axis_name):
     max_time = 0
 
     # iterate through simulations
-    for sim in sims:
+    for sim in sorted(sims, key=lambda x: x.name):
         if axis_name not in sim.axes:
             continue
+
+        if axis_name == "old_ic_code" and sim.name == "Discrete $\\alpha<10$":
+            name = "ART 2.0 Adiabatic"
+        elif axis_name == "old_ic_code" and sim.name == "ART 2.1 Entropy $f_{boost}=5$":
+            name = "ART 2.1 Entropy"
+        else:
+            name = sim.name
         for galaxy in sim.galaxies:
             times, cumulative_mass = cumulative_growth(galaxy)
             # handle halos with few points
@@ -253,7 +260,7 @@ def plot_cumulative_growth(axis_name):
             plot_times = times.to("Gyr").value
             cumulative_mass = cumulative_mass.to("msun").value
             if galaxy.rank == 1:
-                label = f"{sim.name}: z = {1 / sim.ds.scale_factor - 1:.1f}"
+                label = f"{name}: z = {1 / sim.ds.scale_factor - 1:.1f}"
             else:
                 label = None
             ax.plot(plot_times, cumulative_mass, c=sim.color, label=label)
@@ -277,7 +284,7 @@ def plot_cumulative_growth(axis_name):
         label="MW-like (Universe Machine)",
     )
 
-    ax.legend(loc=4, fontsize=10, frameon=False)
+    plot_utils.add_legend(ax, loc=4, fontsize=10, frameon=False)
     ax.set_yscale("log")
     ax.set_limits(0, 1.05 * max_time, 2e7, 1e10)
     ax.add_labels("Time [Gyr]", "Stellar Mass  [$M_\odot$]")
