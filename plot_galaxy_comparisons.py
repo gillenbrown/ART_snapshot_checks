@@ -158,16 +158,16 @@ def get_scale_factor(summary_path):
     return float(scale)
 
 
+sim_groups = load_galaxies.get_plot_names(binned_summaries.keys())
+
 # =============================================================================
 #
-# Then go through and plot everything!
+# helper functions for plotting
 #
 # =============================================================================
-# define some helper functions first
-def plot_quantities(quantity, unit, ax):
+def plot_quantities(quantity, unit, plot_name, ax):
     for idx, sim_name in enumerate(binned_summaries):
-        plots = load_galaxies.axes[sim_name]
-        if len(plots) == 0:
+        if plot_name not in load_galaxies.axes[sim_name]:
             continue
         color = load_galaxies.colors[sim_name]
         summaries = binned_summaries[sim_name]
@@ -196,8 +196,10 @@ def plot_quantities(quantity, unit, ax):
                 ax.plot(scale_factors, quantities, label=label, c=color)
 
 
-def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, ax):
+def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
     for idx, sim_name in enumerate(binned_summaries):
+        if plot_name not in load_galaxies.axes[sim_name]:
+            continue
         color = load_galaxies.colors[sim_name]
         summaries = binned_summaries[sim_name]
         # the number of halos to plot will not change throughout the history
@@ -225,65 +227,78 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, ax):
                 ax.plot(quantities_x, quantities_y, label=label, c=color)
 
 
-# -----------------------------------------------------------------------------
-# halo mass plot
-# -----------------------------------------------------------------------------
-fig, ax = bpl.subplots()
-plot_quantities("virial_mass", u.Msun, ax)
-ax.set_yscale("log")
-plot_utils.add_legend(ax, fontsize=10)
-ax.add_labels("Scale Factor", "Virial Mass [M$_\odot$] ")
-fig.savefig(plot_dir / "galaxy_comparison_virial_mass.png")
-
-# -----------------------------------------------------------------------------
-# stellar mass plot
-# -----------------------------------------------------------------------------
-fig, ax = bpl.subplots()
-plot_quantities("stellar_mass_30_kpc", u.Msun, ax)
-ax.set_yscale("log")
-plot_utils.add_legend(ax, fontsize=10)
-ax.add_labels("Scale Factor", "Stellar Mass [M$_\odot$] within 30 kpc")
-ax.set_limits(y_min=2e7)
-fig.savefig(plot_dir / "galaxy_comparison_stellar_mass.png")
-
-# -----------------------------------------------------------------------------
-# mass-metallicity plot
-# -----------------------------------------------------------------------------
-fig, ax = bpl.subplots()
-plot_two_quantities(
-    "stellar_mass_30_kpc", u.Msun, "metallicity_all_stars", u.dimensionless_unscaled, ax
-)
-# add Kirby 2013 line. Technically Kirby measures [Fe/H], I'll have to redo the
-# summaries to calculate that instead. For now assuem log(Z/Z_sun) = [Fe/H]
-masses = np.logspace(3, 11, 5)
-fe_h_kirby = -1.69 + 0.3 * np.log10(masses / 1e6)
-ax.plot(masses, fe_h_kirby, c=bpl.almost_black, ls=":", label="Kirby+2013 (z=0)")
-ax.fill_between(masses, fe_h_kirby - 0.17, fe_h_kirby + 0.17, color="0.97", zorder=0)
-
-ax.set_xscale("log")
-plot_utils.add_legend(ax, fontsize=10, frameon=False)
-ax.add_labels(
-    "Stellar Mass [M$_\odot$] within 30 kpc",
-    "Mean Stellar Metallicity [log(Z/$Z_\odot$)]",
-)
-ax.set_limits(1e5, 3e10)
-fig.savefig(plot_dir / "galaxy_comparison_mass_metallicity.png")
-
-# -----------------------------------------------------------------------------
-# gas masses plots
-# -----------------------------------------------------------------------------
-for gas_type in gas_types:
+# =============================================================================
+#
+# Then go through and plot everything!
+#
+# =============================================================================
+for group in sim_groups:
+    # -----------------------------------------------------------------------------
+    # halo mass plot
+    # -----------------------------------------------------------------------------
     fig, ax = bpl.subplots()
-    plot_quantities(f"gas_mass_{gas_type}", u.Msun, ax)
+    plot_quantities("virial_mass", u.Msun, group, ax)
     ax.set_yscale("log")
     plot_utils.add_legend(ax, fontsize=10)
-    ax.add_labels(
-        "Scale Factor", f"{gas_type} Gas Mass [M$_\odot$] within" + " R$_{vir}$"
-    )
-    if "H2" in gas_type:
-        ax.set_limits(y_min=1e5)
+    ax.add_labels("Scale Factor", "Virial Mass [M$_\odot$] ")
+    fig.savefig(plot_dir / f"galaxy_comparison_{group}_virial_mass.png")
 
-    fig.savefig(plot_dir / f"galaxy_comparison_gas_mass_{gas_type}.png")
+    # -----------------------------------------------------------------------------
+    # stellar mass plot
+    # -----------------------------------------------------------------------------
+    fig, ax = bpl.subplots()
+    plot_quantities("stellar_mass_30_kpc", u.Msun, group, ax)
+    ax.set_yscale("log")
+    plot_utils.add_legend(ax, fontsize=10)
+    ax.add_labels("Scale Factor", "Stellar Mass [M$_\odot$] within 30 kpc")
+    ax.set_limits(y_min=2e7)
+    fig.savefig(plot_dir / f"galaxy_comparison_{group}_stellar_mass.png")
+
+    # -----------------------------------------------------------------------------
+    # mass-metallicity plot
+    # -----------------------------------------------------------------------------
+    fig, ax = bpl.subplots()
+    plot_two_quantities(
+        "stellar_mass_30_kpc",
+        u.Msun,
+        "metallicity_all_stars",
+        u.dimensionless_unscaled,
+        group,
+        ax,
+    )
+    # add Kirby 2013 line. Technically Kirby measures [Fe/H], I'll have to redo the
+    # summaries to calculate that instead. For now assuem log(Z/Z_sun) = [Fe/H]
+    masses = np.logspace(3, 11, 5)
+    fe_h_kirby = -1.69 + 0.3 * np.log10(masses / 1e6)
+    ax.plot(masses, fe_h_kirby, c=bpl.almost_black, ls=":", label="Kirby+2013 (z=0)")
+    ax.fill_between(
+        masses, fe_h_kirby - 0.17, fe_h_kirby + 0.17, color="0.97", zorder=0
+    )
+
+    ax.set_xscale("log")
+    plot_utils.add_legend(ax, fontsize=10, frameon=False)
+    ax.add_labels(
+        "Stellar Mass [M$_\odot$] within 30 kpc",
+        "Mean Stellar Metallicity [log(Z/$Z_\odot$)]",
+    )
+    ax.set_limits(1e5, 3e10)
+    fig.savefig(plot_dir / f"galaxy_comparison_{group}_mass_metallicity.png")
+
+    # -----------------------------------------------------------------------------
+    # gas masses plots
+    # -----------------------------------------------------------------------------
+    for gas_type in gas_types:
+        fig, ax = bpl.subplots()
+        plot_quantities(f"gas_mass_{gas_type}", u.Msun, group, ax)
+        ax.set_yscale("log")
+        plot_utils.add_legend(ax, fontsize=10)
+        ax.add_labels(
+            "Scale Factor", f"{gas_type} Gas Mass [M$_\odot$] within" + " R$_{vir}$"
+        )
+        if "H2" in gas_type:
+            ax.set_limits(y_min=1e5)
+
+        fig.savefig(plot_dir / f"galaxy_comparison_{group}_gas_mass_{gas_type}.png")
 
 # =============================================================================
 #

@@ -4,6 +4,9 @@ def add_legend(ax, loc=0, fontsize=12, frameon=False):
     # then get everything from it
     handles, labels = ax.get_legend_handles_labels()
 
+    if len(handles) == 0:
+        return
+
     # then figure out how to sort them
     sorts = dict()
     for h, l in zip(handles, labels):
