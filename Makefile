@@ -352,7 +352,7 @@ endif
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(debugs) $(galaxies) $(galaxy_comparison_sentinel) $(halo_growth_plot) $(age_spread_sentinel) $(movies)
+all: $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(debugs) $(movies)
 # $(dt_history_plots) $(cfl_plots)
 
 .PHONY: clean
