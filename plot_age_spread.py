@@ -12,7 +12,7 @@ import numpy as np
 import yt
 import betterplotlib as bpl
 
-from utils import load_galaxies
+from utils import load_galaxies, plot_utils
 from analysis_functions import age_spreads
 
 bpl.set_style()
@@ -133,7 +133,7 @@ def plot_age_growth(axis_name, sim_share_type):
             ax_row[0].plot(ages_lo, fractions_lo, c=sim.color, lW=2, label=label)
 
     # put a legend in the top left panel
-    axs[0][0].legend(loc=4, fontsize=14)
+    plot_utils.add_legend(axs[0][0], loc=4, fontsize=14)
 
     # if there is a common redshift, annotate it
     if sim_share_type == "common":
