@@ -61,6 +61,7 @@ read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
 read_tree_src = $(read_tree_dir)/halo_history.c
 comparison_plots_dir = ./comparison_plots
+paper_plots_dir = ./paper_plots
 
 # ------------------------------------------------------------------------------
 #
@@ -140,7 +141,7 @@ sim_plots_dirs = $(foreach dir,$(sim_dirs),$(dir)/plots)
 # tidal directories are only needed for production runs
 prod_sim_dirs = $(filter $(runs_home)/stampede2/production%,$(sim_dirs))
 sim_tidal_dirs = $(foreach dir,$(prod_sim_dirs),$(dir)/tidal)
-my_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos_dirs) $(sim_plots_dirs) $(sim_tidal_dirs) $(comparison_plots_dir)
+my_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos_dirs) $(sim_plots_dirs) $(sim_tidal_dirs) $(comparison_plots_dir) $(paper_plots_dir)
 
 # ------------------------------------------------------------------------------
 #
@@ -351,10 +352,20 @@ endif
 
 # ------------------------------------------------------------------------------
 #
+#  Paper specific plots
+# 
+# ------------------------------------------------------------------------------
+paper_halo_growth_plot = $(paper_plots_dir)/halo_growth.pdf
+paper_halo_growth_script = paper_halo_growth.py
+
+paper_plots = $(paper_halo_growth_plot)
+
+# ------------------------------------------------------------------------------
+#
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(debugs) $(movies)
+all: $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(debugs) $(movies)
 # $(dt_history_plots) $(cfl_plots)
 
 .PHONY: clean
@@ -503,3 +514,7 @@ $(cfl_plots): $(snapshots) $(cfl_script)
 # tidal output consolidation
 $(tidal_sentinels): $(snapshots) $(tidal_consolidation_script)
 	python $(tidal_consolidation_script) $@
+
+# paper plots
+$(paper_halo_growth_plot): $(paper_halo_growth_script)
+	python $(paper_halo_growth_script) $@
