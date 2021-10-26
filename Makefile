@@ -358,7 +358,12 @@ endif
 paper_halo_growth_plot = $(paper_plots_dir)/halo_growth.pdf
 paper_halo_growth_script = paper_halo_growth.py
 
-paper_plots = $(paper_halo_growth_plot)
+# these are only on shangrila
+ifeq ($(machine),shangrila)
+	paper_plots = $(paper_halo_growth_plot)
+else
+	paper_plots =
+endif
 
 # ------------------------------------------------------------------------------
 #
