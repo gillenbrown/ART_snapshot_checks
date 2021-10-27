@@ -53,6 +53,7 @@ else:
 # =========================================================================
 if len(sim.galaxies) < 2:
     fig, ax = bpl.subplots(figsize=[8.0, 8.0])
+    z = (1 / float(scale_factor)) - 1
     ax.easy_add_text(
         "The Local Group does not exist at z={:.2f}".format(z), "center left"
     )
