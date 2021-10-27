@@ -17,7 +17,7 @@ Note that much of this is borrowed from Molly's scripts. Specifically, this is f
 If I want to do the star centering too, I should use:
 /work2/08197/tg874967/stampede2/newbox/yt_tools/tests/usethisone-Copy1.py
 """
-from utils import load_galaxies
+from utils import load_galaxies as lg
 
 import sys
 from pathlib import Path
@@ -44,7 +44,7 @@ def print_and_write(info, file_obj):
 
 
 ds_loc = Path(sys.argv[1]).resolve()
-sim = load_galaxies.Simulation(ds_loc, sphere_radius_kpc=None, n_galaxies=10)
+sim = lg.Simulation(ds_loc, sphere_radius_kpc=None, n_galaxies=2)
 ad = sim.ds.all_data()
 
 is_zoom = ("N-BODY_0", "POSITION_X") in sim.ds.field_list
@@ -124,28 +124,6 @@ def distance(x_0, y_0, z_0, x_1, y_1, z_1):
     return np.sqrt((x_1 - x_0) ** 2 + (y_1 - y_0) ** 2 + (z_1 - z_0) ** 2)
 
 
-def mass_fractions(sphere):
-    # Prints the fraction of mass inside a sphere that comes from different
-    # species of N-body particles. This is useful for checking contamination
-    masses = sphere[("N-BODY", "MASS")]
-    unique_masses, num_particles = np.unique(masses, return_counts=True)
-    total_mass = masses.sum()
-    out("Total Mass: {:.3e}".format(total_mass.to("Msun")))
-    out(
-        "{:<7s} {:>10s} {:>15s} {:>15s}".format(
-            "Species", "Number", "Mass", "Mass Fraction"
-        )
-    )
-    for m, n_m in zip(unique_masses, num_particles):
-        this_m_tot = (m * n_m).to("Msun")  # total mass in this species of particle
-        frac = (this_m_tot / total_mass).value
-        # then get the species. We take advantage of the fact the the unique masses
-        # are sorted, with the smallest mass (last species) first.
-        s = len(unique_masses) - np.where(unique_masses == m)[0][0] - 1
-
-        out("{:<7} {:>10,} {:>10.2e} {:>14.2f}%".format(s, n_m, this_m_tot, frac * 100))
-
-
 # =========================================================================
 #
 # Functions to write quantities
@@ -163,10 +141,33 @@ def write_halo_properties(galaxy):
     out(f"Virial Radius: {galaxy.r_vir.to('kpc').value:>7.3f} kpc")
 
 
+def mass_fractions(galaxy):
+    # Prints the fraction of mass inside a sphere that comes from different
+    # species of N-body particles. This is useful for checking contamination
+    masses = galaxy.sphere[("N-BODY", "MASS")]
+    unique_masses, num_particles = np.unique(masses, return_counts=True)
+    total_mass = masses.sum()
+    out("Sum of DM particles: {:.3e}".format(total_mass.to("Msun")))
+    out("")
+    out(
+        "{:<7s} {:>10s} {:>15s} {:>15s}".format(
+            "Species", "Number", "Mass", "Mass Fraction"
+        )
+    )
+    for m, n_m in zip(unique_masses, num_particles):
+        this_m_tot = (m * n_m).to("Msun")  # total mass in this species of particle
+        frac = (this_m_tot / total_mass).value
+        # then get the species. We take advantage of the fact the the unique masses
+        # are sorted, with the smallest mass (last species) first.
+        s = len(unique_masses) - np.where(unique_masses == m)[0][0] - 1
+
+        out("{:<7} {:>10,} {:>10.3e} {:>14.2f}%".format(s, n_m, this_m_tot, frac * 100))
+
+
 def write_halo_contamination(galaxy):
     # then print information about contamination, if we need to
     if is_zoom:
-        out("\nClosest particle of each low-res DM species")
+        out(f"\nClosest particle of each low-res DM species within {galaxy.name}")
         # First we calculate the closest particle of each unrefined DM species
         x_cen, y_cen, z_cen = galaxy.center.to("Mpc").value
         for idx in species_x:
@@ -175,51 +176,31 @@ def write_halo_contamination(galaxy):
             )
             out("{}: {:.0f} kpc".format(idx, np.min(distances) * 1000))
 
-        for sphere, name in zip(
-            [galaxy.sphere_virial, galaxy.sphere_mpc], ["the virial radius", "1 Mpc"]
-        ):
-            out(
-                "\nDM mass and fraction of total from different "
-                "species within {}".format(name)
-            )
-            mass_fractions(sphere)
     else:
-        total_mass = galaxy.sphere_virial[("N-BODY", "MASS")].to("Msun").value.sum()
-        out(
-            "\nTotal DM particle mass within the virial radius = {:.3e} Msun".format(
-                total_mass
-            )
-        )
+        out(f"No halo contamination within {galaxy.name}, only one DM species")
 
 
 def write_stellar_masses(galaxy):
-    stellar_mass_30kpc = np.sum(galaxy.sphere_30_kpc[("STAR", "MASS")].to("Msun").value)
-    stellar_mass_virial = np.sum(
-        galaxy.sphere_virial[("STAR", "MASS")].to("Msun").value
-    )
-    out("")
-    out("Stellar Mass within 30 kpc: {:.2e} Msun".format(stellar_mass_30kpc))
-    out(
-        "Stellar Mass within the virial radius: {:.2e} Msun".format(stellar_mass_virial)
-    )
+    stellar_mass = np.sum(galaxy.sphere[("STAR", "MASS")].to("Msun").value)
+    out(f"Stellar Mass within {galaxy.name}: {stellar_mass:.2e} Msun")
 
 
 def write_gas_masses(galaxy):
     # Print the masses in various states
-    cell_volumes = galaxy.sphere_virial[("index", "cell_volume")]
-    gas_mass = galaxy.sphere_virial[("gas", "cell_mass")]
-    gas_mass_HI = galaxy.sphere_virial[("gas", "HI density")] * cell_volumes
-    gas_mass_HII = galaxy.sphere_virial[("gas", "HII density")] * cell_volumes
+    cell_volumes = galaxy.sphere[("index", "cell_volume")]
+    gas_mass = galaxy.sphere[("gas", "cell_mass")]
+    gas_mass_HI = galaxy.sphere[("gas", "HI density")] * cell_volumes
+    gas_mass_HII = galaxy.sphere[("gas", "HII density")] * cell_volumes
     gas_mass_H2 = (
         2
-        * galaxy.sphere_virial[("artio", "RT_HVAR_H2")]
+        * galaxy.sphere[("artio", "RT_HVAR_H2")]
         * sim.ds.arr(1, "code_mass/code_length**3")
         * cell_volumes
     )
-    gas_mass_HeI = 4 * galaxy.sphere_virial[("gas", "HeI density")] * cell_volumes
-    gas_mass_HeII = 4 * galaxy.sphere_virial[("gas", "HeII density")] * cell_volumes
-    gas_mass_HeIII = 4 * galaxy.sphere_virial[("gas", "HeIII density")] * cell_volumes
-    gas_mass_metals = galaxy.sphere_virial[("gas", "metal_density")] * cell_volumes
+    gas_mass_HeI = 4 * galaxy.sphere[("gas", "HeI density")] * cell_volumes
+    gas_mass_HeII = 4 * galaxy.sphere[("gas", "HeII density")] * cell_volumes
+    gas_mass_HeIII = 4 * galaxy.sphere[("gas", "HeIII density")] * cell_volumes
+    gas_mass_metals = galaxy.sphere[("gas", "metal_density")] * cell_volumes
 
     gas_mass_total = np.sum(gas_mass.to("Msun").value)
     gas_mass_HI_total = np.sum(gas_mass_HI.to("Msun").value)
@@ -230,38 +211,34 @@ def write_gas_masses(galaxy):
     gas_mass_HeIII_total = np.sum(gas_mass_HeIII.to("Msun").value)
     gas_mass_metals_total = np.sum(gas_mass_metals.to("Msun").value)
 
-    out("")
-    out("Gas masses within the virial radius:")
-    out("Total:  {:.2e} Msun".format(gas_mass_total))
-    out("HI:     {:.2e} Msun".format(gas_mass_HI_total))
-    out("HII:    {:.2e} Msun".format(gas_mass_HII_total))
-    out("H2:     {:.2e} Msun".format(gas_mass_H2_total))
-    out("He1:    {:.2e} Msun".format(gas_mass_HeI_total))
-    out("HeII:   {:.2e} Msun".format(gas_mass_HeII_total))
-    out("HeIII:  {:.2e} Msun".format(gas_mass_HeIII_total))
-    out("Metals: {:.2e} Msun".format(gas_mass_metals_total))
+    out("Total:  {:.2e} Msun within {}".format(gas_mass_total, galaxy.name))
+    out("HI:     {:.2e} Msun within {}".format(gas_mass_HI_total, galaxy.name))
+    out("HII:    {:.2e} Msun within {}".format(gas_mass_HII_total, galaxy.name))
+    out("H2:     {:.2e} Msun within {}".format(gas_mass_H2_total, galaxy.name))
+    out("He1:    {:.2e} Msun within {}".format(gas_mass_HeI_total, galaxy.name))
+    out("HeII:   {:.2e} Msun within {}".format(gas_mass_HeII_total, galaxy.name))
+    out("HeIII:  {:.2e} Msun within {}".format(gas_mass_HeIII_total, galaxy.name))
+    out("Metals: {:.2e} Msun within {}".format(gas_mass_metals_total, galaxy.name))
 
 
 def write_stellar_metallicity(galaxy):
     # Metallicity
-    metallicity = galaxy.sphere_30_kpc[("STAR", "METALLICITY_SNII")].value
-    metallicity += galaxy.sphere_30_kpc[("STAR", "METALLICITY_SNIa")].value
+    metallicity = galaxy.sphere[("STAR", "METALLICITY_SNII")].value
+    metallicity += galaxy.sphere[("STAR", "METALLICITY_SNIa")].value
     if ("STAR", "METALLICITY_AGB") in sim.ds.field_list:
-        metallicity += galaxy.sphere_30_kpc[("STAR", "METALLICITY_AGB")].value
+        metallicity += galaxy.sphere[("STAR", "METALLICITY_AGB")].value
     # get the masses so we can mass-weight it
-    masses = galaxy.sphere_30_kpc[("STAR", "MASS")].to("Msun").value
+    masses = galaxy.sphere[("STAR", "MASS")].to("Msun").value
     metal_mass = masses * metallicity
 
-    out("")
-    out("Stellar metallicity (nans mean no stars)")
-    out("Mass-weighted mean metallicity of:")
+    out("Mass-weighted mean metallicity of (nans mean no stars):")
     for max_age in [np.inf, 40]:
         if np.isinf(max_age):
             descriptor = "all stars"
         else:
             descriptor = f"stars younger than {max_age} Myr"
 
-        star_ages = galaxy.sphere_30_kpc[("STAR", "age")].to("Myr").value
+        star_ages = galaxy.sphere[("STAR", "age")].to("Myr").value
         # get the mass-weighted metallicity
         if len(star_ages) == 0 or np.min(star_ages) > max_age:
             mean_metallicity = np.nan
@@ -270,20 +247,20 @@ def write_stellar_metallicity(galaxy):
             mean_metallicity = np.sum(metal_mass[star_mask]) / np.sum(masses[star_mask])
 
         out(
-            f"{descriptor:>25} = {mean_metallicity:.2e} -> "
+            f"{descriptor:>25} within {galaxy.name} = {mean_metallicity:.2e} -> "
             f"log(Z/Z_sun) = {np.log10(mean_metallicity / 0.02):.2f}"
         )
 
 
 def write_star_formation_rate(galaxy, timescale_myr):
-    star_ages = galaxy.sphere_virial[("STAR", "age")].to("Myr").value
+    star_ages = galaxy.sphere[("STAR", "age")].to("Myr").value
     mask = star_ages < timescale_myr
 
-    stellar_masses = galaxy.sphere_virial[("STAR", "MASS")]
+    stellar_masses = galaxy.sphere[("STAR", "MASS")]
     mass_formed = np.sum(stellar_masses[mask].to("Msun").value)
     sfr = mass_formed / (timescale_myr * 1e6)
 
-    out(f"SFR in last {timescale_myr} Myr: {sfr:.3e} Msun / yr")
+    out(f"SFR within {galaxy.name} in last {timescale_myr} Myr: {sfr:.6f} Msun / yr")
 
 
 # =========================================================================
@@ -292,35 +269,43 @@ def write_star_formation_rate(galaxy, timescale_myr):
 #
 # =========================================================================
 for gal in sim.galaxies:
-    # get some spheres that will be used in the calculations of galaxy
-    # properties
-    gal.sphere_virial = sim.ds.sphere(center=gal.center, radius=gal.r_vir)
-    gal.sphere_mpc = sim.ds.sphere(center=gal.center, radius=1 * yt.units.Mpc)
-    gal.sphere_30_kpc = sim.ds.sphere(center=gal.center, radius=30 * yt.units.kpc)
+    # make other galaxy objects, which will only be different by their radius, and
+    # the name used to refer to them.
 
-    gal.sp_large = sim.ds.sphere(center=gal.center, radius=1.2 * gal.r_vir)
-    gal.sp2 = sim.ds.sphere(center=gal.center, radius=0.3 * gal.r_vir)
-    gal.sp1 = sim.ds.sphere(center=gal.center, radius=0.1 * gal.r_vir)
-    gal.sp_small = sim.ds.sphere(center=gal.center, radius=0.05 * gal.r_vir)
-    gal.spquar = sim.ds.sphere(center=gal.center, radius=0.25 * gal.r_vir)
+    gal_virial = lg.Galaxy(
+        sim.ds, center=gal.center, sphere_radius=gal.r_vir, name="r_vir"
+    )
+    gal_mpc = lg.Galaxy(
+        sim.ds, center=gal.center, sphere_radius=1 * yt.units.Mpc, name="1 Mpc"
+    )
+    gal_30kpc = lg.Galaxy(
+        sim.ds, center=gal.center, sphere_radius=30 * yt.units.kpc, name="30 kpc"
+    )
 
     out("\n==================================\n")
     out("Rank {} halo:".format(gal.rank))
 
     write_halo_properties(gal)
-    write_halo_contamination(gal)
+    mass_fractions(gal_virial)
+    write_halo_contamination(gal_virial)
+    write_halo_contamination(gal_mpc)
 
     # then the baryon properties. Quit if we don't have baryons
     if not has_baryons:
         continue
+    out("")
 
-    write_stellar_masses(gal)
-    write_stellar_metallicity(gal)
-    write_gas_masses(gal)
-    write_star_formation_rate(gal, 10)
-    write_star_formation_rate(gal, 50)
-    write_star_formation_rate(gal, 100)
-
+    write_stellar_masses(gal_30kpc)
+    write_stellar_masses(gal_virial)
+    out("")
+    write_stellar_metallicity(gal_virial)
+    out("")
+    write_gas_masses(gal_virial)
+    out("")
+    write_star_formation_rate(gal_virial, 10)
+    write_star_formation_rate(gal_virial, 50)
+    write_star_formation_rate(gal_virial, 100)
+    write_star_formation_rate(gal_virial, 1000)
 
 out("\n==================================\n")
 

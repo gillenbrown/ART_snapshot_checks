@@ -266,18 +266,28 @@ def get_plot_names(sim_names):
 #
 # ======================================================================================
 class Galaxy(object):
-    def __init__(self, ds, center, sphere_radius, m_vir, r_vir, rank):
+    def __init__(
+        self,
+        ds,
+        center=None,
+        sphere_radius=None,
+        m_vir=None,
+        r_vir=None,
+        rank=None,
+        name=None,
+    ):
         self.ds = ds
         self.center = center
         self.m_vir = m_vir
         self.r_vir = r_vir
         self.rank = rank
+        self.name = name
+
+        self.mask_done_forming = None
 
         # only create the sphere if the user wants to
         if sphere_radius is not None:
             self.sphere = self.ds.sphere(center=self.center, radius=sphere_radius)
-            # then get the mask showing which clusters are done forming
-            self.mask_done_forming = self.sphere[("STAR", "age")] > 15 * yt.units.Myr
         else:
             self.sphere = None
 
@@ -291,6 +301,10 @@ class Galaxy(object):
         """
         if self.sphere is None:
             raise ValueError("No sphere set on galaxy initialization")
+
+        # then get the mask showing which clusters are done forming
+        if self.mask_done_forming is None and property[0] == "STAR":
+            self.mask_done_forming = self.sphere[("STAR", "age")] > 15 * yt.units.Myr
 
         quantity = self.sphere[property]
         if property[0] == "STAR":
