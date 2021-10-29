@@ -1,4 +1,4 @@
-def add_legend(ax, loc=0, fontsize=12, frameon=False):
+def add_legend(ax, loc=0, fontsize=12, frameon=False, **kwargs):
     # make a default legend
     ax.legend()
     # then get everything from it
@@ -35,4 +35,5 @@ def add_legend(ax, loc=0, fontsize=12, frameon=False):
         loc=loc,
         fontsize=fontsize,
         frameon=frameon,
+        **kwargs
     )
