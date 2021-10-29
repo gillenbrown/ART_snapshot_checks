@@ -29,7 +29,7 @@ def add_legend(ax, loc=0, fontsize=12, frameon=False):
         *sorted([hl for hl in zip(handles, labels)], key=lambda hl: sorts[hl])
     )
 
-    ax.legend(
+    return ax.legend(
         handles=handles,
         labels=labels,
         loc=loc,

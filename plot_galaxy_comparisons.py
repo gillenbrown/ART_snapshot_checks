@@ -214,8 +214,8 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
                 try:  # check that the output has the desired quantity
                     this_qx = info[rank][quantity_x].to(unit_x).value
                     this_qy = info[rank][quantity_y].to(unit_y).value
-                    # get them separately, so that the KeyError will be 
-                    # triggered before we add them to the list. 
+                    # get them separately, so that the KeyError will be
+                    # triggered before we add them to the list.
                     quantities_x.append(this_qx)
                     quantities_y.append(this_qy)
                 except KeyError:  # output does not have it
