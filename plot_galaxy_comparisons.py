@@ -73,7 +73,7 @@ gas_types = ["Total", "HI", "HII", "H2", "He1", "HeII", "HeIII", "Metals"]
 def check_for_gas_masses(line, halo_dict):
     for gas_type in gas_types:
         if line.startswith(gas_type + ": "):
-            quantity = u.Quantity(line.split()[-2], line.split()[-1])
+            quantity = u.Quantity(line.split()[1], line.split()[2])
             halo_dict[f"gas_mass_{gas_type}"] = quantity
 
 
@@ -212,8 +212,12 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
                 info = parsed_summaries[summary]
                 # then get the quanties of interest
                 try:  # check that the output has the desired quantity
-                    quantities_x.append(info[rank][quantity_x].to(unit_x).value)
-                    quantities_y.append(info[rank][quantity_y].to(unit_y).value)
+                    this_qx = info[rank][quantity_x].to(unit_x).value
+                    this_qy = info[rank][quantity_y].to(unit_y).value
+                    # get them separately, so that the KeyError will be 
+                    # triggered before we add them to the list. 
+                    quantities_x.append(this_qx)
+                    quantities_y.append(this_qy)
                 except KeyError:  # output does not have it
                     continue
             # only add the label for rank 1, so I don't duplicate
