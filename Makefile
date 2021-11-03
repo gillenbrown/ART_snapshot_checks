@@ -521,5 +521,5 @@ $(tidal_sentinels): $(snapshots) $(tidal_consolidation_script)
 	python $(tidal_consolidation_script) $@
 
 # paper plots
-$(paper_halo_growth_plot): $(paper_halo_growth_script)
+$(paper_halo_growth_plot): $(paper_halo_growth_script) $(merger_sentinels)
 	python $(paper_halo_growth_script) $@
