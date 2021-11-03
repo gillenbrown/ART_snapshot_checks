@@ -200,6 +200,7 @@ colors = {
     "R&J Collisionless Original": cmap_rj_collisionless(1.0),
     "R&J Collisionless 2x Trim": cmap_rj_collisionless(0.7),
     "R&J Collisionless 4x Trim": cmap_rj_collisionless(0.4),
+    "T&L Collisionless": bpl.almost_black,
 }
 
 axes = {
@@ -249,6 +250,7 @@ axes = {
     "R&J Collisionless Original": ["rj", "lg", "nbody", "all"],
     "R&J Collisionless 2x Trim": ["rj", "lg", "nbody", "all"],
     "R&J Collisionless 4x Trim": ["rj", "lg", "nbody", "all"],
+    "T&L Collisionless": ["tl", "lg", "nbody", "all"],
 }
 
 
