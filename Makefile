@@ -83,6 +83,7 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/stampede2/production/tl_sfe100_hn20/run \
 	                 $(runs_home)/stampede2/production/tl_sfe100_hn05/run \
 	                 $(runs_home)/stampede2/production/tl_sfe100_hn00/run \
+	                 $(runs_home)/stampede2/production/tl_sfe100_hn00_fboost1/run \
 	                 $(runs_home)/stampede2/production/tl_sfe100_hn00_fboost3/run \
  	                 $(runs_home)/stampede2/production/rj_sfe010_hn20/run \
  	                 $(runs_home)/stampede2/production/rj_sfe100_hn20/run \
@@ -119,6 +120,7 @@ ifeq ($(machine),stampede2)
 	sim_dirs_hydro = $(runs_home)/production/tl_sfe001_hn20/run \
 	                 $(runs_home)/production/tl_sfe010_hn20/run \
 	                 $(runs_home)/production/tl_sfe100_hn00/run \
+	                 $(runs_home)/production/tl_sfe100_hn00_fboost1/run \
 	                 $(runs_home)/production/tl_sfe100_hn00_fboost3/run \
 	                 $(runs_home)/production/tl_sfe100_hn05/run \
 	                 $(runs_home)/production/tl_sfe100_hn20/run \
