@@ -178,10 +178,10 @@ colors = {
     "ART 2.1 Entropy $f_{boost}=5$": bpl.color_cycle[1],
     "ART 2.1 Entropy $f_{boost}=3$": bpl.color_cycle[0],
     "ART 2.1 Entropy $f_{boost}=1$": bpl.color_cycle[3],
-    "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": bpl.color_cycle[4],
-    "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff": bpl.color_cycle[5],
-    "ART 2.1 Entropy Molecular Changes $f_{boost}=5$": bpl.color_cycle[6],
-    "ART 2.1 Entropy Molecular Changes $f_{boost}=1$": bpl.color_cycle[7],
+    "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": bpl.color_cycle[0],
+    "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff": bpl.color_cycle[4],
+    "ART 2.1 Entropy Molecular Changes $f_{boost}=5$": bpl.color_cycle[4],
+    "ART 2.1 Entropy Molecular Changes $f_{boost}=1$": bpl.color_cycle[5],
     "ART 2.1 No Sync": bpl.color_cycle[3],
     # These colors are very carefully chosen to avoid colorblindness issues. The hue
     # changes between the SFE variations (blue) to the HN variations (purple), with
@@ -204,8 +204,20 @@ colors = {
 }
 
 axes = {
-    "NBm SFE10": ["old_ic_code", "old_ic_20_feedback", "old_ic_21_feedback", "all"],
-    "NBm SFE100": ["old_ic_code", "old_ic_20_feedback", "old_ic_21_feedback", "all"],
+    "NBm SFE10": [
+        "old_ic_code",
+        "old_ic_20_feedback",
+        "old_ic_21_feedback",
+        "old_ic_sn_timing",
+        "all",
+    ],
+    "NBm SFE100": [
+        "old_ic_code",
+        "old_ic_20_feedback",
+        "old_ic_21_feedback",
+        "old_ic_sn_timing",
+        "all",
+    ],
     "Old IC SFE100 0% HN": ["old_ic", "all"],
     "Old IC SFE100 1% HN": ["old_ic", "all"],
     "Old IC SFE100 10% HN": ["old_ic", "all"],
@@ -231,11 +243,15 @@ axes = {
     "ART 2.0 Advect": ["old_ic_code"],
     "ART 2.0 No Turbulence Adiabatic": ["old_ic_code"],
     "ART 2.0 No Turbulence Advect": ["old_ic_code"],
-    "ART 2.1 Entropy $f_{boost}=5$": ["old_ic_code", "old_ic_21_feedback"],
+    "ART 2.1 Entropy $f_{boost}=5$": [
+        "old_ic_code",
+        "old_ic_21_feedback",
+        "old_ic_sn_timing",
+    ],
     "ART 2.1 Entropy $f_{boost}=3$": ["old_ic_21_feedback"],
-    "ART 2.1 Entropy $f_{boost}=1$": ["old_ic_21_feedback"],
-    "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": ["old_ic_21_feedback"],
-    "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff": ["old_ic_21_feedback"],
+    "ART 2.1 Entropy $f_{boost}=1$": ["old_ic_21_feedback", "old_ic_sn_timing"],
+    "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": ["old_ic_sn_timing"],
+    "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff": ["old_ic_sn_timing"],
     "ART 2.1 Entropy Molecular Changes $f_{boost}=5$": ["old_ic_21_feedback"],
     "ART 2.1 Entropy Molecular Changes $f_{boost}=1$": ["old_ic_21_feedback"],
     "ART 2.1 No Sync": ["old_ic_code"],
