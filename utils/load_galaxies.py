@@ -95,6 +95,9 @@ names = {
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost3/run"
     ): "ART 2.1 Entropy $f_{boost}=3$",
     full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost2/run"
+    ): "ART 2.1 Entropy $f_{boost}=2$",
+    full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1/run"
     ): "ART 2.1 Entropy $f_{boost}=1$",
     full_dir(
@@ -177,11 +180,12 @@ colors = {
     "ART 2.0 No Turbulence Advect": bpl.color_cycle[6],
     "ART 2.1 Entropy $f_{boost}=5$": bpl.color_cycle[1],
     "ART 2.1 Entropy $f_{boost}=3$": bpl.color_cycle[0],
-    "ART 2.1 Entropy $f_{boost}=1$": bpl.color_cycle[3],
+    "ART 2.1 Entropy $f_{boost}=2$": bpl.color_cycle[3],
+    "ART 2.1 Entropy $f_{boost}=1$": bpl.color_cycle[4],
     "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": bpl.color_cycle[0],
-    "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff": bpl.color_cycle[4],
-    "ART 2.1 Entropy Molecular Changes $f_{boost}=5$": bpl.color_cycle[4],
-    "ART 2.1 Entropy Molecular Changes $f_{boost}=1$": bpl.color_cycle[5],
+    "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff": bpl.color_cycle[3],
+    "ART 2.1 Entropy Molecular Changes $f_{boost}=5$": bpl.color_cycle[5],
+    "ART 2.1 Entropy Molecular Changes $f_{boost}=1$": bpl.color_cycle[6],
     "ART 2.1 No Sync": bpl.color_cycle[3],
     # These colors are very carefully chosen to avoid colorblindness issues. The hue
     # changes between the SFE variations (blue) to the HN variations (purple), with
@@ -249,6 +253,7 @@ axes = {
         "old_ic_sn_timing",
     ],
     "ART 2.1 Entropy $f_{boost}=3$": ["old_ic_21_feedback"],
+    "ART 2.1 Entropy $f_{boost}=2$": ["old_ic_21_feedback"],
     "ART 2.1 Entropy $f_{boost}=1$": ["old_ic_21_feedback", "old_ic_sn_timing"],
     "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": ["old_ic_sn_timing"],
     "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff": ["old_ic_sn_timing"],
