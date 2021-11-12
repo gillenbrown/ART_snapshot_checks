@@ -133,7 +133,7 @@ def plot_age_growth(axis_name, sim_share_type):
             ax_row[0].plot(ages_lo, fractions_lo, c=sim.color, lW=2, label=label)
 
     # put a legend in the top left panel
-    plot_utils.add_legend(axs[0][0], loc=4, fontsize=14)
+    plot_utils.add_legend(axs[0][0], loc=4, fontsize=10)
 
     # if there is a common redshift, annotate it
     if sim_share_type == "common":

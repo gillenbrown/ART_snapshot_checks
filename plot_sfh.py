@@ -212,9 +212,9 @@ def plot_sfh(axis_name):
         label="MW-like (Universe Machine)",
     )
 
-    plot_utils.add_legend(ax, loc=2, frameon=False, fontsize=12)
+    plot_utils.add_legend(ax, loc=2, frameon=False, fontsize=10)
     ax.set_yscale("log")
-    ax.set_limits(0, 1.05 * max_time, 0.05, 5)
+    ax.set_limits(0, 1.05 * max_time, 0.1, 20)
     ax.add_labels("Time [Gyr]", "SFR  [$M_\odot$/yr]")
 
     # then add the redshift axis. The process of selecting the labels raises
