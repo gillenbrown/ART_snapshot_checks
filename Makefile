@@ -378,7 +378,7 @@ endif
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(debugs) $(movies)
+all: $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxies) $(debugs) $(movies)
 # $(dt_history_plots) $(cfl_plots)
 
 .PHONY: clean
