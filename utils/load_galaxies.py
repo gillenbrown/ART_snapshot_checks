@@ -101,6 +101,12 @@ names = {
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1/run"
     ): "ART 2.1 Entropy $f_{boost}=1$",
     full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_sfe001/run"
+    ): "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1%",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_sfe010/run"
+    ): "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=10%",
+    full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost3_nosnia/run"
     ): "ART 2.1 Entropy $f_{boost}=3$ No SNIa",
     full_dir(
@@ -115,6 +121,15 @@ names = {
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost3/run"
     ): "ART 2.1 Entropy Molecular Changes $f_{boost}=3$",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediff/run"
+    ): "ART 2.1 Entropy SN Timing Hybrid",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediffallave/run"
+    ): "ART 2.1 Entropy SN Timing Average",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediffallbirth/run"
+    ): "ART 2.1 Entropy SN Timing Birth",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_noagediff/run"
     ): "ART 2.1 Entropy $f_{boost}=5$ No Age Diff",
@@ -138,6 +153,8 @@ names = {
     full_dir("stampede2/production/tl_sfe100_hn20/run"): prod_fmt("T&L", 100, 20),
     full_dir("stampede2/production/tl_sfe100_hn05/run"): prod_fmt("T&L", 100, 5),
     full_dir("stampede2/production/tl_sfe100_hn00/run"): prod_fmt("T&L", 100, 0),
+    full_dir("stampede2/production/tl_sfe100_hn00_fboost1/run"): prod_fmt("T&L", 100, 0)
+    + " $f_{boost}=1",
     full_dir("stampede2/production/tl_sfe100_hn00_fboost3/run"): prod_fmt("T&L", 100, 0)
     + " $f_{boost}=3",
     full_dir("stampede2/production/rj_sfe010_hn20/run"): prod_fmt("R&J", 10, 20),
@@ -172,10 +189,10 @@ colors = {
     "Old IC SFE100 50% HN": cmap_rerun(0.7),
     "Old IC SFE100 50% HN new": cmap_rerun(0.8),
     "Continuous": bpl.color_cycle[0],
-    "Continuous Hui": bpl.color_cycle[1],
+    "Continuous Hui": bpl.color_cycle[3],
     "Continuous PopM": "lightblue",
     "Continuous SNR": bpl.color_cycle[3],
-    "Discrete": bpl.color_cycle[4],
+    "Discrete": bpl.color_cycle[1],
     "Discrete $\\alpha<10$": bpl.color_cycle[5],
     "Discrete $\\alpha<10, f_{boost}=3$": bpl.color_cycle[6],
     "Discrete $\\alpha<10$ HN20": bpl.color_cycle[7],
@@ -194,6 +211,8 @@ colors = {
     "ART 2.1 Entropy $f_{boost}=3$": bpl.color_cycle[0],
     "ART 2.1 Entropy $f_{boost}=2$": bpl.color_cycle[3],
     "ART 2.1 Entropy $f_{boost}=1$": bpl.color_cycle[4],
+    "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1%": bpl.color_cycle[0],
+    "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=10%": bpl.color_cycle[1],
     "ART 2.1 Entropy $f_{boost}=3$ No SNIa": bpl.color_cycle[5],
     "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": bpl.color_cycle[0],
     "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff": bpl.color_cycle[3],
@@ -201,6 +220,9 @@ colors = {
     "ART 2.1 Entropy Molecular Changes $f_{boost}=3$": bpl.color_cycle[3],
     "ART 2.1 Entropy Molecular Changes $f_{boost}=2$": bpl.color_cycle[5],
     "ART 2.1 Entropy Molecular Changes $f_{boost}=1$": bpl.color_cycle[6],
+    "ART 2.1 Entropy SN Timing Hybrid": bpl.color_cycle[0],
+    "ART 2.1 Entropy SN Timing Average": bpl.color_cycle[3],
+    "ART 2.1 Entropy SN Timing Birth": bpl.color_cycle[4],
     "ART 2.1 Entropy $f_{boost}=1$ HN50": bpl.color_cycle[6],
     "ART 2.1 No Sync": bpl.color_cycle[3],
     # These colors are very carefully chosen to avoid colorblindness issues. The hue
@@ -215,6 +237,7 @@ colors = {
     prod_fmt("T&L", 100, 5): hsv_to_hex(0.70, 0.30, 0.65),
     prod_fmt("T&L", 100, 0): hsv_to_hex(0.70, 0.15, 0.85),
     prod_fmt("T&L", 100, 0) + " $f_{boost}=3": hsv_to_hex(0.90, 0.15, 0.85),
+    prod_fmt("T&L", 100, 0) + " $f_{boost}=1": hsv_to_hex(0.95, 0.15, 0.85),
     prod_fmt("R&J", 10, 20): hsv_to_hex(0.35, 0.20, 0.70),
     prod_fmt("R&J", 100, 20): hsv_to_hex(0.35, 0.30, 0.50),
     "R&J Collisionless Original": cmap_rj_collisionless(1.0),
@@ -230,6 +253,8 @@ axes = {
         "old_ic_21_feedback",
         "old_ic_sn_timing",
         "old_ic_molecular",
+        "old_ic_cimf_timing",
+        "old_ic_sfe",
         "all",
     ],
     "NBm SFE100": [
@@ -238,6 +263,9 @@ axes = {
         "old_ic_21_feedback",
         "old_ic_sn_timing",
         "old_ic_molecular",
+        "old_ic_cimf_timing",
+        "old_ic_sfe",
+        "adi_adv",
         "all",
     ],
     "Old IC SFE100 0% HN": ["old_ic", "all"],
@@ -247,11 +275,11 @@ axes = {
     "Old IC SFE100 50% HN": ["old_ic", "all"],
     "Old IC SFE100 50% HN new": ["old_ic", "all"],
     "Continuous": ["old_ic_20_feedback"],
-    "Continuous Hui": ["old_ic_20_feedback"],
+    "Continuous Hui": ["old_ic_20_feedback", "old_ic_cimf_timing", "adi_adv"],
     "Continuous PopM": ["old_ic_20_feedback"],
     "Continuous SNR": ["old_ic_20_feedback"],
     "Discrete": ["old_ic_20_feedback"],
-    "Discrete $\\alpha<10$": ["old_ic_20_feedback", "old_ic_code"],
+    "Discrete $\\alpha<10$": ["old_ic_20_feedback", "old_ic_code", "adi_adv"],
     "Discrete $\\alpha<10, f_{boost}=3$": ["old_ic_20_feedback"],
     "Discrete $\\alpha<10$ HN20": ["old_ic_20_feedback"],
     "ART 1.9": [],
@@ -262,7 +290,7 @@ axes = {
     "ART 1.9 Hui's version Adiabatic": [],
     "ART 2.0 Advect No Stars": [],
     "ART 2.0 No Flags": [],
-    "ART 2.0 Advect": ["old_ic_code"],
+    "ART 2.0 Advect": ["old_ic_code", "adi_adv"],
     "ART 2.0 No Turbulence Adiabatic": ["old_ic_code"],
     "ART 2.0 No Turbulence Advect": ["old_ic_code"],
     "ART 2.1 Entropy $f_{boost}=5$": [
@@ -270,17 +298,28 @@ axes = {
         "old_ic_21_feedback",
         "old_ic_sn_timing",
         "old_ic_molecular",
+        "old_ic_cimf_timing",
     ],
     "ART 2.1 Entropy $f_{boost}=3$": ["old_ic_21_feedback"],
     "ART 2.1 Entropy $f_{boost}=2$": ["old_ic_21_feedback"],
-    "ART 2.1 Entropy $f_{boost}=1$": ["old_ic_21_feedback", "old_ic_sn_timing", "old_ic_molecular"],
-    "ART 2.1 Entropy $f_{boost}=3$ No SNIa": ["old_ic_21_feedback"],
-    "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": ["old_ic_sn_timing"],
-    "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff": ["old_ic_sn_timing"],
+    "ART 2.1 Entropy $f_{boost}=1$": [
+        "old_ic_21_feedback",
+        "old_ic_molecular",
+        "old_ic_cimf_timing",
+        "old_ic_sfe",
+    ],
+    "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1%": ["old_ic_sfe"],
+    "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=10%": ["old_ic_sfe"],
+    "ART 2.1 Entropy $f_{boost}=3$ No SNIa": [],
+    "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": [],
+    "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff": [],
     "ART 2.1 Entropy Molecular Changes $f_{boost}=1$": ["old_ic_molecular"],
     "ART 2.1 Entropy Molecular Changes $f_{boost}=2$": ["old_ic_molecular"],
     "ART 2.1 Entropy Molecular Changes $f_{boost}=3$": ["old_ic_molecular"],
     "ART 2.1 Entropy Molecular Changes $f_{boost}=5$": ["old_ic_molecular"],
+    "ART 2.1 Entropy SN Timing Hybrid": ["old_ic_sn_timing"],
+    "ART 2.1 Entropy SN Timing Average": ["old_ic_sn_timing"],
+    "ART 2.1 Entropy SN Timing Birth": ["old_ic_sn_timing"],
     "ART 2.1 Entropy $f_{boost}=1$ HN50": ["old_ic_21_feedback"],
     "ART 2.1 No Sync": ["old_ic_code"],
     prod_fmt("T&L", 1, 20): ["tl", "lg", "all"],
@@ -288,6 +327,7 @@ axes = {
     prod_fmt("T&L", 100, 20): ["tl", "lg", "all"],
     prod_fmt("T&L", 100, 5): ["tl", "lg", "all"],
     prod_fmt("T&L", 100, 0): ["tl", "lg", "all"],
+    prod_fmt("T&L", 100, 0) + " $f_{boost}=1": ["tl", "lg", "all"],
     prod_fmt("T&L", 100, 0) + " $f_{boost}=3": ["tl", "lg", "all"],
     prod_fmt("R&J", 10, 20): ["rj", "lg", "all"],
     prod_fmt("R&J", 100, 20): ["rj", "lg", "all"],
