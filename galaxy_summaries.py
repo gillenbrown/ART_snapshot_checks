@@ -189,17 +189,12 @@ def write_gas_masses(galaxy):
     # Print the masses in various states
     cell_volumes = galaxy.sphere[("index", "cell_volume")]
     gas_mass = galaxy.sphere[("gas", "cell_mass")]
-    gas_mass_HI = galaxy.sphere[("gas", "HI density")] * cell_volumes
-    gas_mass_HII = galaxy.sphere[("gas", "HII density")] * cell_volumes
-    gas_mass_H2 = (
-        2
-        * galaxy.sphere[("artio", "RT_HVAR_H2")]
-        * sim.ds.arr(1, "code_mass/code_length**3")
-        * cell_volumes
-    )
-    gas_mass_HeI = 4 * galaxy.sphere[("gas", "HeI density")] * cell_volumes
-    gas_mass_HeII = 4 * galaxy.sphere[("gas", "HeII density")] * cell_volumes
-    gas_mass_HeIII = 4 * galaxy.sphere[("gas", "HeIII density")] * cell_volumes
+    gas_mass_HI = galaxy.sphere[("artio", "RT_HVAR_HI")] * cell_volumes
+    gas_mass_HII = galaxy.sphere[("artio", "RT_HVAR_HII")] * cell_volumes
+    gas_mass_H2 = 2 * galaxy.sphere[("artio", "RT_HVAR_H2")] * cell_volumes
+    gas_mass_HeI = 4 * galaxy.sphere[("artio", "RT_HVAR_HeI")] * cell_volumes
+    gas_mass_HeII = 4 * galaxy.sphere[("artio", "RT_HVAR_HeII")] * cell_volumes
+    gas_mass_HeIII = 4 * galaxy.sphere[("artio", "RT_HVAR_HeIII")] * cell_volumes
     gas_mass_metals = galaxy.sphere[("gas", "metal_density")] * cell_volumes
 
     gas_mass_total = np.sum(gas_mass.to("Msun").value)
