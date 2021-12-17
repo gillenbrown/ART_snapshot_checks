@@ -111,6 +111,9 @@ ifeq ($(machine),shangrila)
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost1/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost2/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost3/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediff/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediffallave/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediffallbirth/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_noagediff/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_nosync/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_fboost3/run \
