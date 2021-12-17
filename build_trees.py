@@ -1,23 +1,34 @@
 """
-merger_prep.py
+build_trees.py
 
 This handles taking the out.list files in form of out_a0.xxxx.list and turns
 them into the out_N.list where N is an integer, such that Consistent Trees
 can use them for merger trees. This assumes that all such out.list files are
-in the halos directory.
+in the halos directory. It then builds the trees.
 
-This only takes one argument:
-the path to the sentinel
+This takes three arguments:
+1. The path to the tree that will be created.
+2. The path to the script used to build the tree config file
+3. The directory where consistent_trees is located. 
 """
 import sys
+import subprocess
+import os
 from pathlib import Path
 import shutil
 
 # get the location of the sentinel
-sentinel = Path(sys.argv[1])
+tree = Path(sys.argv[1]).resolve()
+tree_config_script = Path(sys.argv[2]).resolve()
+consistent_trees_dir = Path(sys.argv[3]).resolve()
 # then turn that into other directories we'll need later
-rockstar_dir = sentinel.parent
+rockstar_dir = tree.parent.parent
 halos_dir = rockstar_dir.parent / "halos"
+
+
+def run_command(command):
+    subprocess.call(command, shell=True)
+
 
 # first get rid of all the out.list files in rockstar dir. We'll replace those
 # with new ones later
@@ -60,5 +71,22 @@ with open(rockstar_config_file, "r") as cfg_old:
 # then replace the old with the new
 rockstar_config_file_temp.replace(rockstar_config_file)
 
-# then touch the sentinel to finish the work
-sentinel.touch()
+# Then build the config files
+# perl $(tree_config_script) $(call tree_cfg_to_rockstar_cfg,$@)
+rockstar_config_file = rockstar_dir / "rockstar.cfg"
+run_command(f"perl {str(tree_config_script)} {rockstar_config_file}")
+
+# then build the actual halo files. I need to change to the consistent trees
+# directory to do this. I'll store where I was, then move back once done.
+original_dir = os.getcwd()
+# I need to change to the home dire
+os.chdir(consistent_trees_dir)
+config_file = rockstar_dir / "outputs" / "merger_tree.cfg"
+run_command(f"perl do_merger_tree.pl {str(config_file)}")
+# move back.
+os.chdir(original_dir)
+
+# then cleanup all the halo out files we copied at the beginning.
+for f in rockstar_dir.iterdir():
+    if f.name.startswith("out_") and f.name.endswith(".list"):
+        f.unlink()

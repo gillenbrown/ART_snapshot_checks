@@ -389,47 +389,6 @@ while idx < len(art_files):
 
 # ==============================================================================
 #
-# Formatting out_*.list files for consistent trees
-#
-# ==============================================================================
-# I need to move all the out_*.list files to the rockstar directory, but without their
-# nice scale factor names, so that consistent trees knows what to do with them. Note
-# that I delete these files at the beginning of the script so they don't interfere with
-# the actual creation of the files
-out_files = sorted(
-    [
-        halo_file
-        for halo_file in halos_dir.iterdir()
-        if halo_file.name.startswith("out_") and halo_file.name.endswith(".list")
-    ]
-)
-
-for idx, out_file in tqdm(enumerate(out_files)):
-    new_out = f"out_{idx}.list"
-    new_path = rockstar_dir / new_out
-    shutil.copy2(out_file, new_path)
-
-# I also need to modify the rockstar.cfg file to have the correct number of output
-# files, as this is what tells it how many to include in the tree.
-config_old = rockstar_dir / "rockstar.cfg"
-config_new = rockstar_dir / "rockstar.cfg.temp"
-
-with open(config_old, "r") as old:
-    with open(config_new, "w") as new:
-        for line in old:
-            split = line.split()
-            key = split[0]
-            value = split[-1]
-
-            if key == "NUM_SNAPS":
-                line = line.replace(value, str(len(out_files)))
-            new.write(line)
-
-# then copy the file over
-config_new.replace(config_old)
-
-# ==============================================================================
-#
 # Final cleanup
 #
 # ==============================================================================

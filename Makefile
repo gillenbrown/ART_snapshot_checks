@@ -56,7 +56,7 @@ plot_utils_script = ./utils/plot_utils.py
 dt_history_script = ./dt_history.py
 cfl_script = ./cfl_violations.py
 tidal_consolidation_script = ./tidal_consolidation.py
-merger_prep_script = ./merger_prep.py
+tree_script = ./build_trees.py
 read_tree_dir = ./read_tree
 read_tree_exe = $(read_tree_dir)/halo_history
 read_tree_src = $(read_tree_dir)/halo_history.c
@@ -274,21 +274,11 @@ nbody_plots = $(halo_1_full_plots) $(halo_2_full_plots) $(halo_1_split_plots) $(
 #  Consistent trees
 # 
 # ------------------------------------------------------------------------------
-# first are the config files. We need these any any machine, since they'll need
-# to be copied over to be used before creating the merger trees
-tree_cfgs = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/outputs/merger_tree.cfg)
-tree_cfg_to_rockstar_cfg = $(subst outputs/merger_tree.cfg,rockstar.cfg,$(1))
-tree_cfg_to_sentinel = $(subst outputs/merger_tree.cfg,sentinel.txt,$(1))
-# I also have some sentinel files for the prepping of the out.list files
-tree_cfg_to_prep_sentinel = $(subst outputs/merger_tree.cfg,sentinel_prep.txt,$(1))
-merger_prep_sentinels = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/sentinel_prep.txt)
-merger_prep_sentinel_to_halo_sentinel = $(subst sentinel_prep.txt,sentinel.txt,$(1))
-
 # we only do the actual merger tree creation on shangrila
 ifeq ($(machine),shangrila)
 	# then the actual halo trees
 	trees = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/trees/tree_0_0_0.dat)
-	tree_to_tree_cfg = $(subst trees/tree_0_0_0.dat,outputs/merger_tree.cfg,$(1))
+	tree_to_halo_sentinel = $(subst trees/tree_0_0_0.dat,sentinel.txt,$(1))
 
 	# ----------------------------------------------------------------------------
 	#
@@ -488,17 +478,9 @@ $(call movies_all,n_body_local_group): %: $$(call movie_to_plots,%,sim_to_local_
 $(call movies_all,n_body_split_local_group): %: $$(call movie_to_plots,%,sim_to_local_group_split)
 	ffmpeg -framerate 2 -pattern_type glob -i '$(call movie_to_plot_dir,n_body_split_local_group,$@)/n_body_split_local_group*.png' -c:v h264 -pix_fmt yuv420p -y $@
 
-# and format the out.list files
-$(merger_prep_sentinels): %: $$(call merger_prep_sentinel_to_halo_sentinel,%) $(merger_prep_script)
-	python $(merger_prep_script) $@
-
-# Make the consistent trees config files
-$(tree_cfgs): %: $$(call tree_cfg_to_sentinel,%) $$(call tree_cfg_to_prep_sentinel,%)
-	perl $(tree_config_script) $(call tree_cfg_to_rockstar_cfg,$@)
-
 # Then build the merger trees
-$(trees): %: $$(call tree_to_tree_cfg,%)
-	cd $(tree_dir) && perl do_merger_tree.pl $<
+$(trees): %: $(tree_script) $$(call tree_to_halo_sentinel,%)
+	python $(tree_script) $@ $(tree_config_script) $(tree_dir)
 
 # Build the merger tree reading code
 $(read_tree_exe): $(read_tree_src)
