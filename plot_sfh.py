@@ -180,7 +180,24 @@ def plot_sfh(axis_name):
             plot_sfh = sfh_values.to("msun/yr").value
             dt = plot_times[1] - plot_times[0]
             if galaxy.rank == 1:
-                label = sim.name
+                if axis_name == "adi_adv":
+                    # rename them for this one plot
+                    if sim.name == "NBm SFE100":
+                        label = "L18 Hydro - L18 Feedback"
+                        sim.color = bpl.color_cycle[2]
+                    elif sim.name == "Discrete $\\alpha<10$":
+                        label = "New Hydro - New Feedback"
+                        sim.color = bpl.color_cycle[1]
+                    elif sim.name == "ART 2.0 Advect":
+                        label = "L18 Hydro - New Feedback"
+                        sim.color = bpl.color_cycle[3]
+                    elif sim.name == "Continuous Hui":
+                        label = "New Hydro - L18 Feedback"
+                        sim.color = bpl.color_cycle[0]
+                    else:
+                        raise ValueError("Shouldn't happen.")
+                else:
+                    label = sim.name
             else:
                 label = None
             ax.scatter(
@@ -214,7 +231,7 @@ def plot_sfh(axis_name):
 
     plot_utils.add_legend(ax, loc=2, frameon=False, fontsize=10)
     ax.set_yscale("log")
-    ax.set_limits(0, 1.05 * max_time, 0.1, 20)
+    ax.set_limits(0, 1.05 * max_time, 0.05, 10)
     ax.add_labels("Time [Gyr]", "SFR  [$M_\odot$/yr]")
 
     # then add the redshift axis. The process of selecting the labels raises
