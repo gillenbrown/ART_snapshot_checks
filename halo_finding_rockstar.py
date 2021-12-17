@@ -2,7 +2,9 @@ import sys
 from pathlib import Path
 import gc
 import yt
-from yt.extensions.astro_analysis.halo_finding.rockstar.api import RockstarHaloFinder
+from yt.extensions.astro_analysis.halo_analysis.halo_finding.rockstar.rockstar import (
+    RockstarHaloFinder,
+)
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output - only show rockstar
 yt.enable_parallelism()
