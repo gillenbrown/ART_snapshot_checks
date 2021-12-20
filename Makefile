@@ -88,10 +88,12 @@ ifeq ($(machine),shangrila)
  	                 $(runs_home)/stampede2/production/rj_sfe010_hn20/run \
  	                 $(runs_home)/stampede2/production/rj_sfe100_hn20/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/continuous_hn00_novirial/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/continuous_hn00_virial10_entropy_fboost1/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/continuoushui_hn00_novirial/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/continuouspopmcluster_hn00_novirial/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/continuoussnr_hn00_novirial/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial/run \
+ 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial_entropy_fboost1/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_advect/run \

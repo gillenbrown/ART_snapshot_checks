@@ -44,6 +44,9 @@ names = {
         "stampede2/old_ic_comparison_production_analog/continuous_hn00_novirial/run"
     ): "Continuous",
     full_dir(
+        "stampede2/old_ic_comparison_production_analog/continuous_hn00_novirial/run"
+    ): "ART 2.1 Entropy $f_{boost}=1$ Continuous",
+    full_dir(
         "stampede2/old_ic_comparison_production_analog/continuoushui_hn00_novirial/run"
     ): "Continuous Hui",
     # full_dir(
@@ -55,6 +58,9 @@ names = {
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial/run"
     ): "Discrete",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial/run"
+    ): "ART 2.1 Entropy $f_{boost}=1$ No Virial",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10/run"
     ): "Discrete $\\alpha<10$",
@@ -189,6 +195,7 @@ colors = {
     "Old IC SFE100 50% HN": cmap_rerun(0.7),
     "Old IC SFE100 50% HN new": cmap_rerun(0.8),
     "Continuous": bpl.color_cycle[0],
+    "ART 2.1 Entropy $f_{boost}=1$ Continuous": bpl.color_cycle[0],
     "Continuous Hui": bpl.color_cycle[3],
     "Continuous PopM": "lightblue",
     "Continuous SNR": bpl.color_cycle[3],
@@ -265,6 +272,8 @@ axes = {
         "old_ic_molecular",
         "old_ic_cimf_timing",
         "old_ic_sfe",
+        "old_ic_continuous",
+        "old_ic_virial",
         "adi_adv",
         "all",
     ],
@@ -275,10 +284,12 @@ axes = {
     "Old IC SFE100 50% HN": ["old_ic", "all"],
     "Old IC SFE100 50% HN new": ["old_ic", "all"],
     "Continuous": ["old_ic_20_feedback"],
+    "ART 2.1 Entropy $f_{boost}=1$ Continuous": ["old_ic_continuous"],
     "Continuous Hui": ["old_ic_20_feedback", "old_ic_cimf_timing", "adi_adv"],
     "Continuous PopM": ["old_ic_20_feedback"],
     "Continuous SNR": ["old_ic_20_feedback"],
     "Discrete": ["old_ic_20_feedback"],
+    "ART 2.1 Entropy $f_{boost}=1$ No Virial": ["old_ic_virial"],
     "Discrete $\\alpha<10$": ["old_ic_20_feedback", "old_ic_code", "adi_adv"],
     "Discrete $\\alpha<10, f_{boost}=3$": ["old_ic_20_feedback"],
     "Discrete $\\alpha<10$ HN20": ["old_ic_20_feedback"],
@@ -307,6 +318,8 @@ axes = {
         "old_ic_molecular",
         "old_ic_cimf_timing",
         "old_ic_sfe",
+        "old_ic_continuous",
+        "old_ic_virial",
     ],
     "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1%": ["old_ic_sfe"],
     "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=10%": ["old_ic_sfe"],
