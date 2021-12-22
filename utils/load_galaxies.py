@@ -44,7 +44,7 @@ names = {
         "stampede2/old_ic_comparison_production_analog/continuous_hn00_novirial/run"
     ): "Continuous",
     full_dir(
-        "stampede2/old_ic_comparison_production_analog/continuous_hn00_novirial/run"
+        "stampede2/old_ic_comparison_production_analog/continuous_hn00_virial10_entropy_fboost1/run"
     ): "ART 2.1 Entropy $f_{boost}=1$ Continuous",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/continuoushui_hn00_novirial/run"
@@ -59,7 +59,7 @@ names = {
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial/run"
     ): "Discrete",
     full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial/run"
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial_entropy_fboost1/run"
     ): "ART 2.1 Entropy $f_{boost}=1$ No Virial",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10/run"
@@ -106,6 +106,9 @@ names = {
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1/run"
     ): "ART 2.1 Entropy $f_{boost}=1$",
+    full_dir(
+        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_crho30/run"
+    ): "ART 2.1 Entropy $f_{boost}=1$ $C_\\rho=30",
     full_dir(
         "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_sfe001/run"
     ): "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1%",
@@ -200,6 +203,7 @@ colors = {
     "Continuous PopM": "lightblue",
     "Continuous SNR": bpl.color_cycle[3],
     "Discrete": bpl.color_cycle[1],
+    "ART 2.1 Entropy $f_{boost}=1$ No Virial": bpl.color_cycle[0],
     "Discrete $\\alpha<10$": bpl.color_cycle[5],
     "Discrete $\\alpha<10, f_{boost}=3$": bpl.color_cycle[6],
     "Discrete $\\alpha<10$ HN20": bpl.color_cycle[7],
@@ -218,6 +222,7 @@ colors = {
     "ART 2.1 Entropy $f_{boost}=3$": bpl.color_cycle[0],
     "ART 2.1 Entropy $f_{boost}=2$": bpl.color_cycle[3],
     "ART 2.1 Entropy $f_{boost}=1$": bpl.color_cycle[4],
+    "ART 2.1 Entropy $f_{boost}=1$ $C_\\rho=30": bpl.color_cycle[1],
     "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1%": bpl.color_cycle[0],
     "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=10%": bpl.color_cycle[1],
     "ART 2.1 Entropy $f_{boost}=3$ No SNIa": bpl.color_cycle[5],
@@ -308,7 +313,6 @@ axes = {
         "old_ic_code",
         "old_ic_21_feedback",
         "old_ic_sn_timing",
-        "old_ic_molecular",
         "old_ic_cimf_timing",
     ],
     "ART 2.1 Entropy $f_{boost}=3$": ["old_ic_21_feedback"],
@@ -321,6 +325,7 @@ axes = {
         "old_ic_continuous",
         "old_ic_virial",
     ],
+    "ART 2.1 Entropy $f_{boost}=1$ $C_\\rho=30": ["old_ic_molecular"],
     "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1%": ["old_ic_sfe"],
     "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=10%": ["old_ic_sfe"],
     "ART 2.1 Entropy $f_{boost}=3$ No SNIa": [],
