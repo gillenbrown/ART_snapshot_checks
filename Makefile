@@ -74,7 +74,8 @@ ifeq ($(machine),shangrila)
 	sim_dirs_nbody = $(runs_home)/stampede2/rj_nbody/original_92.48mpc_level07/run \
 	                 $(runs_home)/stampede2/rj_nbody/hybrid_46.24mpc_level08/run \
 	                 $(runs_home)/stampede2/rj_nbody/hybrid_23.12mpc_level08/run \
-	                 $(runs_home)/pleiades/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset
+	                 $(runs_home)/pleiades/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset \
+	                 $(runs_home)/shangrila/hui/dm_only
 	sim_dirs_hydro = $(runs_home)/shangrila/hui/sfe_10 \
 	                 $(runs_home)/shangrila/hui/sfe_50 \
 	                 $(runs_home)/shangrila/hui/sfe_100 \
@@ -88,20 +89,11 @@ ifeq ($(machine),shangrila)
 	                 $(runs_home)/stampede2/production/tl_sfe100_hn00_fboost3/run \
  	                 $(runs_home)/stampede2/production/rj_sfe010_hn20/run \
  	                 $(runs_home)/stampede2/production/rj_sfe100_hn20/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/continuous_hn00_novirial/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/continuous_hn00_virial10_entropy_fboost1/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/continuoushui_hn00_novirial/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/continuouspopmcluster_hn00_novirial/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/continuoussnr_hn00_novirial/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial_entropy_fboost1/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_advect/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_old/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_advect/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_advect_nostars/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_elements/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost2/run \
@@ -110,23 +102,32 @@ ifeq ($(machine),shangrila)
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_sfe001/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_sfe010/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost3_nosnia/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_hybridagediff/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost1/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost2/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost3/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediff/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediffallave/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediffallbirth/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_noagediff/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_nosync/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_fboost3/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noadvoradia_nostars/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_nostars/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noturb_adi/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noturb_adv/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn20_virial10/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn50_virial10_entropy_fboost1/run
+  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/continuous_hn00_novirial/run
+  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/continuouspopmcluster_hn00_novirial/run
+  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/continuoussnr_hn00_novirial/run
+  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial/run
+  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_advect/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_old/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_advect_nostars/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_elements/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_hybridagediff/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost2/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost3/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_noagediff/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_nosync/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_fboost3/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noadvoradia_nostars/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_nostars/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noturb_adi/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noturb_adv/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn20_virial10/run
 endif
 ifeq ($(machine),stampede2)
 	runs_home = $(SCRATCH)/art_runs/runs
