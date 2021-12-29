@@ -5,7 +5,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --no-requeue
 #SBATCH --partition=skx-normal
-#SBATCH --time=4:00:00
+#SBATCH --time=8:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
@@ -30,6 +30,6 @@ unset PYTHONPATH
 # processes on the rest of the cores, although we have to restrict based on
 # memory considerations
 make dirs
-remora ibrun -n 1 -o 0 make halos
-remora make -j6
+ibrun -n 1 -o 0 make halos
+make -j5
 # &>> $SLURM_JOB_NAME.stdout.$SLURM_JOB_ID
