@@ -51,6 +51,7 @@ sfh_plots_script = ./plot_sfh.py
 cimf_plots_script = ./plot_cimf.py
 age_plot_script = ./plot_age_spread.py
 galaxies_comparison_script = ./plot_galaxy_comparisons.py
+galaxy_mass_script = ./print_galaxy_masses.py
 gal_readin_script = ./utils/load_galaxies.py
 plot_utils_script = ./utils/plot_utils.py
 dt_history_script = ./dt_history.py
@@ -237,6 +238,8 @@ else
 	age_spread_sentinel =
 	galaxy_comparison_sentinel =
 endif
+# also a text file with the masses of all sims. This is on all machines.
+galaxy_masses = $(comparison_plots_dir)/galaxy_masses.txt
 
 # ------------------------------------------------------------------------------
 #
@@ -376,7 +379,7 @@ endif
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxies) $(debugs) $(movies)
+all: $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxy_masses) $(debugs) $(movies)
 # $(dt_history_plots) $(cfl_plots)
 
 .PHONY: clean
@@ -441,6 +444,10 @@ $(age_spread_sentinel): $(age_plot_script) $(gal_readin_script) $(plot_utils_scr
 # and the galaxy comparison plots
 $(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(gal_readin_script) $(plot_utils_script)
 	python $(galaxies_comparison_script) $(galaxy_comparison_sentinel) $(galaxies)
+
+# the list of galaxy stellar masses
+$(galaxy_masses): $(galaxy_mass_script) $(galaxies)
+	python $(galaxy_mass_script) $(galaxy_masses) $(galaxies)
 
 # Make the individual nbody plots - several examples of very similar things here
 $(halo_1_full_plots): %: $(nbody_single_halo_plots_script) $(nbody_full_plot_script)
