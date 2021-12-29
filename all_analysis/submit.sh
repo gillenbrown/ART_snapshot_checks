@@ -5,7 +5,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --no-requeue
 #SBATCH --partition=skx-normal
-#SBATCH --time=24:00:00
+#SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
@@ -22,6 +22,8 @@ unset PYTHONPATH
 # double check these variables
 # echo $(which python)
 # echo $PYTHONPATH
+
+module load launcher
 
 # slurm setup, copied from example at $LAUNCHER_DIR/extras/batch-scripts
 export LAUNCHER_RMI=SLURM
