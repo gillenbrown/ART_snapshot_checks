@@ -109,23 +109,31 @@ def plot_age_growth(axis_name, sim_share_type):
 
     for ax_row, func, name in zip(axs, funcs, names):
         # add the labels here
-        ax_row[0].add_labels(
-            name + " [Myr]", "Cumulative Fraction", "M < $10^5 M_\odot$"
-        )
-        ax_row[1].add_labels(
-            name + " [Myr]", "Cumulative Fraction", "M > $10^5 M_\odot$"
-        )
+        ax_row[0].add_labels(name + " [Myr]", "Cumulative Fraction")
+        ax_row[1].add_labels(name + " [Myr]", "Cumulative Fraction")
+        ax_row[0].easy_add_text("M < $10^5 M_\odot$", "upper left")
+        ax_row[1].easy_add_text("M > $10^5 M_\odot$", "upper left")
         ax_row[0].set_limits(0, 5, 0, 1)
         ax_row[1].set_limits(0, 8, 0, 1)
         for sim in sims:
             if axis_name not in sim.axes:
                 continue
 
-            # include the redshift if it's different for each sim
-            if sim_share_type == "last":
-                label = f"{sim.name}: z = {1 / sim.ds.scale_factor - 1:.1f}"
+            # get the name of the simulations
+            if sim.name == "ART 2.1 Entropy $f_{boost}=5$":
+                label = "New Timing - Mean Age"
+                sim.color = bpl.color_cycle[0]
+            elif sim.name == "ART 2.1 Entropy $f_{boost}=5$ No Age Diff":
+                label = "New Timing - Birth"
+                sim.color = bpl.color_cycle[1]
+            elif sim.name == "NBm SFE100":
+                sim.color = bpl.color_cycle[2]
+                label = sim.name
             else:
                 label = sim.name
+            # include the redshift if it's different for each sim
+            if sim_share_type == "last":
+                label += f": z = {1 / sim.ds.scale_factor - 1:.1f}"
 
             ages_lo, fractions_lo = time_cumulative_hist(sim, func, "lo")
             ages_hi, fractions_hi = time_cumulative_hist(sim, func, "hi")
@@ -133,7 +141,7 @@ def plot_age_growth(axis_name, sim_share_type):
             ax_row[0].plot(ages_lo, fractions_lo, c=sim.color, lW=2, label=label)
 
     # put a legend in the top left panel
-    plot_utils.add_legend(axs[0][0], loc=4, fontsize=10)
+    plot_utils.add_legend(axs[0][1], loc=4, fontsize=10)
 
     # if there is a common redshift, annotate it
     if sim_share_type == "common":
