@@ -62,6 +62,12 @@ with open(output_file, "w") as out:
             n_to_read = 1
 
         this_stellar_masses = read_summary_file(summary_path, n_to_read)
+
+        # skip N-body sims with no stellar masses in the summary file
+        if this_stellar_masses is None:
+            print(f"skipping {sim_name}")
+            continue
+
         # then format this to be written
         out_str = f"{sim_name:<50}"
         for m in this_stellar_masses:
