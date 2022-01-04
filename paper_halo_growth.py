@@ -57,9 +57,11 @@ dir_tl = Path(
 dir_rj = Path(
     "/u/home/gillenb/art_runs/runs/stampede2/rj_nbody/hybrid_23.12mpc_level08/run/"
 )
+dir_hui = Path("/u/home/gillenb/art_runs/runs/shangrila/hui/dm_only")
 
 cosmo_tl = Cosmology(str(dir_tl / "out" / "continuous_a1.0007.art"))
 cosmo_rj = Cosmology(str(dir_rj / "out" / "continuous_a1.0018.art"))
+cosmo_hui = Cosmology(str(dir_hui / "out" / "continuous_a1.0005.art"))
 
 # ==============================================================================
 #
@@ -148,6 +150,7 @@ tl = Simulation(
 rj = Simulation(
     dir_rj, "Romeo", "Juliet", bpl.color_cycle[3], bpl.color_cycle[4], cosmo_rj
 )
+hui = Simulation(dir_hui, "Isolated MW", "", bpl.color_cycle[2], "", cosmo_hui)
 
 
 # ==============================================================================
@@ -161,6 +164,8 @@ msize = 100
 def plot_merger(ax, halo, zorder, marker):
     if marker == "+":
         msize_plot = msize * np.sqrt(2)
+    elif marker == "o":
+        msize_plot = 0.7 * msize
     else:
         msize_plot = msize
 
@@ -194,13 +199,12 @@ def plot_merger(ax, halo, zorder, marker):
 
 
 fig, ax = bpl.subplots(figsize=[8, 7])
-# all that gridspec nonsense is to push the plot to the very boundaries of
-# the figure, so there is no whitespace
 
 plot_merger(ax, tl.halo_1, 1, "+")
 plot_merger(ax, tl.halo_2, 1, "x")
-plot_merger(ax, rj.halo_1, 1, "o")
+plot_merger(ax, rj.halo_1, 1, "^")
 plot_merger(ax, rj.halo_2, 1, "v")
+plot_merger(ax, hui.halo_1, 1, "o")
 
 ax.add_labels("Cosmic Time [Gyr]", "Halo Mass [$M_\odot$]")
 ax.set_limits(0, 14, 1e10, 2e12)
@@ -215,9 +219,10 @@ ax.yaxis.set_ticks_position("both")
 # I'll increase the spacing between the legend entry and labels,
 # then manually plot points
 ax.legend(frameon=False, loc=4, handletextpad=1.5)
+x_marker = 9.8  # 9.0-9.9
 ax.scatter(
-    11.1,
-    4.515e10,  # 4.51-4.53
+    x_marker,
+    6.48e10,
     c=tl.halo_1.color,
     marker="+",
     linewidth=1.5,
@@ -225,31 +230,40 @@ ax.scatter(
     s=msize * np.sqrt(2),
 )
 ax.scatter(
-    11.1,
-    3.15e10,  # 3.10-3.20
+    x_marker,
+    4.515e10,  # 4.51-4.53
     c=tl.halo_2.color,
     marker="x",
     linewidth=1.5,
     alpha=1.0,
-    s=msize,
+    s=msize * np.sqrt(2),
 )
 ax.scatter(
-    11.1,
-    2.195e10,  # 2.19-2.20
+    x_marker,
+    3.15e10,  # 3.10-3.20
     c=rj.halo_1.color,
-    marker="o",
+    marker="^",
     linewidth=1.5,
     alpha=1.0,
     s=msize,
 )
 ax.scatter(
-    11.1,
-    1.52e10,  # 1.5-1.55
+    x_marker,
+    2.195e10,  # 2.19-2.20
     c=rj.halo_2.color,
     marker="v",
     linewidth=1.5,
     alpha=1.0,
     s=msize,
+)
+ax.scatter(
+    x_marker,
+    1.535e10,  # 1.53-1.54
+    c=hui.halo_1.color,
+    marker="o",
+    linewidth=1.5,
+    alpha=1.0,
+    s=msize * 0.7,
 )
 
 # I also want to reconfigure the x labels
