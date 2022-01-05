@@ -56,6 +56,10 @@ def read_summary_file(file_loc, n_to_read):
 
 with open(output_file, "w") as out:
     for sim_name, summary_path in last_summary.items():
+        # get the scale factor from the name
+        a = float(str(summary_path)[-10:-4])
+
+        # then get the stellar masses
         if "/production/" in str(summary_path):
             n_to_read = 2
         else:
@@ -69,7 +73,7 @@ with open(output_file, "w") as out:
             continue
 
         # then format this to be written
-        out_str = f"{sim_name:<50}"
+        out_str = f"{sim_name:<50} {a:6.4f} "
         for m in this_stellar_masses:
             out_str += f" {np.log10(m):>5.2f}"
 
