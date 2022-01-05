@@ -178,6 +178,7 @@ def get_quantities(summaries, rank, quantity, unit):
             continue
     return quantities, scale_factors
 
+
 def plot_quantities(quantity, unit, plot_name, ax):
     for idx, sim_name in enumerate(binned_summaries):
         if plot_name not in load_galaxies.axes[sim_name]:
@@ -199,6 +200,7 @@ def plot_quantities(quantity, unit, plot_name, ax):
             if len(scale_factors) > 0:
                 ax.plot(scale_factors, quantities, label=label, c=color)
 
+
 def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
     for idx, sim_name in enumerate(binned_summaries):
         if plot_name not in load_galaxies.axes[sim_name]:
@@ -211,7 +213,7 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
         for rank in range(1, n_to_plot + 1):
             quantities_x, _ = get_quantities(summaries, rank, quantity_x, unit_x)
             quantities_y, _ = get_quantities(summaries, rank, quantity_y, unit_y)
-            
+
             # only add the label for rank 1, so I don't duplicate
             if rank == 1:
                 label = sim_name
@@ -221,6 +223,7 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
             # only plot if at least one output has the quantities desired
             if len(quantities_x) > 0 and len(quantities_x) == len(quantities_y):
                 ax.plot(quantities_x, quantities_y, label=label, c=color)
+
 
 def plot_molecular_gas_fraction(plot_name, ax):
     for idx, sim_name in enumerate(binned_summaries):
@@ -232,12 +235,16 @@ def plot_molecular_gas_fraction(plot_name, ax):
         # of the simulation
         n_to_plot = get_n_halos_to_plot(summaries[0])
         for rank in range(1, n_to_plot + 1):
-            gas_h2, scale_factors = get_quantities(summaries, rank, "gas_mass_H2", u.Msun)
-            gas_hI, scale_factors = get_quantities(summaries, rank, "gas_mass_HI", u.Msun)
+            gas_h2, scale_factors = get_quantities(
+                summaries, rank, "gas_mass_H2", u.Msun
+            )
+            gas_hI, scale_factors = get_quantities(
+                summaries, rank, "gas_mass_HI", u.Msun
+            )
 
             ratio = [h2 / (h2 + hI) for h2, hI in zip(gas_h2, gas_hI)]
             # only add the label for rank 1, so I don't duplicate
-            if rank == 1: 
+            if rank == 1:
                 label = sim_name
             else:
                 label = None
@@ -245,6 +252,7 @@ def plot_molecular_gas_fraction(plot_name, ax):
             # only plot if at least one output has the quantity desired
             if len(scale_factors) > 0:
                 ax.plot(scale_factors, ratio, label=label, c=color)
+
 
 # =============================================================================
 #
@@ -326,10 +334,8 @@ for group in sim_groups:
     plot_molecular_gas_fraction(group, ax)
     ax.set_yscale("log")
     plot_utils.add_legend(ax, fontsize=10)
-    ax.add_labels(
-        "Scale Factor", f"H2 / (HI + H2) within" + " R$_{vir}$"
-    )
-    ax.set_limits(y_min=1e-4, y_max=1) 
+    ax.add_labels("Scale Factor", f"H2 / (HI + H2) within" + " R$_{vir}$")
+    ax.set_limits(y_min=1e-4, y_max=1)
     fig.savefig(plot_dir / f"galaxy_comparison_{group}_molecular_fraction.png")
 
 # =============================================================================

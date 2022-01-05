@@ -17,9 +17,25 @@ yt.funcs.mylog.setLevel(50)  # ignore yt's output
 # ======================================================================================
 # I have to hardcode some labels to make this easier, parsing them won't work
 # nearly as well
-def full_dir(partial_path):
-    base_dir = Path.home() / "art_runs" / "runs"
-    return base_dir / partial_path
+base_dir = Path.home() / "art_runs" / "runs"
+
+
+def hui(suffix):
+    return base_dir / "shangrila" / "hui" / suffix
+
+
+def old_ic(suffix):
+    return (
+        base_dir / "stampede2" / "old_ic_comparison_production_analog" / suffix / "run"
+    )
+
+
+def production(suffix):
+    return base_dir / "stampede2" / "production" / suffix / "run"
+
+
+def rj_nbody(suffix):
+    return base_dir / "stampede2" / "rj_nbody" / suffix / "run"
 
 
 def prod_fmt(ic, eps_ff, f_hn):
@@ -35,151 +51,96 @@ def prod_fmt(ic, eps_ff, f_hn):
 
 
 names = {
-    full_dir(
-        "pleiades/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset/"
-    ): "T&L Collisionless",
-    full_dir("shangrila/hui/sfe_10"): "NBm SFE10",
-    full_dir("shangrila/hui/sfe_100"): "NBm SFE100",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/continuous_hn00_novirial/run"
-    ): "Continuous",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/continuous_hn00_virial10_entropy_fboost1/run"
+    base_dir
+    / "pleiades/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset/": "T&L Collisionless",
+    hui("sfe_10"): "NBm SFE10",
+    hui("sfe_100"): "NBm SFE100",
+    old_ic("continuous_hn00_novirial"): "Continuous",
+    old_ic(
+        "continuous_hn00_virial10_entropy_fboost1"
     ): "ART 2.1 Entropy $f_{boost}=1$ Continuous",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/continuoushui_hn00_novirial/run"
-    ): "Continuous Hui",
-    # full_dir(
-    #     "stampede2/old_ic_comparison_production_analog/continuouspopmcluster_hn00_novirial/run"
-    # ): "Continuous PopM",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/continuoussnr_hn00_novirial/run"
-    ): "Continuous SNR",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial/run"
-    ): "Discrete",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_novirial_entropy_fboost1/run"
+    old_ic("continuoushui_hn00_novirial"): "Continuous Hui",
+    # old_ic("continuouspopmcluster_hn00_novirial"): "Continuous PopM",
+    old_ic("continuoussnr_hn00_novirial"): "Continuous SNR",
+    old_ic("discrete_hn00_novirial"): "Discrete",
+    old_ic(
+        "discrete_hn00_novirial_entropy_fboost1"
     ): "ART 2.1 Entropy $f_{boost}=1$ No Virial",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10/run"
-    ): "Discrete $\\alpha<10$",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_fboost3/run"
-    ): "Discrete $\\alpha<10, f_{boost}=3$",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn20_virial10/run"
-    ): "Discrete $\\alpha<10$ HN20",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19/run"
-    ): "ART 1.9 Adiabatic",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_advect/run"
-    ): "ART 1.9 Advect",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_advect/run"
-    ): "ART 2.0 Advect",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_elements/run"
-    ): "ART 2.0 Adiabatic All Elements",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_nostars/run"
-    ): "ART 2.0 Adiabatic No Stars",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_old/run"
-    ): "ART 1.9 Hui's version Adiabatic",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_advect_nostars/run"
-    ): "ART 2.0 Advect No Stars",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noadvoradia_nostars/run"
-    ): "ART 2.0 No Flags",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy/run"
-    ): "ART 2.1 Entropy $f_{boost}=5$",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost3/run"
-    ): "ART 2.1 Entropy $f_{boost}=3$",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost2/run"
-    ): "ART 2.1 Entropy $f_{boost}=2$",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1/run"
-    ): "ART 2.1 Entropy $f_{boost}=1$",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_crho03/run"
+    old_ic("discrete_hn00_virial10"): "Discrete $\\alpha<10$",
+    old_ic("discrete_hn00_virial10_fboost3"): "Discrete $\\alpha<10, f_{boost}=3$",
+    old_ic("discrete_hn20_virial10"): "Discrete $\\alpha<10$ HN20",
+    old_ic("discrete_hn00_virial10_19"): "ART 1.9 Adiabatic",
+    old_ic("discrete_hn00_virial10_19_advect"): "ART 1.9 Advect",
+    old_ic("discrete_hn00_virial10_advect"): "ART 2.0 Advect",
+    old_ic("discrete_hn00_virial10_elements"): "ART 2.0 Adiabatic All Elements",
+    old_ic("discrete_hn00_virial10_nostars"): "ART 2.0 Adiabatic No Stars",
+    old_ic("discrete_hn00_virial10_19_old"): "ART 1.9 Hui's version Adiabatic",
+    old_ic("discrete_hn00_virial10_advect_nostars"): "ART 2.0 Advect No Stars",
+    old_ic("discrete_hn00_virial10_noadvoradia_nostars"): "ART 2.0 No Flags",
+    old_ic("discrete_hn00_virial10_entropy"): "ART 2.1 Entropy $f_{boost}=5$",
+    old_ic("discrete_hn00_virial10_entropy_fboost3"): "ART 2.1 Entropy $f_{boost}=3$",
+    old_ic("discrete_hn00_virial10_entropy_fboost2"): "ART 2.1 Entropy $f_{boost}=2$",
+    old_ic("discrete_hn00_virial10_entropy_fboost1"): "ART 2.1 Entropy $f_{boost}=1$",
+    old_ic(
+        "discrete_hn00_virial10_entropy_fboost1_crho03"
     ): "ART 2.1 Entropy $f_{boost}=1$ $C_\\rho=3",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_crho30/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_fboost1_crho30"
     ): "ART 2.1 Entropy $f_{boost}=1$ $C_\\rho=30",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_sfe001/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_fboost1_sfe001"
     ): "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1%",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_sfe010/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_fboost1_sfe010"
     ): "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=10%",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost3_nosnia/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_fboost3_nosnia"
     ): "ART 2.1 Entropy $f_{boost}=3$ No SNIa",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_molvadim"
     ): "ART 2.1 Entropy Molecular Changes $f_{boost}=5$",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost1/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_molvadim_fboost1"
     ): "ART 2.1 Entropy Molecular Changes $f_{boost}=1$",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost2/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_molvadim_fboost2"
     ): "ART 2.1 Entropy Molecular Changes $f_{boost}=2$",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost3/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_molvadim_fboost3"
     ): "ART 2.1 Entropy Molecular Changes $f_{boost}=3$",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediff/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_newagediff"
     ): "ART 2.1 Entropy SN Timing Hybrid",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediffallave/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_newagediffallave"
     ): "ART 2.1 Entropy SN Timing Average",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediffallbirth/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_newagediffallbirth"
     ): "ART 2.1 Entropy SN Timing Birth",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_noagediff/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_noagediff"
     ): "ART 2.1 Entropy $f_{boost}=5$ No Age Diff",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_hybridagediff/run"
+    old_ic(
+        "discrete_hn00_virial10_entropy_hybridagediff"
     ): "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn50_virial10_entropy_fboost1/run"
+    old_ic(
+        "discrete_hn50_virial10_entropy_fboost1"
     ): "ART 2.1 Entropy $f_{boost}=1$ HN50",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_nosync/run"
-    ): "ART 2.1 No Sync",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noturb_adi/run"
-    ): "ART 2.0 No Turbulence Adiabatic",
-    full_dir(
-        "stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noturb_adv/run"
-    ): "ART 2.0 No Turbulence Advect",
-    full_dir("stampede2/production/tl_sfe001_hn20/run"): prod_fmt("T&L", 1, 20),
-    full_dir("stampede2/production/tl_sfe010_hn20/run"): prod_fmt("T&L", 10, 20),
-    full_dir("stampede2/production/tl_sfe100_hn20/run"): prod_fmt("T&L", 100, 20),
-    full_dir("stampede2/production/tl_sfe100_hn05/run"): prod_fmt("T&L", 100, 5),
-    full_dir("stampede2/production/tl_sfe100_hn00/run"): prod_fmt("T&L", 100, 0),
-    full_dir("stampede2/production/tl_sfe100_hn00_fboost1/run"): prod_fmt("T&L", 100, 0)
-    + " $f_{boost}=1",
-    full_dir("stampede2/production/tl_sfe100_hn00_fboost3/run"): prod_fmt("T&L", 100, 0)
-    + " $f_{boost}=3",
-    full_dir("stampede2/production/rj_sfe010_hn20/run"): prod_fmt("R&J", 10, 20),
-    full_dir("stampede2/production/rj_sfe100_hn20/run"): prod_fmt("R&J", 100, 20),
-    full_dir(
-        "stampede2/rj_nbody/original_92.48mpc_level07/run"
-    ): "R&J Collisionless Original",
-    full_dir(
-        "stampede2/rj_nbody/hybrid_46.24mpc_level08/run"
-    ): "R&J Collisionless 2x Trim",
-    full_dir(
-        "stampede2/rj_nbody/hybrid_23.12mpc_level08/run"
-    ): "R&J Collisionless 4x Trim",
+    old_ic("discrete_hn00_virial10_entropy_nosync"): "ART 2.1 No Sync",
+    old_ic("discrete_hn00_virial10_noturb_adi"): "ART 2.0 No Turbulence Adiabatic",
+    old_ic("discrete_hn00_virial10_noturb_adv"): "ART 2.0 No Turbulence Advect",
+    production("tl_sfe001_hn20"): prod_fmt("T&L", 1, 20),
+    production("tl_sfe010_hn20"): prod_fmt("T&L", 10, 20),
+    production("tl_sfe100_hn20"): prod_fmt("T&L", 100, 20),
+    production("tl_sfe100_hn05"): prod_fmt("T&L", 100, 5),
+    production("tl_sfe100_hn00"): prod_fmt("T&L", 100, 0),
+    production("tl_sfe100_hn00_fboost1"): prod_fmt("T&L", 100, 0) + " $f_{boost}=1",
+    production("tl_sfe100_hn00_fboost3"): prod_fmt("T&L", 100, 0) + " $f_{boost}=3",
+    production("rj_sfe010_hn20"): prod_fmt("R&J", 10, 20),
+    production("rj_sfe100_hn20"): prod_fmt("R&J", 100, 20),
+    rj_nbody("original_92.48mpc_level07"): "R&J Collisionless Original",
+    rj_nbody("hybrid_46.24mpc_level08"): "R&J Collisionless 2x Trim",
+    rj_nbody("hybrid_23.12mpc_level08"): "R&J Collisionless 4x Trim",
 }
 
 cmap_nbm = cm.Greys
