@@ -89,10 +89,10 @@ names = {
     ): "ART 2.1 Entropy $f_{boost}=1$ $C_\\rho=30",
     old_ic(
         "discrete_hn00_virial10_entropy_fboost1_sfe001"
-    ): "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1%",
+    ): "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1$%",
     old_ic(
         "discrete_hn00_virial10_entropy_fboost1_sfe010"
-    ): "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=10%",
+    ): "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=10$%",
     old_ic(
         "discrete_hn00_virial10_entropy_fboost3_nosnia"
     ): "ART 2.1 Entropy $f_{boost}=3$ No SNIa",
