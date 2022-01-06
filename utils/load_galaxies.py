@@ -89,10 +89,10 @@ names = {
     ): "ART 2.1 Entropy $f_{boost}=1$ $C_\\rho=30",
     old_ic(
         "discrete_hn00_virial10_entropy_fboost1_sfe001"
-    ): "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1$%",
+    ): "ART 2.1 Entropy $f_{boost}=1$ $\epsilon_{ff}=1$%",
     old_ic(
         "discrete_hn00_virial10_entropy_fboost1_sfe010"
-    ): "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=10$%",
+    ): "ART 2.1 Entropy $f_{boost}=1$ $\epsilon_{ff}=10$%",
     old_ic(
         "discrete_hn00_virial10_entropy_fboost3_nosnia"
     ): "ART 2.1 Entropy $f_{boost}=3$ No SNIa",
@@ -181,8 +181,8 @@ colors = {
     "ART 2.1 Entropy $f_{boost}=1$": bpl.color_cycle[4],
     "ART 2.1 Entropy $f_{boost}=1$ $C_\\rho=3": bpl.color_cycle[1],
     "ART 2.1 Entropy $f_{boost}=1$ $C_\\rho=30": bpl.color_cycle[2],
-    "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1$%": bpl.color_cycle[0],
-    "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=10$%": bpl.color_cycle[1],
+    "ART 2.1 Entropy $f_{boost}=1$ $\epsilon_{ff}=1$%": bpl.color_cycle[0],
+    "ART 2.1 Entropy $f_{boost}=1$ $\epsilon_{ff}=10$%": bpl.color_cycle[1],
     "ART 2.1 Entropy $f_{boost}=3$ No SNIa": bpl.color_cycle[5],
     "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": bpl.color_cycle[0],
     "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff": bpl.color_cycle[3],
@@ -255,8 +255,8 @@ axes = {
     ],
     "ART 2.1 Entropy $f_{boost}=1$ $C_\\rho=3": ["old_ic_molecular"],
     "ART 2.1 Entropy $f_{boost}=1$ $C_\\rho=30": ["old_ic_molecular"],
-    "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=1$%": ["old_ic_sfe"],
-    "ART 2.1 Entropy $f_{boost}=1$ $\eps_{ff}=10$%": ["old_ic_sfe"],
+    "ART 2.1 Entropy $f_{boost}=1$ $\epsilon_{ff}=1$%": ["old_ic_sfe"],
+    "ART 2.1 Entropy $f_{boost}=1$ $\epsilon_{ff}=10$%": ["old_ic_sfe"],
     "ART 2.1 Entropy $f_{boost}=3$ No SNIa": [],
     "ART 2.1 Entropy $f_{boost}=5$ No Age Diff": [],
     "ART 2.1 Entropy $f_{boost}=5$ Hybrid Age Diff": [],
