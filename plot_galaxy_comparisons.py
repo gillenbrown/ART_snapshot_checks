@@ -143,9 +143,9 @@ for summary_path in sys.argv[2:]:
 # =============================================================================
 binned_summaries = defaultdict(list)
 for summary_path in parsed_summaries:
-    for full_dir, short_name in load_galaxies.names.items():
+    for full_dir in plot_utils.names.keys():
         if summary_path.startswith(str(full_dir / "checks")):
-            binned_summaries[short_name].append(summary_path)
+            binned_summaries[full_dir].append(summary_path)
 # then sort them to get the summaries in order
 for key in binned_summaries:
     binned_summaries[key] = sorted(binned_summaries[key])
@@ -158,7 +158,7 @@ def get_scale_factor(summary_path):
     return float(scale)
 
 
-sim_groups = load_galaxies.get_plot_names(binned_summaries.keys())
+sim_groups = load_galaxies.get_plot_names_dirs(binned_summaries.keys())
 
 # =============================================================================
 #
@@ -180,11 +180,11 @@ def get_quantities(summaries, rank, quantity, unit):
 
 
 def plot_quantities(quantity, unit, plot_name, ax):
-    for idx, sim_name in enumerate(binned_summaries):
-        if plot_name not in load_galaxies.axes[sim_name]:
+    for idx, sim_dir in enumerate(binned_summaries):
+        if plot_name not in plot_utils.names[sim_dir]:
             continue
-        color = load_galaxies.colors[sim_name]
-        summaries = binned_summaries[sim_name]
+        color = plot_utils.colors[sim_dir]
+        summaries = binned_summaries[sim_dir]
         # the number of halos to plot will not change throughout the history
         # of the simulation
         n_to_plot = get_n_halos_to_plot(summaries[0])
@@ -192,7 +192,7 @@ def plot_quantities(quantity, unit, plot_name, ax):
             quantities, scale_factors = get_quantities(summaries, rank, quantity, unit)
             # only add the label for rank 1, so I don't duplicate
             if rank == 1:
-                label = sim_name
+                label = plot_utils.names[sim_dir][plot_name]
             else:
                 label = None
 
@@ -202,11 +202,11 @@ def plot_quantities(quantity, unit, plot_name, ax):
 
 
 def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
-    for idx, sim_name in enumerate(binned_summaries):
-        if plot_name not in load_galaxies.axes[sim_name]:
+    for idx, sim_dir in enumerate(binned_summaries):
+        if plot_name not in plot_utils.names[sim_dir]:
             continue
-        color = load_galaxies.colors[sim_name]
-        summaries = binned_summaries[sim_name]
+        color = plot_utils.colors[sim_dir]
+        summaries = binned_summaries[sim_dir]
         # the number of halos to plot will not change throughout the history
         # of the simulation
         n_to_plot = get_n_halos_to_plot(summaries[0])
@@ -216,7 +216,7 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
 
             # only add the label for rank 1, so I don't duplicate
             if rank == 1:
-                label = sim_name
+                label = plot_utils.names[sim_dir][plot_name]
             else:
                 label = None
 
@@ -226,11 +226,11 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
 
 
 def plot_molecular_gas_fraction(plot_name, ax):
-    for idx, sim_name in enumerate(binned_summaries):
-        if plot_name not in load_galaxies.axes[sim_name]:
+    for idx, sim_dir in enumerate(binned_summaries):
+        if plot_name not in plot_utils.names[sim_dir]:
             continue
-        color = load_galaxies.colors[sim_name]
-        summaries = binned_summaries[sim_name]
+        color = plot_utils.colors[sim_dir]
+        summaries = binned_summaries[sim_dir]
         # the number of halos to plot will not change throughout the history
         # of the simulation
         n_to_plot = get_n_halos_to_plot(summaries[0])
@@ -245,7 +245,7 @@ def plot_molecular_gas_fraction(plot_name, ax):
             ratio = [h2 / (h2 + hI) for h2, hI in zip(gas_h2, gas_hI)]
             # only add the label for rank 1, so I don't duplicate
             if rank == 1:
-                label = sim_name
+                label = plot_utils.names[sim_dir][plot_name]
             else:
                 label = None
 

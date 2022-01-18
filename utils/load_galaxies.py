@@ -89,11 +89,10 @@ class Simulation(object):
         self.scale_factor = 1 / (1 + self.z)
 
         # get the axis names and other stuff. There are times where these aren't
-        # defined, but when it's not defined it's not needed. Using .get returns none
-        # as the default value.
-        self.name = plot_utils.names.get(run_dir)
-        self.axes = plot_utils.axes.get(self.name)
-        self.color = plot_utils.colors.get(self.name)
+        # defined, but when it's not defined it's not needed
+        self.names = plot_utils.names.get(run_dir)
+        self.axes = list(self.names.keys())
+        self.color = plot_utils.colors[run_dir]  # does set a default, so no .get needed
 
         # have the place to store some precalculated things, particularly those that
         # include all galaxies in the simulation
@@ -302,9 +301,17 @@ def get_simulations_same_scale(
     return sims_common
 
 
-def get_plot_names(sim_names):
+def get_plot_names(sims):
     all_plots = []
-    for name in sim_names:
-        for plot in plot_utils.axes[name]:
-            all_plots.append(plot)
+    for sim in sims:
+        for ax in sim.axes:
+            all_plots.append(ax)
+    return list(set(all_plots))
+
+
+def get_plot_names_dirs(dirs):
+    all_plots = []
+    for d in dirs:
+        for ax in plot_utils.names[d]:
+            all_plots.append(ax)
     return list(set(all_plots))

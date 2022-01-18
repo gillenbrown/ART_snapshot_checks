@@ -170,6 +170,8 @@ def plot_sfh(axis_name):
     for sim in sims:
         if axis_name not in sim.axes:
             continue
+
+        z = 1 / sim.ds.scale_factor - 1
         for galaxy in sim.galaxies:
             times, sfh_values = sfh(galaxy)
             # don't plot halos without few points
@@ -180,24 +182,7 @@ def plot_sfh(axis_name):
             plot_sfh = sfh_values.to("msun/yr").value
             dt = plot_times[1] - plot_times[0]
             if galaxy.rank == 1:
-                if axis_name == "adi_adv":
-                    # rename them for this one plot
-                    if sim.name == "NBm SFE100":
-                        label = "L18 Hydro - L18 Feedback"
-                        sim.color = bpl.color_cycle[2]
-                    elif sim.name == "Discrete $\\alpha<10$":
-                        label = "New Hydro - New Feedback"
-                        sim.color = bpl.color_cycle[1]
-                    elif sim.name == "ART 2.0 Advect":
-                        label = "L18 Hydro - New Feedback"
-                        sim.color = bpl.color_cycle[3]
-                    elif sim.name == "Continuous Hui":
-                        label = "New Hydro - L18 Feedback"
-                        sim.color = bpl.color_cycle[0]
-                    else:
-                        raise ValueError("Shouldn't happen.")
-                else:
-                    label = sim.name
+                label = sim.names[axis_name]
             else:
                 label = None
             ax.scatter(
@@ -207,9 +192,9 @@ def plot_sfh(axis_name):
                 c=sim.color,
                 alpha=1,
                 label=label,
-                zorder=10,
+                zorder=z,
             )
-            ax.plot(plot_times, plot_sfh, lw=1.0, c=sim.color, zorder=9)
+            ax.plot(plot_times, plot_sfh, lw=1.0, c=sim.color, zorder=z)
 
             # figure out the max time to use for the plot limit
             if max(plot_times) > max_time:
@@ -254,16 +239,13 @@ def plot_cumulative_growth(axis_name):
     max_time = 0
 
     # iterate through simulations
-    for sim in sorted(sims, key=lambda x: x.name):
+    for sim in sims:
         if axis_name not in sim.axes:
             continue
 
-        if axis_name == "old_ic_code" and sim.name == "Discrete $\\alpha<10$":
-            name = "ART 2.0 Adiabatic"
-        elif axis_name == "old_ic_code" and sim.name == "ART 2.1 Entropy $f_{boost}=5$":
-            name = "ART 2.1 Entropy"
-        else:
-            name = sim.name
+        name = sim.names[axis_name]
+
+        z = 1 / sim.ds.scale_factor - 1
         for galaxy in sim.galaxies:
             times, cumulative_mass = cumulative_growth(galaxy)
             # handle halos with few points
@@ -277,10 +259,10 @@ def plot_cumulative_growth(axis_name):
             plot_times = times.to("Gyr").value
             cumulative_mass = cumulative_mass.to("msun").value
             if galaxy.rank == 1:
-                label = f"{name}: z = {1 / sim.ds.scale_factor - 1:.1f}"
+                label = f"{name}: z = {z:.1f}"
             else:
                 label = None
-            ax.plot(plot_times, cumulative_mass, c=sim.color, label=label)
+            ax.plot(plot_times, cumulative_mass, c=sim.color, label=label, zorder=z)
 
             # figure out the max time to use for the plot limit
             if max(plot_times) > max_time:
@@ -320,7 +302,7 @@ def plot_cumulative_growth(axis_name):
 # then actually do the plotting
 #
 # ======================================================================================
-for plot_name in load_galaxies.get_plot_names([sim.name for sim in sims]):
+for plot_name in load_galaxies.get_plot_names(sims):
     plot_sfh(plot_name)
     plot_cumulative_growth(plot_name)
 

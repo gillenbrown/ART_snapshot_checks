@@ -11,8 +11,6 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import betterplotlib as bpl
 
-from utils import plot_utils
-
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
@@ -129,6 +127,23 @@ class Halo(object):
 # Then get the two halos in each of these simulations
 #
 # ==============================================================================
+names = {
+    "/u/home/gillenb/art_runs/runs/pleiades/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset/": "T&L Collisionless",
+    "/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe001_hn20/run/": "T&L $\epsilon_{ff}=1$% $f_{HN,0}=20$% $f_{boost}=5$",
+    "/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe010_hn20/run/": "T&L $\epsilon_{ff}=10$% $f_{HN,0}=20$% $f_{boost}=5$",
+    "/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn20/run/": "T&L $\epsilon_{ff}=100$% $f_{HN,0}=20$% $f_{boost}=5$",
+    "/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn05/run/": "T&L $\epsilon_{ff}=100$% $f_{HN,0}=5$% $f_{boost}=5$",
+    "/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn00/run/": "T&L $\epsilon_{ff}=100$% $f_{HN,0}=0$% $f_{boost}=5$",
+    "/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn00_fboost1/run/": "T&L $\epsilon_{ff}=100$% $f_{HN,0}=0$% $f_{boost}=1$",
+    "/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn00_fboost3/run/": "T&L $\epsilon_{ff}=100$% $f_{HN,0}=0$% $f_{boost}=3$",
+    "/u/home/gillenb/art_runs/runs/stampede2/rj_nbody/original_92.48mpc_level07/run/": "R&J Collisionless 92 Mpc",
+    "/u/home/gillenb/art_runs/runs/stampede2/rj_nbody/hybrid_46.24mpc_level08/run/": "R&J Collisionless 46 Mpc",
+    "/u/home/gillenb/art_runs/runs/stampede2/rj_nbody/hybrid_23.12mpc_level08/run/": "R&J Collisionless 23 Mpc",
+    "/u/home/gillenb/art_runs/runs/stampede2/production/rj_sfe010_hn20/run/": "R&J $\epsilon_{ff}=10$% $f_{HN,0}=20$% $f_{boost}=5$",
+    "/u/home/gillenb/art_runs/runs/stampede2/production/rj_sfe100_hn20/run/": "R&J $\epsilon_{ff}=100$% $f_{HN,0}=20$% $f_{boost}=5$",
+}
+
+
 class Simulation(object):
     def __init__(self, output_dir):
         self.dirname = Path(output_dir).resolve() / "checks"
@@ -139,9 +154,9 @@ class Simulation(object):
         growth_2 = self.dirname / "growth_2.txt"
 
         try:
-            name_base = plot_utils.names[Path(output_dir)]
+            name_base = names[output_dir]
         except KeyError:
-            raise ValueError("Sim name not found in load_galaxies.py", output_dir)
+            raise ValueError("Sim name not found", output_dir)
 
         self.g1 = Halo(mergers_1, growth_1, name_base)
         self.g2 = Halo(mergers_2, growth_2, name_base)
@@ -149,14 +164,18 @@ class Simulation(object):
 
 # fmt: off
 tl_nbody = Simulation("/u/home/gillenb/art_runs/runs/pleiades/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset/")
-tl_sfe001_hn20 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe001_hn20/run/")
-tl_sfe010_hn20 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe010_hn20/run/")
-tl_sfe100_hn00 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn00/run/")
-tl_sfe100_hn05 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn05/run/")
-tl_sfe100_hn20 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn20/run/")
+tl_sfe001_hn20_fb5 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe001_hn20/run/")
+tl_sfe010_hn20_fb5 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe010_hn20/run/")
+tl_sfe100_hn00_fb5 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn00/run/")
+tl_sfe100_hn05_fb5 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn05/run/")
+tl_sfe100_hn20_fb5 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn20/run/")
+tl_sfe100_hn00_fb1 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn00_fboost1/run/")
+tl_sfe100_hn00_fb3 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/tl_sfe100_hn00_fboost3/run/")
 rj_nbody_92 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/rj_nbody/original_92.48mpc_level07/run/")
 rj_nbody_46 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/rj_nbody/hybrid_46.24mpc_level08/run/")
 rj_nbody_23 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/rj_nbody/hybrid_23.12mpc_level08/run/")
+rj_sfe100_hn20 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/rj_sfe100_hn20/run/")
+rj_sfe010_hn20 = Simulation("/u/home/gillenb/art_runs/runs/stampede2/production/rj_sfe010_hn20/run/")
 # fmt: on
 
 # ==============================================================================
@@ -290,8 +309,10 @@ c1, m1 = bpl.color_cycle[0], "."  # "o"
 c2, m2 = bpl.color_cycle[1], "s"  # "v"
 c3, m3 = bpl.color_cycle[2], "P"  # "+"
 c4, m4 = bpl.color_cycle[3], ">"  # "x"
-c5, m5 = bpl.color_cycle[4], "v"
-c6, m6 = bpl.color_cycle[5], "x"
+c5, m5 = bpl.color_cycle[4], "<"
+c6, m6 = bpl.color_cycle[5], "^"
+c7, m7 = bpl.color_cycle[6], "v"
+c8, m8 = bpl.color_cycle[7], "X"
 
 print(
     "\nThe most massive galaxy at z=0 is not the most massive galaxy at all times,\n"
@@ -300,48 +321,64 @@ print(
 )
 
 plot_merger(ax_t, tl_nbody.g1, c1, m1, "T&L")
-plot_merger(ax_t, tl_sfe001_hn20.g2, c2, m2, "T&L")
-plot_merger(ax_t, tl_sfe010_hn20.g2, c3, m3, "T&L")
-plot_merger(ax_t, tl_sfe100_hn00.g2, c4, m4, "T&L")
-plot_merger(ax_t, tl_sfe100_hn05.g2, c5, m5, "T&L")
-plot_merger(ax_t, tl_sfe100_hn20.g2, c6, m6, "T&L")
+plot_merger(ax_t, tl_sfe001_hn20_fb5.g2, c2, m2, "T&L")
+plot_merger(ax_t, tl_sfe010_hn20_fb5.g2, c3, m3, "T&L")
+plot_merger(ax_t, tl_sfe100_hn00_fb5.g2, c4, m4, "T&L")
+plot_merger(ax_t, tl_sfe100_hn05_fb5.g2, c5, m5, "T&L")
+plot_merger(ax_t, tl_sfe100_hn20_fb5.g2, c6, m6, "T&L")
+plot_merger(ax_t, tl_sfe100_hn00_fb3.g2, c7, m7, "T&L")
+plot_merger(ax_t, tl_sfe100_hn00_fb1.g2, c8, m8, "T&L")
 
 plot_mass_ratio(ax_dt, tl_nbody.g1, tl_nbody.g1, c1)
-plot_mass_ratio(ax_dt, tl_nbody.g1, tl_sfe001_hn20.g2, c2)
-plot_mass_ratio(ax_dt, tl_nbody.g1, tl_sfe010_hn20.g2, c3)
-plot_mass_ratio(ax_dt, tl_nbody.g1, tl_sfe100_hn00.g2, c4)
-plot_mass_ratio(ax_dt, tl_nbody.g1, tl_sfe100_hn05.g2, c5)
-plot_mass_ratio(ax_dt, tl_nbody.g1, tl_sfe100_hn20.g2, c6)
+plot_mass_ratio(ax_dt, tl_nbody.g1, tl_sfe001_hn20_fb5.g2, c2)
+plot_mass_ratio(ax_dt, tl_nbody.g1, tl_sfe010_hn20_fb5.g2, c3)
+plot_mass_ratio(ax_dt, tl_nbody.g1, tl_sfe100_hn00_fb5.g2, c4)
+plot_mass_ratio(ax_dt, tl_nbody.g1, tl_sfe100_hn05_fb5.g2, c5)
+plot_mass_ratio(ax_dt, tl_nbody.g1, tl_sfe100_hn20_fb5.g2, c6)
+plot_mass_ratio(ax_dt, tl_nbody.g1, tl_sfe100_hn00_fb3.g2, c7)
+plot_mass_ratio(ax_dt, tl_nbody.g1, tl_sfe100_hn00_fb1.g2, c8)
 
 plot_merger(ax_l, tl_nbody.g2, c1, m1, "T&L")
-plot_merger(ax_l, tl_sfe001_hn20.g1, c2, m2, "T&L")
-plot_merger(ax_l, tl_sfe010_hn20.g1, c3, m3, "T&L")
-plot_merger(ax_l, tl_sfe100_hn00.g1, c4, m4, "T&L")
-plot_merger(ax_l, tl_sfe100_hn05.g1, c5, m5, "T&L")
-plot_merger(ax_l, tl_sfe100_hn20.g1, c6, m6, "T&L")
+plot_merger(ax_l, tl_sfe001_hn20_fb5.g1, c2, m2, "T&L")
+plot_merger(ax_l, tl_sfe010_hn20_fb5.g1, c3, m3, "T&L")
+plot_merger(ax_l, tl_sfe100_hn00_fb5.g1, c4, m4, "T&L")
+plot_merger(ax_l, tl_sfe100_hn05_fb5.g1, c5, m5, "T&L")
+plot_merger(ax_l, tl_sfe100_hn20_fb5.g1, c6, m6, "T&L")
+plot_merger(ax_l, tl_sfe100_hn00_fb3.g1, c7, m7, "T&L")
+plot_merger(ax_l, tl_sfe100_hn00_fb1.g1, c8, m8, "T&L")
 
 plot_mass_ratio(ax_dl, tl_nbody.g2, tl_nbody.g2, c1)
-plot_mass_ratio(ax_dl, tl_nbody.g2, tl_sfe001_hn20.g1, c2)
-plot_mass_ratio(ax_dl, tl_nbody.g2, tl_sfe010_hn20.g1, c3)
-plot_mass_ratio(ax_dl, tl_nbody.g2, tl_sfe100_hn00.g1, c4)
-plot_mass_ratio(ax_dl, tl_nbody.g2, tl_sfe100_hn05.g1, c5)
-plot_mass_ratio(ax_dl, tl_nbody.g2, tl_sfe100_hn20.g1, c6)
+plot_mass_ratio(ax_dl, tl_nbody.g2, tl_sfe001_hn20_fb5.g1, c2)
+plot_mass_ratio(ax_dl, tl_nbody.g2, tl_sfe010_hn20_fb5.g1, c3)
+plot_mass_ratio(ax_dl, tl_nbody.g2, tl_sfe100_hn00_fb5.g1, c4)
+plot_mass_ratio(ax_dl, tl_nbody.g2, tl_sfe100_hn05_fb5.g1, c5)
+plot_mass_ratio(ax_dl, tl_nbody.g2, tl_sfe100_hn20_fb5.g1, c6)
+plot_mass_ratio(ax_dl, tl_nbody.g2, tl_sfe100_hn00_fb3.g1, c7)
+plot_mass_ratio(ax_dl, tl_nbody.g2, tl_sfe100_hn00_fb1.g1, c8)
 
 plot_merger(ax_r, rj_nbody_92.g1, c1, m1, "R&J")
 plot_merger(ax_r, rj_nbody_46.g1, c2, m2, "R&J")
 plot_merger(ax_r, rj_nbody_23.g1, c3, m3, "R&J")
+plot_merger(ax_r, rj_sfe010_hn20.g1, c4, m4, "R&J")
+plot_merger(ax_r, rj_sfe100_hn20.g1, c5, m5, "R&J")
 
 plot_mass_ratio(ax_dr, rj_nbody_92.g1, rj_nbody_92.g1, c1)
 plot_mass_ratio(ax_dr, rj_nbody_92.g1, rj_nbody_46.g1, c2)
 plot_mass_ratio(ax_dr, rj_nbody_92.g1, rj_nbody_23.g1, c3)
+plot_mass_ratio(ax_dr, rj_nbody_92.g1, rj_sfe010_hn20.g1, c4)
+plot_mass_ratio(ax_dr, rj_nbody_92.g1, rj_sfe100_hn20.g1, c5)
 
 plot_merger(ax_j, rj_nbody_92.g2, c1, m1, "R&J")
 plot_merger(ax_j, rj_nbody_46.g2, c2, m2, "R&J")
 plot_merger(ax_j, rj_nbody_23.g2, c3, m3, "R&J")
+plot_merger(ax_j, rj_sfe010_hn20.g2, c4, m4, "R&J")
+plot_merger(ax_j, rj_sfe100_hn20.g2, c5, m5, "R&J")
 
 plot_mass_ratio(ax_dj, rj_nbody_92.g2, rj_nbody_92.g2, c1)
 plot_mass_ratio(ax_dj, rj_nbody_92.g2, rj_nbody_46.g2, c2)
 plot_mass_ratio(ax_dj, rj_nbody_92.g2, rj_nbody_23.g2, c3)
+plot_mass_ratio(ax_dj, rj_nbody_92.g2, rj_sfe010_hn20.g2, c4)
+plot_mass_ratio(ax_dj, rj_nbody_92.g2, rj_sfe100_hn20.g2, c5)
 
 format_main_ax(ax_l, "T&L")
 format_main_ax(ax_t, "T&L")
