@@ -69,17 +69,16 @@ names = {
         "adi_adv": "L18 Hydro - New Feedback",
     },
     old_ic("discrete_hn00_virial10_entropy"): {
-        "old_ic_fboost": "$f_{boost}=5$",
+        "old_ic_sn_feedback": "$f_{boost}=5$, $f_{HN,0}=0$",
     },
     old_ic("discrete_hn00_virial10_entropy_fboost3"): {
-        "old_ic_fboost": "$f_{boost}=3$",
+        "old_ic_sn_feedback": "$f_{boost}=3$, $f_{HN,0}=0$",
     },
     old_ic("discrete_hn00_virial10_entropy_fboost2"): {
-        "old_ic_fboost": "$f_{boost}=2$",
+        "old_ic_sn_feedback": "$f_{boost}=2$, $f_{HN,0}=0$",
     },
     old_ic("discrete_hn00_virial10_entropy_fboost1"): {
-        "old_ic_fboost": "$f_{boost}=1$",
-        "old_ic_hn_fraction": "$f_{HN,0}=0$",
+        "old_ic_sn_feedback": "$f_{boost}=1$, $f_{HN,0}=0$",
         "old_ic_sfe": "$\epsilon_{ff}=100$%",
         "old_ic_virial": "Virial Criterion",
         "old_ic_discreteness": "Discrete SN",
@@ -110,7 +109,7 @@ names = {
         "old_ic_sn_timing": "Birth Approach",
     },
     old_ic("discrete_hn50_virial10_entropy_fboost1"): {
-        "old_ic_hn_fraction": "$f_{HN,0}=50$%",
+        "old_ic_sn_feedback": "$f_{boost}=1$, $f_{HN,0}=50$%",
     },
     production("tl_sfe001_hn20"): {
         "lg_sfe": "T&L, $\epsilon_{ff}=1$%",
@@ -227,8 +226,9 @@ def add_legend(ax, loc=0, fontsize=12, frameon=False, **kwargs):
             sort_label = l
         # add extras to manually change the sort for labels I want at the front
         # or back
-        if "NBm" in l:
-            sorts[h, l] = "000" + sort_label
+        if "NBm" in l or "$f_{boost}=1$, $f_{HN,0}=50$%" in l:
+            # ! is the first real ASCII character
+            sorts[h, l] = "!!!" + sort_label
         elif "Universe Machine" in l:
             sorts[h, l] = "zzz" + sort_label
         else:
