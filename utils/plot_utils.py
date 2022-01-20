@@ -144,83 +144,60 @@ names = {
 }
 
 
-def create_color_cmap(hex_color, min_saturation=0.1, max_value=0.8):
-    """
-    Create a colormap that fades from one color to nearly white.
-
-    This is done by converting the color to HSV, then decreasing the saturation while
-    increasing the value (which makes it closer to white)
-
-    :param hex_color: Original starting color, must be in hex format
-    :param min_saturation: The saturation of the point farthest from the original color
-    :param max_value: The value of the point farthest from the original color
-    :return: A matplotilb colormap. Calling it with 0 returns the color specififed
-             by `min_saturation` and `max_value` while keeping the same hue, while
-             1 will return the original color.
-    """
-    # convert to HSV (rgb required as an intermediate)
-    base_color_rgb = mpl_col.hex2color(hex_color)
-    h, s, v = mpl_col.rgb_to_hsv(base_color_rgb)
-    N = 256  # number of points in final colormap
-    # check that this color is within the range specified
-    assert s > min_saturation
-    assert v < max_value
-    # reduce the saturation and up the brightness. Start from the outer values, as these
-    # will correspond to 0, while the original color will be 1
-    saturations = np.linspace(min_saturation, s, N)
-    values = np.linspace(max_value, v, N)
-    out_xs = np.linspace(0, 1, N)
-
-    # set up the weird format required by LinearSegmentedColormap
-    cmap_dict = {"red": [], "blue": [], "green": []}
-    for idx in range(N):
-        r, g, b = mpl_col.hsv_to_rgb((h, saturations[idx], values[idx]))
-        out_x = out_xs[idx]
-        # LinearSegmentedColormap requires a weird format. I don't think the difference
-        # in the last two values matters, it seems to work fine without it.
-        cmap_dict["red"].append((out_x, r, r))
-        cmap_dict["green"].append((out_x, g, g))
-        cmap_dict["blue"].append((out_x, b, b))
-    return mpl_col.LinearSegmentedColormap(hex_color, cmap_dict, N=256)
-
-
-def hsv_to_hex(h, s, v):
+def h(h, s, v):  # stands for hsv to hex
     return mpl_col.to_hex(mpl_col.hsv_to_rgb([h, s, v]))
 
 
-cmap_old_ic_sfe = create_color_cmap(bpl.color_cycle[0])
+cmap_rj_collisionless = cm.Reds
 
 
 def default_color():
     return "#bafc03"  # an ugly color that's noticeable, to let me know to replace it
 
 
+# I have a bit of a scheme to follow here. Each IC gets it's own distinct color:
+# T&L is blue, R&J is green, and the old IC is red.
+# Within each IC, a decrease in the SFE fades the color by increasing value and
+# decreasing saturation (for old IC I'll just change value)
+# f_boost is just a change in saturation for the old IC
+
 colors = defaultdict(
     default_color,
     {
         hui("sfe_100"): "#AAAAAA",
-        old_ic("discrete_hn00_virial10_entropy_fboost1"): bpl.color_cycle[0],
+        old_ic("discrete_hn00_virial10_entropy_fboost1"): h(0.00, 0.60, 0.65),
+        old_ic("discrete_hn00_virial10_entropy_fboost2"): h(0.05, 0.70, 0.75),
+        old_ic("discrete_hn00_virial10_entropy_fboost3"): h(0.08, 0.70, 0.90),
+        old_ic("discrete_hn00_virial10_entropy"): h(0.13, 0.75, 0.90),
         old_ic("continuous_hn00_virial10_entropy_fboost1"): bpl.color_cycle[1],
-        old_ic("discrete_hn50_virial10_entropy_fboost1"): bpl.color_cycle[4],
-        old_ic("discrete_hn00_virial10_entropy_fboost1_sfe010"): cmap_old_ic_sfe(0.65),
-        old_ic("discrete_hn00_virial10_entropy_fboost1_sfe001"): cmap_old_ic_sfe(0.3),
+        old_ic("discrete_hn50_virial10_entropy_fboost1"): h(0.80, 0.4, 0.6),
+        old_ic("discrete_hn00_virial10_entropy_fboost1_sfe010"): h(0.00, 0.45, 0.70),
+        old_ic("discrete_hn00_virial10_entropy_fboost1_sfe001"): h(0.00, 0.20, 0.80),
         old_ic("discrete_hn00_virial10_advect"): bpl.almost_black,
-        old_ic("discrete_hn00_virial10"): bpl.color_cycle[3],
+        old_ic("discrete_hn00_virial10"): h(0.06, 0.70, 0.80),
+        old_ic("continuoushui_hn00_novirial"): h(0.06, 0.30, 0.85),
+        old_ic("discrete_hn00_novirial_entropy_fboost1"): bpl.color_cycle[0],
+        old_ic("discrete_hn00_virial10_entropy_fboost1_crho03"): h(0.05, 0.50, 0.60),
+        old_ic("discrete_hn00_virial10_entropy_fboost1_crho30"): h(0.85, 0.30, 0.60),
+        old_ic("discrete_hn00_virial10_entropy_molvadim_fboost1"): h(0.95, 0.4, 0.4),
+        old_ic("discrete_hn00_virial10_entropy_newagediff"): h(0.55, 0.35, 0.45),
+        old_ic("discrete_hn00_virial10_entropy_newagediffallave"): h(0.35, 0.45, 0.75),
+        old_ic("discrete_hn00_virial10_entropy_newagediffallbirth"): h(0.2, 0.6, 0.8),
         # These colors are very carefully chosen to avoid colorblindness issues. The hue
         # changes between the SFE variations (blue) to the HN variations (purple), with
         # the shared SFE 100 HN 20 run in the middle. The blues are more saturated,
         # while the purples are less saturated. I found this essential to making the
         # colors distinguishable to those with colorblindess.
         # If you ever change these, use davidmathlogic.com/colorblind to doublecheck.
-        production("tl_sfe001_hn20"): hsv_to_hex(0.60, 0.45, 0.85),
-        production("tl_sfe010_hn20"): hsv_to_hex(0.60, 0.70, 0.75),
-        production("tl_sfe100_hn20"): hsv_to_hex(0.65, 0.80, 0.50),
-        production("tl_sfe100_hn05"): hsv_to_hex(0.70, 0.30, 0.65),
-        production("tl_sfe100_hn00"): hsv_to_hex(0.70, 0.15, 0.85),
-        production("tl_sfe100_hn00_fboost1"): hsv_to_hex(0.90, 0.15, 0.85),
-        production("tl_sfe100_hn00_fboost3"): hsv_to_hex(0.80, 0.15, 0.85),
-        production("rj_sfe010_hn20"): hsv_to_hex(0.35, 0.20, 0.70),
-        production("rj_sfe100_hn20"): hsv_to_hex(0.35, 0.30, 0.50),
+        production("tl_sfe001_hn20"): h(0.60, 0.45, 0.85),
+        production("tl_sfe010_hn20"): h(0.60, 0.70, 0.75),
+        production("tl_sfe100_hn20"): h(0.65, 0.80, 0.50),
+        production("tl_sfe100_hn05"): h(0.70, 0.30, 0.65),
+        production("tl_sfe100_hn00"): h(0.70, 0.15, 0.85),
+        production("tl_sfe100_hn00_fboost1"): h(0.70, 0.55, 0.85),
+        production("tl_sfe100_hn00_fboost3"): h(0.70, 0.35, 0.85),
+        production("rj_sfe010_hn20"): h(0.35, 0.20, 0.70),
+        production("rj_sfe100_hn20"): h(0.35, 0.30, 0.50),
         rj_nbody("original_92.48mpc_level07"): cmap_rj_collisionless(1.0),
         rj_nbody("hybrid_46.24mpc_level08"): cmap_rj_collisionless(0.7),
         rj_nbody("hybrid_23.12mpc_level08"): cmap_rj_collisionless(0.4),
