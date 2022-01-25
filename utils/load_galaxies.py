@@ -88,12 +88,11 @@ class Simulation(object):
         self.z = self.ds.current_redshift
         self.scale_factor = 1 / (1 + self.z)
 
-        # get the axis names and other stuff. There are times where these aren't
-        # defined, but when it's not defined it's not needed
-        self.names = plot_utils.names.get(self.run_dir)
+        # get the axis names and other stuff. The dictionaries are defaultdicts, so
+        # there is no need to worry about key errors
+        self.names = plot_utils.names[self.run_dir]
         self.axes = list(self.names.keys())
         self.color = plot_utils.colors[self.run_dir]
-        # the colors dictionary does set a default, so no .get needed
 
         # have the place to store some precalculated things, particularly those that
         # include all galaxies in the simulation
@@ -179,7 +178,7 @@ class Simulation(object):
             self.galaxies.append(Galaxy(self.ds, center, radius, M_vir, r_vir, rank))
 
     def __repr__(self):
-        return self.name
+        return str(self.run_dir)
 
 
 # ======================================================================================

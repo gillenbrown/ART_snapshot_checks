@@ -48,99 +48,102 @@ def prod_fmt(ic, eps_ff, f_hn):
 
 
 # if the simulation is not included here, it is not used in any plots
-names = {
-    hui("sfe_100"): {
-        "adi_adv": "L18 Hydro - L18 Feedback",
+names = defaultdict(
+    dict,
+    {
+        hui("sfe_100"): {
+            "adi_adv": "L18 Hydro - L18 Feedback",
+        },
+        old_ic("continuous_hn00_virial10_entropy_fboost1"): {
+            "old_ic_discreteness": "Continuous"
+        },
+        old_ic("continuoushui_hn00_novirial"): {
+            "adi_adv": "New Hydro - L18 Feedback",
+            "old_ic_sn_timing": "L18: Continuous",
+        },
+        old_ic("discrete_hn00_novirial_entropy_fboost1"): {
+            "old_ic_virial": "No Virial Criterion"
+        },
+        old_ic("discrete_hn00_virial10"): {
+            "adi_adv": "New Hydro - New Feedback",
+        },
+        old_ic("discrete_hn00_virial10_advect"): {
+            "adi_adv": "L18 Hydro - New Feedback",
+        },
+        old_ic("discrete_hn00_virial10_entropy"): {
+            "old_ic_sn_feedback": "$f_{boost}=5$, $f_{HN,0}=0$",
+        },
+        old_ic("discrete_hn00_virial10_entropy_fboost3"): {
+            "old_ic_sn_feedback": "$f_{boost}=3$, $f_{HN,0}=0$",
+        },
+        old_ic("discrete_hn00_virial10_entropy_fboost2"): {
+            "old_ic_sn_feedback": "$f_{boost}=2$, $f_{HN,0}=0$",
+        },
+        old_ic("discrete_hn00_virial10_entropy_fboost1"): {
+            "old_ic_sn_feedback": "$f_{boost}=1$, $f_{HN,0}=0$",
+            "old_ic_sfe": "$\epsilon_{ff}=100$%",
+            "old_ic_virial": "Virial Criterion",
+            "old_ic_discreteness": "Discrete SN",
+            "old_ic_molecular": "$c_\\rho$=10",
+        },
+        old_ic("discrete_hn00_virial10_entropy_fboost1_crho03"): {
+            "old_ic_molecular": "$c_\\rho$=3",
+        },
+        old_ic("discrete_hn00_virial10_entropy_fboost1_crho30"): {
+            "old_ic_molecular": "$c_\\rho$=30",
+        },
+        old_ic("discrete_hn00_virial10_entropy_fboost1_sfe001"): {
+            "old_ic_sfe": "$\epsilon_{ff}=1$%",
+        },
+        old_ic("discrete_hn00_virial10_entropy_fboost1_sfe010"): {
+            "old_ic_sfe": "$\epsilon_{ff}=10$%",
+        },
+        old_ic("discrete_hn00_virial10_entropy_molvadim_fboost1"): {
+            "old_ic_molecular": "$c_\\rho$=30, Other Changes",
+        },
+        old_ic("discrete_hn00_virial10_entropy_newagediff"): {
+            "old_ic_sn_timing": "Hybrid Approach",
+        },
+        old_ic("discrete_hn00_virial10_entropy_newagediffallave"): {
+            "old_ic_sn_timing": "Average Approach",
+        },
+        old_ic("discrete_hn00_virial10_entropy_newagediffallbirth"): {
+            "old_ic_sn_timing": "Birth Approach",
+        },
+        old_ic("discrete_hn50_virial10_entropy_fboost1"): {
+            "old_ic_sn_feedback": "$f_{boost}=1$, $f_{HN,0}=50$%",
+        },
+        production("tl_sfe001_hn20"): {
+            "lg_sfe": "T&L, $\epsilon_{ff}=1$%",
+        },
+        production("tl_sfe010_hn20"): {
+            "lg_sfe": "T&L, $\epsilon_{ff}=10$%",
+        },
+        production("tl_sfe100_hn20"): {
+            "lg_hn_fraction": "$f_{HN,0}=20$%",
+            "lg_sfe": "T&L, $\epsilon_{ff}=100$%",
+        },
+        production("tl_sfe100_hn05"): {
+            "lg_hn_fraction": "$f_{HN,0}=5$%",
+        },
+        production("tl_sfe100_hn00"): {
+            "lg_fboost": "$f_{boost}=5$",
+            "lg_hn_fraction": "$f_{HN,0}=0$",
+        },
+        production("tl_sfe100_hn00_fboost1"): {
+            "lg_fboost": "$f_{boost}=1$",
+        },
+        production("tl_sfe100_hn00_fboost3"): {
+            "lg_fboost": "$f_{boost}=3$",
+        },
+        production("rj_sfe010_hn20"): {
+            "lg_sfe": "R&J, $\epsilon_{ff}=10$%",
+        },
+        production("rj_sfe100_hn20"): {
+            "lg_sfe": "R&J, $\epsilon_{ff}=100$%",
+        },
     },
-    old_ic("continuous_hn00_virial10_entropy_fboost1"): {
-        "old_ic_discreteness": "Continuous"
-    },
-    old_ic("continuoushui_hn00_novirial"): {
-        "adi_adv": "New Hydro - L18 Feedback",
-        "old_ic_sn_timing": "L18: Continuous",
-    },
-    old_ic("discrete_hn00_novirial_entropy_fboost1"): {
-        "old_ic_virial": "No Virial Criterion"
-    },
-    old_ic("discrete_hn00_virial10"): {
-        "adi_adv": "New Hydro - New Feedback",
-    },
-    old_ic("discrete_hn00_virial10_advect"): {
-        "adi_adv": "L18 Hydro - New Feedback",
-    },
-    old_ic("discrete_hn00_virial10_entropy"): {
-        "old_ic_sn_feedback": "$f_{boost}=5$, $f_{HN,0}=0$",
-    },
-    old_ic("discrete_hn00_virial10_entropy_fboost3"): {
-        "old_ic_sn_feedback": "$f_{boost}=3$, $f_{HN,0}=0$",
-    },
-    old_ic("discrete_hn00_virial10_entropy_fboost2"): {
-        "old_ic_sn_feedback": "$f_{boost}=2$, $f_{HN,0}=0$",
-    },
-    old_ic("discrete_hn00_virial10_entropy_fboost1"): {
-        "old_ic_sn_feedback": "$f_{boost}=1$, $f_{HN,0}=0$",
-        "old_ic_sfe": "$\epsilon_{ff}=100$%",
-        "old_ic_virial": "Virial Criterion",
-        "old_ic_discreteness": "Discrete SN",
-        "old_ic_molecular": "$c_\\rho$=10",
-    },
-    old_ic("discrete_hn00_virial10_entropy_fboost1_crho03"): {
-        "old_ic_molecular": "$c_\\rho$=3",
-    },
-    old_ic("discrete_hn00_virial10_entropy_fboost1_crho30"): {
-        "old_ic_molecular": "$c_\\rho$=30",
-    },
-    old_ic("discrete_hn00_virial10_entropy_fboost1_sfe001"): {
-        "old_ic_sfe": "$\epsilon_{ff}=1$%",
-    },
-    old_ic("discrete_hn00_virial10_entropy_fboost1_sfe010"): {
-        "old_ic_sfe": "$\epsilon_{ff}=10$%",
-    },
-    old_ic("discrete_hn00_virial10_entropy_molvadim_fboost1"): {
-        "old_ic_molecular": "$c_\\rho$=30, Other Changes",
-    },
-    old_ic("discrete_hn00_virial10_entropy_newagediff"): {
-        "old_ic_sn_timing": "Hybrid Approach",
-    },
-    old_ic("discrete_hn00_virial10_entropy_newagediffallave"): {
-        "old_ic_sn_timing": "Average Approach",
-    },
-    old_ic("discrete_hn00_virial10_entropy_newagediffallbirth"): {
-        "old_ic_sn_timing": "Birth Approach",
-    },
-    old_ic("discrete_hn50_virial10_entropy_fboost1"): {
-        "old_ic_sn_feedback": "$f_{boost}=1$, $f_{HN,0}=50$%",
-    },
-    production("tl_sfe001_hn20"): {
-        "lg_sfe": "T&L, $\epsilon_{ff}=1$%",
-    },
-    production("tl_sfe010_hn20"): {
-        "lg_sfe": "T&L, $\epsilon_{ff}=10$%",
-    },
-    production("tl_sfe100_hn20"): {
-        "lg_hn_fraction": "$f_{HN,0}=20$%",
-        "lg_sfe": "T&L, $\epsilon_{ff}=100$%",
-    },
-    production("tl_sfe100_hn05"): {
-        "lg_hn_fraction": "$f_{HN,0}=5$%",
-    },
-    production("tl_sfe100_hn00"): {
-        "lg_fboost": "$f_{boost}=5$",
-        "lg_hn_fraction": "$f_{HN,0}=0$",
-    },
-    production("tl_sfe100_hn00_fboost1"): {
-        "lg_fboost": "$f_{boost}=1$",
-    },
-    production("tl_sfe100_hn00_fboost3"): {
-        "lg_fboost": "$f_{boost}=3$",
-    },
-    production("rj_sfe010_hn20"): {
-        "lg_sfe": "R&J, $\epsilon_{ff}=10$%",
-    },
-    production("rj_sfe100_hn20"): {
-        "lg_sfe": "R&J, $\epsilon_{ff}=100$%",
-    },
-}
+)
 
 
 def h(h, s, v):  # stands for hsv to hex
