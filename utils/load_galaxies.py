@@ -197,9 +197,12 @@ def filename_to_scale_factor(filename):
 
 def get_outputs_in_dir(sim_dir):
     directory = Path(sim_dir)
-    if directory not in plot_utils.names:
-        print(f"Skipping {directory}")
-        return []
+    # This is useful to avoid loading things without names that won't appear on plots,
+    # but it makes this code less useful elsewhere when I may want to use it to load
+    # all kinds of simulations
+    # if directory not in plot_utils.names:
+    #     print(f"Skipping {directory}")
+    #     return []
 
     out_dir = directory / "out"
     return [
