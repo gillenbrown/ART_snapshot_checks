@@ -78,8 +78,8 @@ class Simulation(object):
         ds_path must be a Path object
         """
         # get the dataset and corresponding halo file
-        run_dir = ds_path.parent.parent
-        halo_path = run_dir / "halos"
+        self.run_dir = ds_path.parent.parent
+        halo_path = self.run_dir / "halos"
         halo_name = ds_path.name.replace("continuous_", "out_")
         halo_name = halo_name.replace(".art", ".list")
 
@@ -90,9 +90,10 @@ class Simulation(object):
 
         # get the axis names and other stuff. There are times where these aren't
         # defined, but when it's not defined it's not needed
-        self.names = plot_utils.names.get(run_dir)
+        self.names = plot_utils.names.get(self.run_dir)
         self.axes = list(self.names.keys())
-        self.color = plot_utils.colors[run_dir]  # does set a default, so no .get needed
+        self.color = plot_utils.colors[self.run_dir]
+        # the colors dictionary does set a default, so no .get needed
 
         # have the place to store some precalculated things, particularly those that
         # include all galaxies in the simulation
