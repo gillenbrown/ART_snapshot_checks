@@ -30,8 +30,9 @@ def age_spread(region):
     creation_time = region[("STAR", "creation_time")]
 
     # some clusters have bad values, for whatever reason. Set a placeholder
-    # value for the vectorized calculation, then replace them with nans later
-    bad_idxs = np.where(age_spread.value <= 0)
+    # value for the vectorized calculation, then replace them with nans later.
+    # Negative age spreads or values very close to zero break the age calculation
+    bad_idxs = np.where(age_spread.value <= 1e-20)
     age_spread[bad_idxs] = max(age_spread)
 
     time = time_units(region.ds, (initial_mass ** 2 / age_spread) + birth_time)
