@@ -10,7 +10,9 @@ from pathlib import Path
 
 import numpy as np
 import yt
+from tqdm import tqdm
 import betterplotlib as bpl
+from matplotlib import pyplot as plt
 
 from utils import load_galaxies, plot_utils
 from analysis_functions import age_spreads
@@ -84,7 +86,58 @@ def time_cumulative_hist(sim, time_func, mask_name):
 # plotting
 #
 # ======================================================================================
-def plot_age_growth(axis_name, sim_share_type):
+def plot_age_growth_base(
+    ax, axis_name, age_quantity, sim_share_type, mass_side, label=False
+):
+    if sim_share_type == "last":
+        sims = sims_last
+    else:
+        sims = sims_common
+
+    if mass_side not in ["lo", "hi"]:
+        raise ValueError("bad mass_side")
+    high = mass_side == "hi"
+
+    funcs = {
+        "Duration": age_spreads.duration,
+        "Average Age": age_spreads.ave_time,
+        "Age Spread": age_spreads.age_spread,
+    }
+    func = funcs[age_quantity]
+
+    # add the labels here
+    ax.add_labels(age_quantity + " [Myr]", "Cumulative Fraction")
+    if high:
+        ax.easy_add_text("M > $10^5 M_\odot$", "upper left")
+    else:
+        ax.easy_add_text("M < $10^5 M_\odot$", "upper left")
+
+    for sim in sims:
+        if axis_name not in sim.axes:
+            continue
+
+        # make the plot legend
+        label = sim.names[axis_name]
+        z = 1 / sim.ds.scale_factor - 1
+        if sim_share_type == "last" and not 1.49 < z < 1.51:
+            label += f": z = {z:.1f}"
+
+        ages, fractions = time_cumulative_hist(sim, func, mass_side)
+        ax.plot(ages, fractions, c=sim.color, lw=2, label=label)
+
+    # add limits appropriately. This dictionary holds the maximum x value for
+    # low and high mass, respectively
+    limits = {"Duration": (5, 8), "Average Age": (3, 5), "Age Spread": (3, 5)}
+    ax.set_limits(0, limits[age_quantity][high], 0, 1)
+
+    if label:
+        plot_utils.add_legend(ax, loc=4, fontsize=16)
+        # if there is a common redshift, annotate it
+        if sim_share_type == "common":
+            ax.easy_add_text(f"z = {1/common_scale - 1:.1f}", "upper right")
+
+
+def plot_age_growth(axis_name, age_quantity, sim_share_type, which_mass):
     """
     Plot the cluster age spread quantities
 
@@ -97,63 +150,36 @@ def plot_age_growth(axis_name, sim_share_type):
     if sim_share_type not in ["last", "common"]:
         raise ValueError("bad plot_name_suffix")
 
-    if sim_share_type == "last":
-        sims = sims_last
+    if which_mass not in ["lo", "hi", "both"]:
+        raise ValueError("bad which_mass")
+
+    if which_mass == "both":
+        fig, axs = bpl.subplots(figsize=[14, 7], ncols=2)
+        plot_age_growth_base(
+            axs[0], axis_name, age_quantity, sim_share_type, "lo", True
+        )
+        plot_age_growth_base(
+            axs[1], axis_name, age_quantity, sim_share_type, "hi", False
+        )
+
     else:
-        sims = sims_common
+        fig, ax = bpl.subplots(figsize=[7, 7])
+        plot_age_growth_base(
+            ax, axis_name, age_quantity, sim_share_type, which_mass, True
+        )
 
-    fig, axs = bpl.subplots(figsize=[13, 17], ncols=2, nrows=3)
-
-    funcs = [age_spreads.duration, age_spreads.ave_time, age_spreads.age_spread]
-    names = ["Duration", "Average Age", "Age Spread"]
-
-    for ax_row, func, name in zip(axs, funcs, names):
-        # add the labels here
-        ax_row[0].add_labels(name + " [Myr]", "Cumulative Fraction")
-        ax_row[1].add_labels(name + " [Myr]", "Cumulative Fraction")
-        ax_row[0].easy_add_text("M < $10^5 M_\odot$", "upper left")
-        ax_row[1].easy_add_text("M > $10^5 M_\odot$", "upper left")
-        ax_row[0].set_limits(0, 5, 0, 1)
-        ax_row[1].set_limits(0, 8, 0, 1)
-        for sim in sims:
-            if axis_name not in sim.axes:
-                continue
-
-            # get the name of the simulations
-            if sim.name == "ART 2.1 Entropy $f_{boost}=5$":
-                label = "New Timing - Mean Age"
-                sim.color = bpl.color_cycle[0]
-            elif sim.name == "ART 2.1 Entropy $f_{boost}=5$ No Age Diff":
-                label = "New Timing - Birth"
-                sim.color = bpl.color_cycle[1]
-            elif sim.name == "NBm SFE100":
-                sim.color = bpl.color_cycle[2]
-                label = sim.name
-            else:
-                label = sim.name
-            # include the redshift if it's different for each sim
-            if sim_share_type == "last":
-                label += f": z = {1 / sim.ds.scale_factor - 1:.1f}"
-
-            ages_lo, fractions_lo = time_cumulative_hist(sim, func, "lo")
-            ages_hi, fractions_hi = time_cumulative_hist(sim, func, "hi")
-            ax_row[1].plot(ages_hi, fractions_hi, c=sim.color, lw=2, label=label)
-            ax_row[0].plot(ages_lo, fractions_lo, c=sim.color, lW=2, label=label)
-
-    # put a legend in the top left panel
-    plot_utils.add_legend(axs[0][1], loc=4, fontsize=10)
-
-    # if there is a common redshift, annotate it
-    if sim_share_type == "common":
-        axs[0][0].easy_add_text(f"z = {1/common_scale - 1:.1f}", "upper left")
-
-    plot_name = f"age_spread_{axis_name.replace('_', '')}_{sim_share_type}.pdf"
+    plot_name = f"age_{age_quantity.lower().replace(' ', '_')}"
+    plot_name += f"_{axis_name}_{sim_share_type}_{which_mass}.pdf"
     fig.savefig(plot_dir / plot_name)
+    # then remove figure for memory purposes
+    plt.close(fig)
 
 
 # then actually call this function to build the plots
-for plot_name in load_galaxies.get_plot_names([sim.name for sim in sims_last]):
+for plot_name in tqdm(load_galaxies.get_plot_names(sims_last)):
     for share_type in ["common", "last"]:
-        plot_age_growth(plot_name, share_type)
+        for age_type in ["Duration", "Average Age", "Age Spread"]:
+            for which_mass in ["lo", "hi", "both"]:
+                plot_age_growth(plot_name, age_type, share_type, which_mass)
 
 sentinel.touch()
