@@ -35,6 +35,11 @@ def rj_nbody(suffix):
     return base_dir / "stampede2" / "rj_nbody" / suffix / "run"
 
 
+def stampede2_analysis(suffix):
+    analysis_dir = Path("/scratch/06912/tg862118/art_runs/analysis/production")
+    return analysis_dir / suffix / "run"
+
+
 def prod_fmt(ic, eps_ff, f_hn):
     name = f"{ic} "
     name += "$\epsilon_{ff} = $" + f"{eps_ff:}%, "
@@ -208,6 +213,22 @@ colors = defaultdict(
 
 if len(list(colors.values())) != len(set(colors.values())):
     raise ValueError("Not all colors are unique! Fix please!")
+
+# add duplicates for Stampede2 analysis
+production_list = [
+    "tl_sfe001_hn20",
+    "tl_sfe010_hn20",
+    "tl_sfe100_hn20",
+    "tl_sfe100_hn05",
+    "tl_sfe100_hn00",
+    "tl_sfe100_hn00_fboost1",
+    "tl_sfe100_hn00_fboost3",
+    "rj_sfe010_hn20",
+    "rj_sfe100_hn20",
+]
+for suffix in production_list:
+    names[stampede2_analysis(suffix)] = names[production(suffix)]
+    colors[stampede2_analysis(suffix)] = colors[production(suffix)]
 
 
 def add_legend(ax, loc=0, fontsize=12, frameon=False, **kwargs):

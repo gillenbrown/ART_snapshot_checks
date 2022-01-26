@@ -14,7 +14,12 @@ ifneq (,$(findstring shangrila,$(hostname)))
 	machine = shangrila
 endif
 ifneq (,$(findstring stampede2,$(hostname)))
-	machine = stampede2
+	# then check which directory we're in
+	ifneq (,$(findstring analysis,$(shell pwd)))
+		machine = stampede2_analysis
+	else
+		machine = stampede2_halos
+	endif
 endif
 
 # ------------------------------------------------------------------------------
@@ -27,7 +32,7 @@ ifeq ($(machine),shangrila)
 	tree_dir = /u/home/gillenb/code/not_mine/consistent-trees
 	timing_script = /u/home/gillenb/code/mine/cart/utils/scripts/parse_timing2.pl
 endif
-ifeq ($(machine),stampede2)
+ifneq (,$(findstring stampede2,$(machine)))
 	tree_config_script = $(HOME)/code/rockstar-galaxies/scripts/gen_merger_cfg.pl
 	tree_dir = $(HOME)/code/consistent-trees
 	timing_script = $(HOME)/code/cart/utils/scripts/parse_timing2.pl
@@ -102,7 +107,6 @@ ifeq ($(machine),shangrila)
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_crho30/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_sfe001/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost1_sfe010/run \
- 	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost3_nosnia/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost1/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediff/run \
  	                 $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_newagediffallave/run \
@@ -117,6 +121,7 @@ ifeq ($(machine),shangrila)
  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_19_old/run
  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_advect_nostars/run
  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_elements/run
+ 	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_fboost3_nosnia/run
  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_hybridagediff/run
  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim/run
  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_entropy_molvadim_fboost2/run
@@ -130,7 +135,7 @@ ifeq ($(machine),shangrila)
  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn00_virial10_noturb_adv/run
  	                 # $(runs_home)/stampede2/old_ic_comparison_production_analog/discrete_hn20_virial10/run
 endif
-ifeq ($(machine),stampede2)
+ifeq ($(machine),stampede2_halos)
 	runs_home = $(SCRATCH)/art_runs/runs
 	sim_dirs_nbody =
 	sim_dirs_hydro = $(runs_home)/production/tl_sfe001_hn20/run \
@@ -142,6 +147,19 @@ ifeq ($(machine),stampede2)
 	                 $(runs_home)/production/tl_sfe100_hn20/run \
 	                 $(runs_home)/production/rj_sfe010_hn20/run \
 	                 $(runs_home)/production/rj_sfe100_hn20/run 
+endif
+ifeq ($(machine),stampede2_analysis)
+    runs_home = $(SCRATCH)/art_runs/analysis/production
+    sim_dirs_nbody =
+    sim_dirs_hydro = $(runs_home)/tl_sfe001_hn20/run \
+                     $(runs_home)/tl_sfe010_hn20/run \
+                     $(runs_home)/tl_sfe100_hn00/run \
+                     $(runs_home)/tl_sfe100_hn00_fboost1/run \
+                     $(runs_home)/tl_sfe100_hn00_fboost3/run \
+                     $(runs_home)/tl_sfe100_hn05/run \
+                     $(runs_home)/tl_sfe100_hn20/run \
+                     $(runs_home)/rj_sfe010_hn20/run \
+                     $(runs_home)/rj_sfe100_hn20/run
 endif
 
 # combine the N-Body and Hydro into one big list
@@ -223,23 +241,14 @@ galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
-#  comparison plots that have all sims on one plot. Only on shangrila!
+#  comparison plots that have all sims on one plot
 # 
 # ------------------------------------------------------------------------------
-ifeq ($(machine),shangrila)
-	sfh_sentinel = $(comparison_plots_dir)/sfh_sentinel.txt
-	cimf_sentinel = $(comparison_plots_dir)/cimf_sentinel.txt
-	halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
-	age_spread_sentinel = $(comparison_plots_dir)/age_spread_sentinel.txt
-	# one sentinel file for the script that makes a bunch of plots
-	galaxy_comparison_sentinel = $(comparison_plots_dir)/comparison_sentinel.txt
-else
-	sfh_sentinel =
-	cimf_sentinel =
-	halo_growth_plot =
-	age_spread_sentinel =
-	galaxy_comparison_sentinel =
-endif
+sfh_sentinel = $(comparison_plots_dir)/sfh_sentinel.txt
+cimf_sentinel = $(comparison_plots_dir)/cimf_sentinel.txt
+halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
+age_spread_sentinel = $(comparison_plots_dir)/age_spread_sentinel.txt
+galaxy_comparison_sentinel = $(comparison_plots_dir)/comparison_sentinel.txt
 # also a text file with the masses of all sims. This is on all machines.
 galaxy_masses = $(comparison_plots_dir)/galaxy_masses.txt
 
@@ -282,26 +291,20 @@ nbody_plots = $(halo_1_full_plots) $(halo_2_full_plots) $(halo_1_split_plots) $(
 #  Consistent trees
 # 
 # ------------------------------------------------------------------------------
-# we only do the actual merger tree creation on shangrila
-ifeq ($(machine),shangrila)
-	# then the actual halo trees
-	trees = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/trees/tree_0_0_0.dat)
-	tree_to_halo_sentinel = $(subst trees/tree_0_0_0.dat,sentinel.txt,$(1))
+# then the actual halo trees
+trees = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/trees/tree_0_0_0.dat)
+tree_to_halo_sentinel = $(subst trees/tree_0_0_0.dat,sentinel.txt,$(1))
 
-	# ----------------------------------------------------------------------------
-	#
-	#  Parsing merger trees
-	# 
-	# ----------------------------------------------------------------------------
-	# Here I again use a sentinel file, since there will be multiple files created
-	# by the one C file:
-	merger_sentinels = $(foreach dir,$(sim_checks_dirs),$(dir)/merger_sentinel.txt)
-	# need to get the trees that the sim should parse
-	merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_0_0.dat,$(1))
-else
-	trees =
-	merger_sentinels = 
-endif
+# ----------------------------------------------------------------------------
+#
+#  Parsing merger trees
+#
+# ----------------------------------------------------------------------------
+# Here I again use a sentinel file, since there will be multiple files created
+# by the one C file:
+merger_sentinels = $(foreach dir,$(sim_checks_dirs),$(dir)/merger_sentinel.txt)
+# need to get the trees that the sim should parse
+merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_0_0.dat,$(1))
 
 # ------------------------------------------------------------------------------
 #
@@ -328,12 +331,7 @@ cfl_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)/cfl_cell_speeds.png)
 # ------------------------------------------------------------------------------
 # Take the tidal ouput files from each run and consolidate them together into one
 # big file for each star.
-# only do this on shangrila
-ifeq ($(machine),shangrila)
-	tidal_sentinels = $(foreach dir,$(sim_tidal_dirs),$(dir)/sentinel.txt)
-else
-	tidal_sentinels =
-endif
+tidal_sentinels = $(foreach dir,$(sim_tidal_dirs),$(dir)/sentinel.txt)
 
 
 # ------------------------------------------------------------------------------
@@ -355,11 +353,7 @@ movie_to_metal_summary = $(call sim_to_summary_metal,$(call dir_to_sims,$(subst 
 movie_to_plot_dir = $(subst /$(1).mp4,,$(2))
 
 # only make the movies on shangrila
-ifeq ($(machine),shangrila)
-	movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
-else
-	movies =
-endif
+movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refined) $(call movies_all,n_body_local_group) $(call movies_all,n_body_split_local_group)
 
 # ------------------------------------------------------------------------------
 #
@@ -368,21 +362,23 @@ endif
 # ------------------------------------------------------------------------------
 paper_halo_growth_plot = $(paper_plots_dir)/halo_growth.pdf
 paper_halo_growth_script = paper_halo_growth.py
-
-# these are only on shangrila
-ifeq ($(machine),shangrila)
-	paper_plots = $(paper_halo_growth_plot)
-else
-	paper_plots =
-endif
+paper_plots = $(paper_halo_growth_plot)
 
 # ------------------------------------------------------------------------------
 #
 #  Rules
 # 
 # ------------------------------------------------------------------------------
-all: $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxy_masses) $(debugs) $(movies)
-# $(dt_history_plots) $(cfl_plots)
+ifeq ($(machine),shangrila)
+	outputs = $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxy_masses) $(debugs)
+	# $(dt_history_plots) $(cfl_plots) $(movies)
+else ifeq ($(machine),stampede2_analysis)
+	outputs = $(my_directories) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel)
+else ifeq ($(machine),stampede2_halos)
+	outputs = $(my_directories) $(galaxy_masses) $(debugs)
+endif
+
+all: $(outputs)
 
 .PHONY: clean
 clean:
@@ -512,8 +508,8 @@ timing: $(timings)
 
 # Here I have all timing outputs dependent on all snapshots. This isn't right.
 # But it's really hard to get the actual directory, since the timing scripts
-# have many subdirectories with unknown names. This is techincaly wrong, but 
-# costs essentially no time, so I keep it. 
+# have many subdirectories with unknown names. This is techincaly wrong, but
+# costs essentially no time, so I keep it.
 $(timings): $(snapshots)
 	$(timing_script) $(dir $@) > $@ 
 

@@ -4,7 +4,7 @@ import numpy as np
 import yt
 from astropy import table
 
-import plot_utils
+from . import plot_utils
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
