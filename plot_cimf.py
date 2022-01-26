@@ -9,8 +9,12 @@ from pathlib import Path
 
 import numpy as np
 from scipy import special
+from astropy import cosmology
+from astropy import units as u
 import yt
 import betterplotlib as bpl
+
+from tqdm import tqdm
 
 from utils import load_galaxies, plot_utils
 
@@ -25,7 +29,8 @@ cimf_sentinel = Path(sys.argv[1])
 #
 # ======================================================================================
 sims_last = load_galaxies.get_simulations_last(sys.argv[2:])
-sims_common, common_scale = load_galaxies.get_simulations_common(sys.argv[2:])
+common_z = 4.0
+sims_common = load_galaxies.get_simulations_same_scale(sys.argv[2:], common_z)
 
 # ======================================================================================
 #
@@ -60,6 +65,96 @@ def get_initial_bound_fraction(galaxy):
     return f_bound(eps_int)
 
 
+# ======================================================================================
+#
+# tidal evolution to z=0
+#
+# ======================================================================================
+dt = 100 * yt.units.Myr
+
+
+def t_tidal(M):
+    omega_tid = 50 / yt.units.Gyr
+
+    term_1 = 10 * yt.units.Gyr
+    term_2 = (M / (2e5 * yt.units.Msun)) ** (2 / 3)
+    term_3 = 100 / (omega_tid * yt.units.Gyr)
+    total = term_1 * term_2 * term_3
+    return total.to("Myr")
+
+
+def get_n_steps(t_now, t_z_0):
+    return int(np.ceil((t_z_0 - t_now).to("Myr") / dt))
+
+
+precalculated_disruption = dict()
+
+
+def precalculate_disruption(n_steps):
+    if n_steps in precalculated_disruption:
+        return
+    else:
+        precalculated_disruption[n_steps] = dict()
+
+    # otherwise, we need to build this
+    print(f"\n\n\nprecalculating\n{n_steps}\n\n\n")
+    for log_m in tqdm(np.arange(2, 8, 0.01)):
+        key_m = str(round(log_m, 2))
+
+        m = 10 ** log_m * yt.units.Msun
+        for _ in range(n_steps):
+            if m < 100 * yt.units.Msun:
+                m = 0
+                break
+            m *= np.exp(-dt / t_tidal(m))
+        precalculated_disruption[n_steps][key_m] = m
+
+
+def get_evolution_single_cluster(n_steps, log_m):
+    try:
+        key_m = str(round(log_m, 2))
+        return precalculated_disruption[n_steps][key_m]
+    except KeyError:  # only happens for initial M below 100, which will be fully
+        # disrupted by z=0
+        return 0
+
+
+def evolve_cluster_population(galaxy):
+    # get cosmology to get times
+    # Initialize the cosmology object, used to put a redshift scale on the plots
+    H_0 = galaxy.ds.artio_parameters["hubble"][0] * 100 * u.km / (u.Mpc * u.second)
+    omega_matter = galaxy.ds.artio_parameters["OmegaM"][0]
+    cosmo = cosmology.FlatLambdaCDM(H0=H_0, Om0=omega_matter, Tcmb0=2.725)
+
+    t_now = galaxy.ds.current_time
+    # need to convert the astropy units into yt units.
+    t_z_0 = cosmo.age(0).to("Gyr").value * yt.units.Gyr
+    n_steps = get_n_steps(t_now, t_z_0)
+
+    # precalculate the disruption. This won't do anything if it already exists.
+    precalculate_disruption(n_steps)
+
+    # then get star masses (note that this ignores stellar evolution).
+    raw_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun")
+    star_initial_bound = get_initial_bound_fraction(galaxy)
+    tidal_bound_fraction = galaxy[("STAR", "BOUND_FRACTION")].value
+    cluster_masses = raw_mass * star_initial_bound * tidal_bound_fraction
+    # get the log here. This makes using it in precalculation easier, as this is
+    # vectorized. Set a minimum of 0.1 to avoid log of zero errors.
+    log_cluster_masses_msun = np.log10(np.maximum(0.1, cluster_masses.to("Msun").value))
+
+    evolved_masses = [
+        get_evolution_single_cluster(n_steps, log_m)
+        for log_m in tqdm(log_cluster_masses_msun)
+    ]
+    return np.array(evolved_masses)
+
+
+# ======================================================================================
+#
+# CIMF itself
+#
+# ======================================================================================
 def cimf(sim, mass_type, max_age_myr):
     """
     Make the cluster initial mass function.
@@ -110,6 +205,8 @@ def cimf(sim, mass_type, max_age_myr):
                 star_initial_bound = get_initial_bound_fraction(galaxy)
                 tidal_bound_fraction = galaxy[("STAR", "BOUND_FRACTION")].value
                 this_mass = raw_mass * star_initial_bound * tidal_bound_fraction
+            elif mass_type == "evolved":
+                this_mass = evolve_cluster_population(galaxy)
             else:
                 raise ValueError("Mass not recognized")
 
@@ -179,19 +276,25 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
     if sim_share_type not in ["last", "common"]:
         raise ValueError("bad sim_share_type")
     # if we plot current, it should be alone, with nothing else
-    if "current" in masses_to_plot and len(masses_to_plot) > 1:
-        raise RuntimeError("Current masses must be plotted alone.")
+    if ("current" in masses_to_plot or "evolved" in masses_to_plot) and len(
+        masses_to_plot
+    ) > 1:
+        raise RuntimeError("Current or evolved masses must be plotted alone.")
 
     # make the name of the plot
     plot_name = f"cimf_{axis_name.replace('_', '')}_{sim_share_type}"
     if "current" in masses_to_plot:
         plot_name += "_current"
+    elif "evolved" in masses_to_plot:
+        plot_name += "_evolved"
+    elif len(masses_to_plot) == 1 and "initial" in masses_to_plot:
+        plot_name += "_initial"
     elif (
         len(masses_to_plot) == 2
         and "initial" in masses_to_plot
         and "initial_bound" in masses_to_plot
     ):
-        plot_name += "_initial"
+        plot_name += "_initial_with_bound"
     else:
         raise ValueError("This plot not yet named:", masses_to_plot)
     # add the age if it's not infinity
@@ -214,22 +317,33 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
             mass_plot, dn_dlogM = cimf(sim, mass_type, max_age_myr)
 
             # make the label only for the biggest halo, and not for initial only
-            if mass_type != "initial":
+            if len(masses_to_plot) == 1 or mass_type != "initial":
+                # set the default name
+                label = sim.names[axis_name]
                 # and include the redshift if it's different for each sim
                 if sim_share_type == "last":
-                    label = f"{sim.name}: z = {1/sim.ds.scale_factor - 1:.1f}"
-                else:
-                    label = sim.name
+                    z = 1 / sim.ds.scale_factor - 1
+                    # don't include if at z=1.5
+                    if not 1.49 < z < 1.51:
+                        label += f": z = {z:.1f}"
             else:
                 label = None
 
             # have different line styles
-            lss = {"initial": ":", "initial_bound": "-", "current": "-"}
+            if len(masses_to_plot) == 1:
+                ls = "-"
+            else:
+                ls = {
+                    "initial": ":",
+                    "initial_bound": "-",
+                    "current": "-",
+                    "evolved": "-",
+                }[mass_type]
 
-            ax.plot(mass_plot, dn_dlogM, c=sim.color, ls=lss[mass_type], label=label)
+            ax.plot(mass_plot, dn_dlogM, c=sim.color, ls=ls, label=label)
 
-    # formax axes
-    plot_utils.add_legend(ax, loc=1, fontsize=10)
+    # format axes
+    plot_utils.add_legend(ax, loc=1, fontsize=18)
     ax.set_yscale("log")
     ax.set_xscale("log")
     # have different y limits for different versions of the plot
@@ -245,21 +359,23 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
         y_max = 1e4
     else:
         y_min = 10
-        y_max = 1e5
+        y_max = 1e6
     ax.set_limits(1e3, 1e7, y_min, y_max)
 
     # plot the guiding lines
-    log_space = 0.4 * (np.log10(y_max) - np.log10(y_min))
-    y_guide = 10 ** (np.log10(y_min) + log_space)
-    plot_power_law(ax, -2, 1e6, 3e6, y_guide)
-    plot_power_law(ax, -3, 1e6, 3e6, y_guide)
+    # log_space = 0.4 * (np.log10(y_max) - np.log10(y_min))
+    # y_guide = 10 ** (np.log10(y_min) + log_space)
+    # plot_power_law(ax, -2, 1e6, 3e6, y_guide)
+    # plot_power_law(ax, -3, 1e6, 3e6, y_guide)
 
     # if there is a common redshift, annotate it
     if sim_share_type == "common":
-        ax.easy_add_text(f"z = {1/common_scale - 1:.1f}", "upper left")
+        ax.easy_add_text(f"z = {common_z:.1f}", "upper left")
 
-    if "current" in masses_to_plot:
+    if "current" in masses_to_plot or "evolved" in masses_to_plot:
         ax.add_labels("$f_b$M [$M_\odot$]", "dN/dlogM")
+    elif len(masses_to_plot) == 1 and "initial" in masses_to_plot:
+        ax.add_labels("$M_i$ [$M_\odot$]", "dN/dlogM")
     else:
         ax.add_labels("$f_i M_i$ [$M_\odot$]", "dN/dlogM")
 
@@ -272,13 +388,17 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
 #
 # ======================================================================================
 # then actually call this function to build the plots
-for plot_name in load_galaxies.get_plot_names([sim.name for sim in sims_last]):
+for plot_name in load_galaxies.get_plot_names(sims_last):
     for share_type in ["common", "last"]:
+        # plot particle masses
+        plot_cimf(plot_name, share_type, ["initial"])
         # plot main CIMF and unbound CIMF
         plot_cimf(plot_name, share_type, ["initial_bound", "initial"])
         # plot recently formed clusters
         plot_cimf(plot_name, share_type, ["initial_bound", "initial"], 300)
         # plot surviving clusters
         plot_cimf(plot_name, share_type, ["current"])
+    # plot cluster population evolved to z=0. Only use the last output for this
+    # plot_cimf(plot_name, "last", ["evolved"])
 
 cimf_sentinel.touch()
