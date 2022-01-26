@@ -15,10 +15,7 @@
 # will stop conda from recognizing my distribution somehow.
 # We do need to source bashrc, as it holds the code to activate conda and
 # activate the correct env
-module load remora
 source ~/.bashrc
-# Make sure the system python is not accessible
-unset PYTHONPATH
 
 # double check these variables
 # echo $(which python)
