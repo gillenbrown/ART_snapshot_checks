@@ -268,7 +268,7 @@ for group in sim_groups:
     ax.set_yscale("log")
     plot_utils.add_legend(ax, fontsize=10)
     ax.add_labels("Scale Factor", "Virial Mass [M$_\odot$] ")
-    fig.savefig(plot_dir / f"galaxy_comparison_{group}_virial_mass.png")
+    fig.savefig(plot_dir / f"galaxy_comparison_{group}_virial_mass.pdf")
 
     # -----------------------------------------------------------------------------
     # stellar mass plot
@@ -279,7 +279,7 @@ for group in sim_groups:
     plot_utils.add_legend(ax, fontsize=10)
     ax.add_labels("Scale Factor", "Stellar Mass [M$_\odot$] within 30 kpc")
     ax.set_limits(y_min=2e7)
-    fig.savefig(plot_dir / f"galaxy_comparison_{group}_stellar_mass.png")
+    fig.savefig(plot_dir / f"galaxy_comparison_{group}_stellar_mass.pdf")
 
     # -----------------------------------------------------------------------------
     # mass-metallicity plot
@@ -309,7 +309,7 @@ for group in sim_groups:
         "Mean Stellar Metallicity [log(Z/$Z_\odot$)]",
     )
     ax.set_limits(1e5, 3e10)
-    fig.savefig(plot_dir / f"galaxy_comparison_{group}_mass_metallicity.png")
+    fig.savefig(plot_dir / f"galaxy_comparison_{group}_mass_metallicity.pdf")
 
     # -----------------------------------------------------------------------------
     # gas masses plots
@@ -325,7 +325,7 @@ for group in sim_groups:
         if "H2" in gas_type:
             ax.set_limits(y_min=1e5)
 
-        fig.savefig(plot_dir / f"galaxy_comparison_{group}_gas_mass_{gas_type}.png")
+        fig.savefig(plot_dir / f"galaxy_comparison_{group}_gas_mass_{gas_type}.pdf")
 
     # -----------------------------------------------------------------------------
     # neutral fraction plot
@@ -336,7 +336,7 @@ for group in sim_groups:
     plot_utils.add_legend(ax, fontsize=10)
     ax.add_labels("Scale Factor", f"H2 / (HI + H2) within" + " R$_{vir}$")
     ax.set_limits(y_min=1e-4, y_max=1)
-    fig.savefig(plot_dir / f"galaxy_comparison_{group}_molecular_fraction.png")
+    fig.savefig(plot_dir / f"galaxy_comparison_{group}_molecular_fraction.pdf")
 
 # =============================================================================
 #
