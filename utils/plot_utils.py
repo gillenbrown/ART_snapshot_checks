@@ -104,7 +104,7 @@ names = defaultdict(
             "old_ic_sfe": "$\epsilon_{ff}=10$%",
         },
         old_ic("discrete_hn00_virial10_entropy_molvadim_fboost1"): {
-            "old_ic_molecular": "$c_\\rho$=30, Other Changes",
+            "old_ic_molecular": "$c_\\rho$=30, GK11 Shielding",
         },
         old_ic("discrete_hn00_virial10_entropy_newagediff"): {
             "old_ic_sn_timing": "Hybrid Approach",
