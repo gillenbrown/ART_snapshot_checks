@@ -64,7 +64,7 @@ names = defaultdict(
         },
         old_ic("continuoushui_hn00_novirial"): {
             "adi_adv": "New Hydro - L18 Feedback",
-            "old_ic_sn_timing": "L18: Continuous",
+            "old_ic_sn_timing": "L18",
         },
         old_ic("discrete_hn00_novirial_entropy_fboost1"): {
             "old_ic_virial": "No Virial Criterion"

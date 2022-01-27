@@ -127,7 +127,7 @@ def plot_age_growth_base(
 
     # add limits appropriately. This dictionary holds the maximum x value for
     # low and high mass, respectively
-    limits = {"Duration": (5, 8), "Average Age": (3, 5), "Age Spread": (3, 5)}
+    limits = {"Duration": (5, 10), "Average Age": (3, 6), "Age Spread": (2, 4)}
     ax.set_limits(0, limits[age_quantity][high], 0, 1)
 
     if label:
