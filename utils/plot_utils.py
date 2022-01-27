@@ -125,20 +125,25 @@ names = defaultdict(
             "lg_sfe": "T&L, $\epsilon_{ff}=10$%",
         },
         production("tl_sfe100_hn20"): {
+            "lg_sn_feedback": "$f_{boost}=5$, $f_{HN,0}=20$%",
             "lg_hn_fraction": "$f_{HN,0}=20$%",
             "lg_sfe": "T&L, $\epsilon_{ff}=100$%",
         },
         production("tl_sfe100_hn05"): {
+            "lg_sn_feedback": "$f_{boost}=5$, $f_{HN,0}=5$%",
             "lg_hn_fraction": "$f_{HN,0}=5$%",
         },
         production("tl_sfe100_hn00"): {
+            "lg_sn_feedback": "$f_{boost}=5$, $f_{HN,0}=0$",
             "lg_fboost": "$f_{boost}=5$",
             "lg_hn_fraction": "$f_{HN,0}=0$",
         },
         production("tl_sfe100_hn00_fboost1"): {
+            "lg_sn_feedback": "$f_{boost}=1$, $f_{HN,0}=0$",
             "lg_fboost": "$f_{boost}=1$",
         },
         production("tl_sfe100_hn00_fboost3"): {
+            "lg_sn_feedback": "$f_{boost}=3$, $f_{HN,0}=0$",
             "lg_fboost": "$f_{boost}=3$",
         },
         production("rj_sfe010_hn20"): {
