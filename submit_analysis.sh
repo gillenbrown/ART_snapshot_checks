@@ -5,7 +5,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --no-requeue
 #SBATCH --partition=skx-dev
-#SBATCH --time=1:00:00
+#SBATCH --time=0:10:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
