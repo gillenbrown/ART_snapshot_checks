@@ -7,11 +7,10 @@ with nonzero hypernovae
 from pathlib import Path
 
 import sys
-import yt
 import numpy as np
 from matplotlib import pyplot as plt
 
-import load_galaxies
+from utils import load_galaxies
 
 import betterplotlib as bpl
 
@@ -127,7 +126,7 @@ for sim in sims:
         ax.twin_axis(
             "y",
             [0.001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5],
-            "HN Fraction",
+            "$f_{HN}$",
             new_to_old_func=z_at_f_hn,
         )
 
