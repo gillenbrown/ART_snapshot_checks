@@ -46,6 +46,7 @@ endif
 halo_finding_script = ./run_rockstar.py
 debug_script = ./debug_output.py
 galaxies_script = ./galaxy_summaries.py
+age_metallicity_script = ./plot_age_metallicity.py
 nbody_single_halo_plots_script = ./plot_single_halo_nbody.py
 nbody_refined_plot_script = ./plot_refined_region_nbody.py
 nbody_local_group_plot_script = ./plot_local_group_nbody.py
@@ -251,6 +252,7 @@ cimf_sentinel = $(comparison_plots_dir)/cimf_sentinel.txt
 halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
 age_spread_sentinel = $(comparison_plots_dir)/age_spread_sentinel.txt
 galaxy_comparison_sentinel = $(comparison_plots_dir)/comparison_sentinel.txt
+age_metallicity_sentinel = $(comparison_plots_dir)/age_metallicity_sentinel.txt
 # also a text file with the masses of all sims. This is on all machines.
 galaxy_masses = $(comparison_plots_dir)/galaxy_masses.txt
 
@@ -372,10 +374,10 @@ paper_plots = $(paper_halo_growth_plot)
 # 
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
-	outputs = $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxy_masses) $(debugs)
+	outputs = $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(age_metallicity_sentinel) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxy_masses) $(debugs)
 	# $(dt_history_plots) $(cfl_plots) $(movies)
 else ifeq ($(machine),stampede2_analysis)
-	outputs = $(my_directories) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel)
+	outputs = $(my_directories) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(age_metallicity_sentinel)
 else ifeq ($(machine),stampede2_halos)
 	outputs = $(my_directories) $(galaxy_masses) $(debugs)
 endif
@@ -444,6 +446,10 @@ $(age_spread_sentinel): $(age_plot_script) $(gal_readin_script) $(plot_utils_scr
 # and the galaxy comparison plots
 $(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(gal_readin_script) $(plot_utils_script)
 	python $(galaxies_comparison_script) $(galaxy_comparison_sentinel) $(galaxies)
+
+# the age-metallicity diagrams
+$(age_metallicity_sentinel): $(rockstar_sentinels) $(age_metallicity_script)
+	python $(age_metallicity_script) $(age_metallicity_sentinel) $(sim_dirs_hydro)
 
 # the list of galaxy stellar masses
 $(galaxy_masses): $(galaxy_mass_script) $(galaxies)
