@@ -282,7 +282,7 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
         raise RuntimeError("Current or evolved masses must be plotted alone.")
 
     # make the name of the plot
-    plot_name = f"cimf_{axis_name.replace('_', '')}_{sim_share_type}"
+    plot_name = f"cimf_{axis_name}_{sim_share_type}"
     if "current" in masses_to_plot:
         plot_name += "_current"
     elif "evolved" in masses_to_plot:
