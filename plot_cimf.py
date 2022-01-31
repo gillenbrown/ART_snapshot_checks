@@ -12,6 +12,7 @@ from scipy import special
 from astropy import cosmology
 from astropy import units as u
 import yt
+from matplotlib import pyplot as plt
 import betterplotlib as bpl
 
 from tqdm import tqdm
@@ -155,7 +156,7 @@ def evolve_cluster_population(galaxy):
 # CIMF itself
 #
 # ======================================================================================
-def cimf(sim, mass_type, max_age_myr):
+def cimf(sim, mass_type, max_age_myr, max_z):
     """
     Make the cluster initial mass function.
 
@@ -184,12 +185,14 @@ def cimf(sim, mass_type, max_age_myr):
                                   distribution of initial particle masses
     :param max_age_myr: The maximum age to restrict the plot to. Is infinity as the
                         default, which plots all stars.
+    :param max_z: The maximum metallicity to restrict the plot to. Is infinity as the
+                  default, which plots all stars.
     :returns: Two lists. The first is f_i * M, representing the initial
               bound mass, of M if include_initial_bound=False. This will be
               binned values suitable to plot. The second is dN/dLogM for each
               of the bins in the first list.
     """
-    id_string = f"{mass_type}_{max_age_myr}"
+    id_string = f"{mass_type}_{max_age_myr}_{max_z}"
 
     if id_string not in sim.precalculated:
         mass = []
@@ -210,10 +213,14 @@ def cimf(sim, mass_type, max_age_myr):
             else:
                 raise ValueError("Mass not recognized")
 
-            # then restrict to recently formed clusters. This can be set to infinity,
-            # which plots everything.
-            mask = galaxy[("STAR", "age")] < max_age_myr * yt.units.Myr
-            this_mass = this_mass[mask]
+            # then restrict the metallicity and age
+            metallicity = galaxy[("STAR", "METALLICITY_SNII")].value
+            metallicity += galaxy[("STAR", "METALLICITY_SNIa")].value
+            if ("STAR", "METALLICITY_AGB") in sim.ds.field_list:
+                metallicity += galaxy[("STAR", "METALLICITY_AGB")].value
+            mask_z = metallicity < max_z
+            mask_age = galaxy[("STAR", "age")] < max_age_myr * yt.units.Myr
+            this_mass = this_mass[np.logical_and(mask_z, mask_age)]
 
             mass = np.concatenate([this_mass, mass])
 
@@ -258,7 +265,9 @@ def plot_power_law(ax, slope, x1, x2, y1):
     ax.add_text(1.1 * x2, y2, text=slope, va="center", ha="left", fontsize=18)
 
 
-def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
+def plot_cimf(
+    axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf, max_z=np.inf
+):
     """
     Plot various versions of the cluster mass function.
 
@@ -300,6 +309,8 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
     # add the age if it's not infinity
     if not np.isinf(max_age_myr):
         plot_name += f"_{max_age_myr}myr"
+    if not np.isinf(max_z):
+        plot_name += f"_Z{max_z:.1e}"
     plot_name += ".pdf"
 
     # choose which simulations we're using
@@ -314,7 +325,7 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
         if axis_name not in sim.axes:
             continue
         for mass_type in masses_to_plot:
-            mass_plot, dn_dlogM = cimf(sim, mass_type, max_age_myr)
+            mass_plot, dn_dlogM = cimf(sim, mass_type, max_age_myr, max_z)
 
             # make the label only for the biggest halo, and not for initial only
             if len(masses_to_plot) == 1 or mass_type != "initial":
@@ -380,6 +391,8 @@ def plot_cimf(axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf):
         ax.add_labels("$f_i M_i$ [$M_\odot$]", "dN/dlogM")
 
     fig.savefig(cimf_sentinel.parent / plot_name)
+    # then remove figure for memory purposes
+    plt.close(fig)
 
 
 # ======================================================================================
@@ -395,9 +408,11 @@ for plot_name in load_galaxies.get_plot_names(sims_last):
         # plot main CIMF and unbound CIMF
         plot_cimf(plot_name, share_type, ["initial_bound", "initial"])
         # plot recently formed clusters
-        plot_cimf(plot_name, share_type, ["initial_bound", "initial"], 300)
+        plot_cimf(plot_name, share_type, ["initial_bound", "initial"], max_age_myr=300)
         # plot surviving clusters
         plot_cimf(plot_name, share_type, ["current"])
+    # plot low metallicity clusters. Only do this on the last output
+    plot_cimf(plot_name, "last", ["initial"], max_z=0.001)
     # plot cluster population evolved to z=0. Only use the last output for this
     # plot_cimf(plot_name, "last", ["evolved"])
 
