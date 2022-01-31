@@ -87,7 +87,7 @@ def time_cumulative_hist(sim, time_func, mask_name):
 #
 # ======================================================================================
 def plot_age_growth_base(
-    ax, axis_name, age_quantity, sim_share_type, mass_side, label=False
+    ax, axis_name, age_quantity, sim_share_type, mass_side, label, both
 ):
     if sim_share_type == "last":
         sims = sims_last
@@ -126,9 +126,14 @@ def plot_age_growth_base(
         ax.plot(ages, fractions, c=sim.color, lw=2, label=label)
 
     # add limits appropriately. This dictionary holds the maximum x value for
-    # low and high mass, respectively
-    limits = {"Duration": (5, 10), "Average Age": (3, 6), "Age Spread": (2, 4)}
-    ax.set_limits(0, limits[age_quantity][high], 0, 1)
+    # low and high mass, respectively. If we're plotting both, use the high mass for
+    # both panels.
+    limits = {"Duration": (5, 15), "Average Age": (3, 6), "Age Spread": (2, 4)}
+    if both or high:
+        idx = 1
+    else:
+        idx = 0
+    ax.set_limits(0, limits[age_quantity][idx], 0, 1)
 
     if label:
         plot_utils.add_legend(ax, loc=4, fontsize=16)
@@ -156,16 +161,16 @@ def plot_age_growth(axis_name, age_quantity, sim_share_type, which_mass):
     if which_mass == "both":
         fig, axs = bpl.subplots(figsize=[14, 7], ncols=2)
         plot_age_growth_base(
-            axs[0], axis_name, age_quantity, sim_share_type, "lo", True
+            axs[0], axis_name, age_quantity, sim_share_type, "lo", True, True
         )
         plot_age_growth_base(
-            axs[1], axis_name, age_quantity, sim_share_type, "hi", False
+            axs[1], axis_name, age_quantity, sim_share_type, "hi", False, True
         )
 
     else:
         fig, ax = bpl.subplots(figsize=[7, 7])
         plot_age_growth_base(
-            ax, axis_name, age_quantity, sim_share_type, which_mass, True
+            ax, axis_name, age_quantity, sim_share_type, which_mass, True, False
         )
 
     plot_name = f"age_{age_quantity.lower().replace(' ', '_')}"
