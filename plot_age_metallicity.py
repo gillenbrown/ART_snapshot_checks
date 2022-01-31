@@ -10,7 +10,7 @@ import sys
 import numpy as np
 from matplotlib import pyplot as plt
 
-from utils import load_galaxies
+from utils import load_galaxies, plot_utils
 
 import betterplotlib as bpl
 
@@ -63,43 +63,6 @@ def z_at_f_hn(hn_fraction):
     return f_hn_scale * np.log(hn_fraction / f_hn0)
 
 
-def moving_percentiles(xs, ys, percentile, dx):
-    bins = np.arange(min(xs), max(xs) + dx, dx)
-
-    bin_centers = []
-    radii_percentiles = []
-    for idx in range(len(bins) - 1):
-        lower = bins[idx]
-        upper = bins[idx + 1]
-
-        # then find all clusters in this mass range
-        mask_above = xs > lower
-        mask_below = xs < upper
-        mask_good = np.logical_and(mask_above, mask_below)
-
-        good_ys = ys[mask_good]
-        if len(ys) > 1:
-            radii_percentiles.append(np.percentile(good_ys, percentile))
-            # the bin centers will be the mean in log space
-            bin_centers.append(np.mean([lower, upper]))
-
-    return bin_centers, radii_percentiles
-
-
-def shaded_region(ax, xs, ys, color):
-    dx = 0.2
-    c10, p10 = moving_percentiles(xs, ys, 10, dx)
-    c50, p50 = moving_percentiles(xs, ys, 50, dx)
-    c90, p90 = moving_percentiles(xs, ys, 90, dx)
-
-    # The X values should be the same for all percentiles
-    assert np.allclose(c10, c50)
-    assert np.allclose(c10, c90)
-
-    ax.plot(c50, p50, c=color, zorder=1)
-    ax.fill_between(x=c10, y1=p10, y2=p90, color=color, alpha=0.5, zorder=0)
-
-
 # ======================================================================================
 #
 # make the plots
@@ -116,7 +79,7 @@ for sim in sims:
     creation_time = gal[("STAR", "creation_time")].to("Gyr").value
 
     fig, ax = bpl.subplots()
-    shaded_region(ax, creation_time, metallicity, sim.color)
+    plot_utils.shaded_region(ax, creation_time, metallicity, sim.color)
     ax.set_yscale("log")
     ax.set_limits(0, 5, 1e-4, 0.03)
     ax.add_labels("Time of Cluster Formation [Gyr]", "Metallicity")

@@ -46,7 +46,6 @@ endif
 halo_finding_script = ./run_rockstar.py
 debug_script = ./debug_output.py
 galaxies_script = ./galaxy_summaries.py
-age_metallicity_script = ./plot_age_metallicity.py
 nbody_single_halo_plots_script = ./plot_single_halo_nbody.py
 nbody_refined_plot_script = ./plot_refined_region_nbody.py
 nbody_local_group_plot_script = ./plot_local_group_nbody.py
@@ -57,6 +56,8 @@ sfh_plots_script = ./plot_sfh.py
 cimf_plots_script = ./plot_cimf.py
 age_plot_script = ./plot_age_spread.py
 galaxies_comparison_script = ./plot_galaxy_comparisons.py
+age_metallicity_script = ./plot_age_metallicity.py
+bound_fraction_script = ./plot_bound_fraction.py
 galaxy_mass_script = ./print_galaxy_masses.py
 gal_readin_script = ./utils/load_galaxies.py
 plot_utils_script = ./utils/plot_utils.py
@@ -253,6 +254,7 @@ halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
 age_spread_sentinel = $(comparison_plots_dir)/age_spread_sentinel.txt
 galaxy_comparison_sentinel = $(comparison_plots_dir)/comparison_sentinel.txt
 age_metallicity_sentinel = $(comparison_plots_dir)/age_metallicity_sentinel.txt
+bound_fraction_sentinel = $(comparison_plots_dir)/bound_fraction_sentinel.txt
 # also a text file with the masses of all sims. This is on all machines.
 galaxy_masses = $(comparison_plots_dir)/galaxy_masses.txt
 
@@ -374,10 +376,10 @@ paper_plots = $(paper_halo_growth_plot)
 # 
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
-	outputs = $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(age_metallicity_sentinel) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxy_masses) $(debugs)
+	outputs = $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(age_metallicity_sentinel) $(bound_fraction_sentinel) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxy_masses) $(debugs)
 	# $(dt_history_plots) $(cfl_plots) $(movies)
 else ifeq ($(machine),stampede2_analysis)
-	outputs = $(my_directories) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(age_metallicity_sentinel)
+	outputs = $(my_directories) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(age_metallicity_sentinel) $(bound_fraction_sentinel)
 else ifeq ($(machine),stampede2_halos)
 	outputs = $(my_directories) $(galaxy_masses) $(debugs)
 endif
@@ -450,6 +452,10 @@ $(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(gal_r
 # the age-metallicity diagrams
 $(age_metallicity_sentinel): $(rockstar_sentinels) $(age_metallicity_script)
 	python $(age_metallicity_script) $(age_metallicity_sentinel) $(sim_dirs_hydro)
+
+# the bound fraction plots
+$(bound_fraction_sentinel): $(rockstar_sentinels) $(bound_fraction_script)
+	python $(bound_fraction_script) $(bound_fraction_sentinel) $(sim_dirs_hydro)
 
 # the list of galaxy stellar masses
 $(galaxy_masses): $(galaxy_mass_script) $(galaxies)
