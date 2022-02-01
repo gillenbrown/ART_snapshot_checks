@@ -38,9 +38,11 @@ if not temp_dir.is_dir() and yt.is_root():
 if machine == "shangrila":
     if "old_ic_comparison_production_analog" not in str(sim_dir):
         raise RuntimeError("Trying to do halo finding somewhere other than Stampede2!")
-elif machine == "stampede2":
+elif machine == "stampede2_halos":
     if "/scratch/06912/tg862118/art_runs/runs/production" not in str(sim_dir):
         raise RuntimeError("Doing halo finding somewhere other than runtime directory!")
+else:
+    raise ValueError("Machine not recognized")
 
 # ==============================================================================
 #
@@ -336,7 +338,7 @@ while idx < len(art_files):
     # have issues with MPI ranks when doing multiple runs of rockstar, as well as
     # memory issues when running rockstar on many outputs, so completely separating it
     # out will make sure that gets taken care of correctly.
-    if machine == "stampede2":
+    if machine == "stampede2_halos":
         os.system(
             f"ibrun -n 47 -o 1 python ./halo_finding_rockstar.py {temp_dir} {rockstar_dir} 47"
         )
@@ -344,6 +346,8 @@ while idx < len(art_files):
         os.system(
             f"mpiexec -np 4 python ./halo_finding_rockstar.py {temp_dir} {rockstar_dir} 4"
         )
+    else:
+        raise ValueError("Machine not recognized")
 
     # if successfull, continue on. Otherwise, delete the halo catalogs and try again.
     if halo_finding_successfull(float(this_scale_str), restart):
