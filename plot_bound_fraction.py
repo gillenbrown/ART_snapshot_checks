@@ -146,7 +146,10 @@ def plot_eps_int(axis_name, sim_share_type):
         sims = sims_last
 
     fig, ax = bpl.subplots(figsize=[9, 7])
-    x_values = np.logspace(-3, 0, 61)
+    x_values = np.logspace(-3, 0, 301)
+    # I need to adjust the limits of the plot depending on the SFE of the sims present
+    # set a default value which will be adjusted
+    x_min = 1e-2
     for sim in sims:
         if axis_name not in sim.axes:
             continue
@@ -157,10 +160,14 @@ def plot_eps_int(axis_name, sim_share_type):
         plot_y = plot_utils.kde(x_values, eps_int, width=0.05, weights=mass, log=True)
         ax.plot(x_values, plot_y, c=sim.color, label=sim.names[axis_name])
 
-    # format axes
+        # if there is something other than sfe100, update the limit
+        if "sfe010" in str(sim.run_dir) or "sfe001" in str(sim.run_dir):
+            x_min = 1e-3
+
+    # format axes. limits depend on which runs are shown
     ax.set_xscale("log")
-    ax.set_limits(1e-3, 1, 0)
-    ax.legend(loc=2, fontsize=16)
+    ax.set_limits(x_min, 1, 0)
+    ax.legend(loc=2, fontsize=16, frameon=False)
     plot_utils.nice_log_axis(ax, "x")
     ax.add_labels(
         "Integrated Star Formation Efficiency $\epsilon_{int}$",
