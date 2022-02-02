@@ -358,12 +358,12 @@ def plot_cimf(
         # small timeframe, don't need to show much.
         y_min = 3
         y_max = 1e4
-    elif sim_share_type == "common" or axis_name == "lg_sfe":
-        y_min = 10
-        y_max = 1e5
     elif "current" in masses_to_plot:
         y_min = 10
         y_max = 1e4
+    elif sim_share_type == "common" or axis_name == "lg_sfe":
+        y_min = 10
+        y_max = 1e5
     else:
         y_min = 10
         y_max = 1e6
