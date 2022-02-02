@@ -329,14 +329,7 @@ def plot_cimf(
 
             # make the label only for the biggest halo, and not for initial only
             if len(masses_to_plot) == 1 or mass_type != "initial":
-                # set the default name
-                label = sim.names[axis_name]
-                # and include the redshift if it's different for each sim
-                if sim_share_type == "last":
-                    z = 1 / sim.ds.scale_factor - 1
-                    # don't include if at z=1.5
-                    if not 1.49 < z < 1.51:
-                        label += f": z = {z:.1f}"
+                label = plot_utils.plot_label(sim, sim_share_type, axis_name)
             else:
                 label = None
 
@@ -365,6 +358,9 @@ def plot_cimf(
         # small timeframe, don't need to show much.
         y_min = 3
         y_max = 1e4
+    elif sim_share_type == "common" or axis_name == "lg_sfe":
+        y_min = 10
+        y_max = 1e5
     elif "current" in masses_to_plot:
         y_min = 10
         y_max = 1e4

@@ -241,6 +241,18 @@ for suffix in production_list:
 # functions for commonly used plotting ideas
 #
 # ======================================================================================
+def plot_label(sim, sim_share_type, axis_name, include_z=True):
+    label = sim.names[axis_name]
+    # and include the redshift if it's different for each sim
+    if sim_share_type == "last" and include_z:
+        z = 1 / sim.ds.scale_factor - 1
+        # don't include if at z=1.5
+        if not 1.49 < z < 1.51:
+            label += f": z = {z:.1f}"
+
+    return label
+
+
 def add_legend(ax, loc=0, fontsize=12, frameon=False, **kwargs):
     # make a default legend
     ax.legend()

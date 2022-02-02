@@ -105,7 +105,14 @@ def plot_bound_fraction(axis_name, sim_share_type):
         f_b = get_all_galaxies(sim, get_initial_bound_fraction)
 
         plot_utils.shaded_region(
-            ax, mass, f_b, sim.color, log_x=True, label=sim.names[axis_name]
+            ax,
+            mass,
+            f_b,
+            sim.color,
+            p_lo=25,
+            p_hi=75,
+            log_x=True,
+            label=plot_utils.plot_label(sim, sim_share_type, axis_name),
         )
 
     # format axes
@@ -158,7 +165,12 @@ def plot_eps_int(axis_name, sim_share_type):
         eps_int = get_all_galaxies(sim, get_eps_int)
 
         plot_y = plot_utils.kde(x_values, eps_int, width=0.05, weights=mass, log=True)
-        ax.plot(x_values, plot_y, c=sim.color, label=sim.names[axis_name])
+        ax.plot(
+            x_values,
+            plot_y,
+            c=sim.color,
+            label=plot_utils.plot_label(sim, sim_share_type, axis_name),
+        )
 
         # if there is something other than sfe100, update the limit
         if "sfe010" in str(sim.run_dir) or "sfe001" in str(sim.run_dir):
@@ -178,7 +190,7 @@ def plot_eps_int(axis_name, sim_share_type):
     if sim_share_type == "common":
         ax.easy_add_text(f"z = {common_z:.1f}", "upper right")
 
-    fig.savefig(sentinel.parent / f"eps_int_{axis_name}_{sim_share_type}.png")
+    fig.savefig(sentinel.parent / f"eps_int_{axis_name}_{sim_share_type}.pdf")
     plt.close(fig)  # to save memory
 
 
