@@ -250,7 +250,7 @@ galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
 # ------------------------------------------------------------------------------
 sfh_sentinel = $(comparison_plots_dir)/sfh_sentinel.txt
 cimf_sentinel = $(comparison_plots_dir)/cimf_sentinel.txt
-halo_growth_plot = $(comparison_plots_dir)/halo_growth.png
+halo_growth_plot = $(comparison_plots_dir)/halo_growth.pdf
 age_spread_sentinel = $(comparison_plots_dir)/age_spread_sentinel.txt
 galaxy_comparison_sentinel = $(comparison_plots_dir)/comparison_sentinel.txt
 age_metallicity_sentinel = $(comparison_plots_dir)/age_metallicity_sentinel.txt
