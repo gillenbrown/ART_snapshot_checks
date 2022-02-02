@@ -2,7 +2,7 @@
 #SBATCH --job-name=analysis
 #SBATCH --account=TG-AST200017
 #SBATCH --mail-user=gillenb@umich.edu
-#SBATCH --mail-type=ALL
+#SBATCH --mail-type=FAIL
 #SBATCH --no-requeue
 #SBATCH --partition=skx-dev
 #SBATCH --time=0:10:00
