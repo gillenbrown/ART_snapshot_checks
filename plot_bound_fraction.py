@@ -127,7 +127,7 @@ def plot_bound_fraction(axis_name, sim_share_type):
     if sim_share_type == "common":
         ax.easy_add_text(f"z = {common_z:.1f}", "upper left")
 
-    fig.savefig(sentinel.parent / f"bound_fraction_{axis_name}_{sim_share_type}.png")
+    fig.savefig(sentinel.parent / f"bound_fraction_{axis_name}_{sim_share_type}.pdf")
     plt.close(fig)  # to save memory
 
 
@@ -250,7 +250,7 @@ def plot_eps_int(axis_name, sim_share_type):
     if sim_share_type == "common":
         ax.easy_add_text(f"z = {common_z:.1f}", "upper left")
 
-    fig.savefig(sentinel.parent / f"eps_int_{axis_name}_{sim_share_type}.png")
+    fig.savefig(sentinel.parent / f"eps_int_{axis_name}_{sim_share_type}.pdf")
     plt.close(fig)  # to save memory
 
 
