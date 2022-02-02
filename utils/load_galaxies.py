@@ -180,6 +180,15 @@ class Simulation(object):
     def __repr__(self):
         return str(self.run_dir)
 
+    def func_all_galaxies(self, func):
+        """
+        Apply one function to all galaxies, and append the results to each other.
+
+        This is likely used for something like getting the stellar masses of all stars
+        in all galaxies, or their bound fractions.
+        """
+        return np.concatenate([func(galaxy) for galaxy in self.galaxies])
+
 
 # ======================================================================================
 #

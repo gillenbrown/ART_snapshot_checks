@@ -180,10 +180,71 @@ def plot_age_growth(axis_name, age_quantity, sim_share_type, which_mass):
     plt.close(fig)
 
 
-# then actually call this function to build the plots
+def plot_age_mass(axis_name, age_quantity, sim_share_type):
+    if sim_share_type == "last":
+        sims = sims_last
+    elif sim_share_type == "common":
+        sims = sims_common
+    else:
+        raise ValueError("bad sim_share_type")
+
+    funcs = {
+        "Duration": age_spreads.duration,
+        "Average Age": age_spreads.ave_time,
+        "Age Spread": age_spreads.age_spread,
+    }
+    func = funcs[age_quantity]
+
+    fig, ax = bpl.subplots()
+
+    for sim in sims:
+        if axis_name not in sim.axes:
+            continue
+
+        spreads = sim.func_all_galaxies(lambda g: func(g).to("Myr").value)
+        masses = sim.func_all_galaxies(
+            lambda g: g[("STAR", "INITIAL_MASS")].to("Msun").value
+        )
+
+        plot_utils.shaded_region(
+            ax,
+            masses,
+            spreads,
+            sim.color,
+            p_lo=25,
+            p_hi=75,
+            log_x=True,
+            label=plot_utils.plot_label(sim, sim_share_type, axis_name),
+        )
+
+    # format axis
+    ax.add_labels("Initial Particle Mass [$M_\odot$]", age_quantity + " [Myr]")
+    ax.set_xscale("log")
+    ax.legend(loc=2)
+    plot_utils.nice_log_axis(ax, "x")
+
+    # add limits appropriately. This dictionary holds the maximum x value for
+    # low and high mass, respectively. If we're plotting both, use the high mass for
+    # both panels.
+    limits = {"Duration": 15, "Average Age": 6, "Age Spread": 4}
+    ax.set_limits(1e2, 1e7, 0, limits[age_quantity])
+
+    plot_name = f"age_mass_{age_quantity.lower().replace(' ', '_')}"
+    plot_name += f"_{axis_name}_{sim_share_type}.pdf"
+    fig.savefig(plot_dir / plot_name)
+    # then remove figure for memory purposes
+    plt.close(fig)
+
+
+# ======================================================================================
+#
+# actually make the plots
+#
+# ======================================================================================
 for plot_name in tqdm(load_galaxies.get_plot_names(sims_last)):
     for share_type in ["common", "last"]:
         for age_type in ["Duration", "Average Age", "Age Spread"]:
+            plot_age_mass(plot_name, age_type, share_type)
             for which_mass in ["lo", "hi", "both"]:
                 plot_age_growth(plot_name, age_type, share_type, which_mass)
 

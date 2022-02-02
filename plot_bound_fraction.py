@@ -65,10 +65,6 @@ def get_initial_bound_fraction(galaxy):
     return f_bound(get_eps_int(galaxy))
 
 
-def get_all_galaxies(sim, func):
-    return np.concatenate([func(galaxy) for galaxy in sim.galaxies])
-
-
 # ======================================================================================
 #
 # plotting functions
@@ -101,8 +97,8 @@ def plot_bound_fraction(axis_name, sim_share_type):
         if axis_name not in sim.axes:
             continue
 
-        mass = get_all_galaxies(sim, get_initial_mass_msun)
-        f_b = get_all_galaxies(sim, get_initial_bound_fraction)
+        mass = sim.func_all_galaxies(get_initial_mass_msun)
+        f_b = sim.func_all_galaxies(get_initial_bound_fraction)
 
         plot_utils.shaded_region(
             ax,
@@ -161,8 +157,8 @@ def plot_eps_int_histogram(axis_name, sim_share_type):
         if axis_name not in sim.axes:
             continue
 
-        mass = get_all_galaxies(sim, get_initial_mass_msun)
-        eps_int = get_all_galaxies(sim, get_eps_int)
+        mass = sim.func_all_galaxies(get_initial_mass_msun)
+        eps_int = sim.func_all_galaxies(get_eps_int)
 
         plot_y = plot_utils.kde(x_values, eps_int, width=0.05, weights=mass, log=True)
         ax.plot(
@@ -221,8 +217,8 @@ def plot_eps_int(axis_name, sim_share_type):
         if axis_name not in sim.axes:
             continue
 
-        mass = get_all_galaxies(sim, get_initial_mass_msun)
-        eps_int = get_all_galaxies(sim, get_eps_int)
+        mass = sim.func_all_galaxies(sim, get_initial_mass_msun)
+        eps_int = sim.func_all_galaxies(sim, get_eps_int)
 
         plot_utils.shaded_region(
             ax,
