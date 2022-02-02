@@ -217,8 +217,8 @@ def plot_eps_int(axis_name, sim_share_type):
         if axis_name not in sim.axes:
             continue
 
-        mass = sim.func_all_galaxies(sim, get_initial_mass_msun)
-        eps_int = sim.func_all_galaxies(sim, get_eps_int)
+        mass = sim.func_all_galaxies(get_initial_mass_msun)
+        eps_int = sim.func_all_galaxies(get_eps_int)
 
         plot_utils.shaded_region(
             ax,
