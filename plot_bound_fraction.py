@@ -131,7 +131,7 @@ def plot_bound_fraction(axis_name, sim_share_type):
     plt.close(fig)  # to save memory
 
 
-def plot_eps_int(axis_name, sim_share_type):
+def plot_eps_int_histogram(axis_name, sim_share_type):
     """
     Plot kde histograms of the cluster integrated star formation efficiency
 
@@ -190,7 +190,67 @@ def plot_eps_int(axis_name, sim_share_type):
     if sim_share_type == "common":
         ax.easy_add_text(f"z = {common_z:.1f}", "upper right")
 
-    fig.savefig(sentinel.parent / f"eps_int_{axis_name}_{sim_share_type}.pdf")
+    fig.savefig(sentinel.parent / f"eps_int_hist_{axis_name}_{sim_share_type}.pdf")
+    plt.close(fig)  # to save memory
+
+
+def plot_eps_int(axis_name, sim_share_type):
+    """
+    Plot the cluster integrated star formation efficiency as a function of mass.
+
+    :param axis_name: The name of the axis, so we can select which simulations go
+                      on this plot.
+    :param sim_share_type: Either "last" or "common". This will determine if
+                           the redshift is labeled as common to all, or
+                           individually per simulation
+
+    """
+    # validate options given
+    if sim_share_type not in ["last", "common"]:
+        raise ValueError("bad sim_share_type")
+
+    # choose which simulations we're using
+    if sim_share_type == "common":
+        sims = sims_common
+    else:
+        sims = sims_last
+
+    fig, ax = bpl.subplots(figsize=[9, 7])
+
+    for sim in sims:
+        if axis_name not in sim.axes:
+            continue
+
+        mass = get_all_galaxies(sim, get_initial_mass_msun)
+        eps_int = get_all_galaxies(sim, get_eps_int)
+
+        plot_utils.shaded_region(
+            ax,
+            mass,
+            eps_int,
+            sim.color,
+            p_lo=25,
+            p_hi=75,
+            log_x=True,
+            label=plot_utils.plot_label(sim, sim_share_type, axis_name),
+        )
+
+    # format axes
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_limits(1e2, 1e7, 1e-3, 1)
+    ax.add_labels(
+        "Initial Particle Mass [$M_\odot$]",
+        "Integrated Star Formation Efficiency $\epsilon_{int}$",
+    )
+    ax.legend(loc=4, frameon=False)
+    plot_utils.nice_log_axis(ax, "y")
+
+    # if there is a common redshift, annotate it
+    if sim_share_type == "common":
+        ax.easy_add_text(f"z = {common_z:.1f}", "upper left")
+
+    fig.savefig(sentinel.parent / f"eps_int_{axis_name}_{sim_share_type}.png")
     plt.close(fig)  # to save memory
 
 
@@ -202,6 +262,7 @@ def plot_eps_int(axis_name, sim_share_type):
 for plot_name in load_galaxies.get_plot_names(sims_last):
     for share_type in ["last", "common"]:
         plot_bound_fraction(plot_name, share_type)
+        plot_eps_int_histogram(plot_name, share_type)
         plot_eps_int(plot_name, share_type)
 
 # touch the sentinel once done
