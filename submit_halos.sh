@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=snapshot_checks_halos
+#SBATCH --job-name=halos_and_checks
 #SBATCH --account=TG-AST200017
 #SBATCH --mail-user=gillenb@umich.edu
 #SBATCH --mail-type=ALL
