@@ -120,14 +120,17 @@ names = defaultdict(
         },
         production("tl_sfe001_hn20"): {
             "lg_sfe": "T&L, $\epsilon_{ff}=1$%",
+            "tl_sfe": "T&L, $\epsilon_{ff}=1$%",
         },
         production("tl_sfe010_hn20"): {
             "lg_sfe": "T&L, $\epsilon_{ff}=10$%",
+            "tl_sfe": "T&L, $\epsilon_{ff}=10$%",
         },
         production("tl_sfe100_hn20"): {
             "lg_sn_feedback": "$f_{boost}=5$, $f_{HN,0}=20$%",
             "lg_hn_fraction": "$f_{HN,0}=20$%",
             "lg_sfe": "T&L, $\epsilon_{ff}=100$%",
+            "tl_sfe": "T&L, $\epsilon_{ff}=100$%",
         },
         production("tl_sfe100_hn05"): {
             "lg_sn_feedback": "$f_{boost}=5$, $f_{HN,0}=5$%",
