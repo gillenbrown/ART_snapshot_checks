@@ -12,6 +12,7 @@ from pathlib import Path
 from collections import defaultdict
 import numpy as np
 from astropy import units as u
+from matplotlib import pyplot as plt
 import betterplotlib as bpl
 
 from utils import load_galaxies, plot_utils
@@ -269,6 +270,8 @@ for group in sim_groups:
     plot_utils.add_legend(ax, fontsize=10)
     ax.add_labels("Scale Factor", "Virial Mass [M$_\odot$] ")
     fig.savefig(plot_dir / f"galaxy_comparison_{group}_virial_mass.pdf")
+    # then remove figure for memory purposes
+    plt.close(fig)
 
     # -----------------------------------------------------------------------------
     # stellar mass plot
@@ -280,6 +283,7 @@ for group in sim_groups:
     ax.add_labels("Scale Factor", "Stellar Mass [M$_\odot$] within 30 kpc")
     ax.set_limits(y_min=2e7)
     fig.savefig(plot_dir / f"galaxy_comparison_{group}_stellar_mass.pdf")
+    plt.close(fig)
 
     # -----------------------------------------------------------------------------
     # mass-metallicity plot
@@ -310,6 +314,7 @@ for group in sim_groups:
     )
     ax.set_limits(1e5, 3e10)
     fig.savefig(plot_dir / f"galaxy_comparison_{group}_mass_metallicity.pdf")
+    plt.close(fig)
 
     # -----------------------------------------------------------------------------
     # gas masses plots
@@ -326,6 +331,7 @@ for group in sim_groups:
             ax.set_limits(y_min=1e5)
 
         fig.savefig(plot_dir / f"galaxy_comparison_{group}_gas_mass_{gas_type}.pdf")
+        plt.close(fig)
 
     # -----------------------------------------------------------------------------
     # neutral fraction plot
@@ -337,6 +343,7 @@ for group in sim_groups:
     ax.add_labels("Scale Factor", f"H2 / (HI + H2) within" + " R$_{vir}$")
     ax.set_limits(y_min=1e-4, y_max=1)
     fig.savefig(plot_dir / f"galaxy_comparison_{group}_molecular_fraction.pdf")
+    plt.close(fig)
 
 # =============================================================================
 #

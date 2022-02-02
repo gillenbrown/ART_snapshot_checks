@@ -13,6 +13,7 @@ import yt
 from astropy import cosmology
 from astropy import units as u
 from scipy import integrate
+from matplotlib import pyplot as plt
 import betterplotlib as bpl
 import abundance_matching
 
@@ -226,6 +227,8 @@ def plot_sfh(axis_name):
     ax.twin_axis("x", label_redshifts, "Redshift", new_to_old_func=z_to_age_Gyr)
 
     fig.savefig(sfh_sentinel.parent / f"sfh_{axis_name}.pdf")
+    # then remove figure for memory purposes
+    plt.close(fig)
 
 
 # ======================================================================================
@@ -295,6 +298,8 @@ def plot_cumulative_growth(axis_name):
     ax.twin_axis("x", label_redshifts, "Redshift", new_to_old_func=z_to_age_Gyr)
 
     fig.savefig(sfh_sentinel.parent / f"mass_growth_{axis_name}.pdf")
+    # then remove figure for memory purposes
+    plt.close(fig)
 
 
 # ======================================================================================
