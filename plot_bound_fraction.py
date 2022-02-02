@@ -120,7 +120,7 @@ def plot_bound_fraction(axis_name, sim_share_type):
     ax.set_yscale("log")
     ax.set_limits(1e2, 1e7, 0.001, 1)
     ax.add_labels("Initial Particle Mass [$M_\odot$]", "Initial Bound Fraction")
-    ax.legend(loc=4)
+    ax.legend(loc=4, frameon=False)
     plot_utils.nice_log_axis(ax, "y")
 
     # if there is a common redshift, annotate it
@@ -179,7 +179,7 @@ def plot_eps_int(axis_name, sim_share_type):
     # format axes. limits depend on which runs are shown
     ax.set_xscale("log")
     ax.set_limits(x_min, 1, 0)
-    ax.legend(loc=2, fontsize=16, frameon=False)
+    ax.legend(loc=2, fontsize=15, frameon=False)
     plot_utils.nice_log_axis(ax, "x")
     ax.add_labels(
         "Integrated Star Formation Efficiency $\epsilon_{int}$",
