@@ -182,7 +182,7 @@ def mass_age_plot(sim):
 # make the plots
 #
 # ======================================================================================
-for sim in sims[:3]:
+for sim in sims:
     age_metallicity_plot(sim)
     mass_metallicity_plot(sim)
     mass_age_plot(sim)
