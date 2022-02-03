@@ -217,6 +217,7 @@ def plot_sfh(axis_name):
 
     plot_utils.add_legend(ax, loc=2, frameon=False, fontsize=10)
     ax.set_yscale("log")
+    plot_utils.nice_log_axis(ax, "y")
     ax.set_limits(0, 1.05 * max_time, 0.05, 10)
     ax.add_labels("Time [Gyr]", "SFR  [$M_\odot$/yr]")
 
