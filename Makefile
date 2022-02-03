@@ -447,7 +447,7 @@ $(age_spread_sentinel): $(age_plot_script) $(gal_readin_script) $(plot_utils_scr
 
 # and the galaxy comparison plots
 $(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(gal_readin_script) $(plot_utils_script)
-	python $(galaxies_comparison_script) $(galaxy_comparison_sentinel) $(galaxies)
+	python $(galaxies_comparison_script) $(galaxy_comparison_sentinel) $(sim_checks_dirs)
 
 # the age-metallicity diagrams
 $(cluster_trends_sentinel): $(rockstar_sentinels) $(cluster_trends_script)

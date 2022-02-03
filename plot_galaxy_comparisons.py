@@ -40,9 +40,14 @@ def check_for_virial_mass(line, halo_dict):
 
 def check_for_virial_radius(line, halo_dict):
     if line.startswith("Virial Radius: "):
-        # have code units here, so need to get those, and throw awway the comma
-        value = line.split()[-2]
-        unit = line.split()[-1]
+        # some versions of the summary printed both code units and kpc, while the
+        # new version is only kpc. Need to do a check for that here.
+        if "code" in line:
+            value = line.split()[-4]
+            unit = line.split()[3].replace(",", "")
+        else:
+            value = line.split()[-2]
+            unit = line.split()[-1]
         quantity = u.Quantity(value, unit)
         halo_dict["virial_radius"] = quantity
 
@@ -129,13 +134,18 @@ def get_n_halos_to_plot(summary_path):
 
 
 parsed_summaries = dict()
-for summary_path in sys.argv[2:]:
-    n_to_read = get_n_halos_to_plot(summary_path)
+for checks_dir in sys.argv[2:]:
+    for summary_path in [
+        str(f)
+        for f in Path(checks_dir).iterdir()
+        if f.name.startswith("galaxy_summaries")
+    ]:
+        n_to_read = get_n_halos_to_plot(summary_path)
 
-    parsed_summary = read_summary_file(summary_path, n_to_read)
-    # some of these are None if there are no halos.
-    if parsed_summary is not None:
-        parsed_summaries[summary_path] = parsed_summary
+        parsed_summary = read_summary_file(summary_path, n_to_read)
+        # some of these are None if there are no halos.
+        if parsed_summary is not None:
+            parsed_summaries[summary_path] = parsed_summary
 
 # =============================================================================
 #
