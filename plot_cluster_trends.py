@@ -1,5 +1,5 @@
 """
-plot_age_metallicity.py
+plot_cluster_trends.py
 
 Plot the age-metallicity relation, as well as the hypernova fraction for runs
 with nonzero hypernovae
