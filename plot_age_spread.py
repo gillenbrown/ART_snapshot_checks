@@ -87,7 +87,7 @@ def time_cumulative_hist(sim, time_func, mask_name):
 #
 # ======================================================================================
 def plot_age_growth_base(
-    ax, axis_name, age_quantity, sim_share_type, mass_side, label, both
+    ax, axis_name, age_quantity, sim_share_type, mass_side, legend, both
 ):
     if sim_share_type == "last":
         sims = sims_last
@@ -135,7 +135,7 @@ def plot_age_growth_base(
         idx = 0
     ax.set_limits(0, limits[age_quantity][idx], 0, 1)
 
-    if label:
+    if legend:
         plot_utils.add_legend(ax, loc=4, fontsize=16)
         # if there is a common redshift, annotate it
         if sim_share_type == "common":
