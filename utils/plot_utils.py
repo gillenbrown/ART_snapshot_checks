@@ -41,7 +41,7 @@ def add_legend(ax, loc=0, fontsize=12, frameon=False, **kwargs):
         if "NBm" in l or "$f_{boost}=1$, $f_{HN,0}=50$%" in l:
             # ! is the first real ASCII character
             sorts[h, l] = "!!!" + sort_label
-        elif "Universe Machine" in l:
+        elif "Universe Machine" in l or l.startswith("M < ") or l.startswith("M > "):
             sorts[h, l] = "zzz" + sort_label
         else:
             sorts[h, l] = sort_label

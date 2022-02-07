@@ -87,7 +87,15 @@ def time_cumulative_hist(sim, time_func, mask_name):
 #
 # ======================================================================================
 def plot_age_growth_base(
-    ax, axis_name, age_quantity, sim_share_type, mass_side, legend, both
+    ax,
+    axis_name,
+    age_quantity,
+    sim_share_type,
+    mass_side,
+    legend,
+    both,
+    ls="-",
+    label_mass=True,
 ):
     if sim_share_type == "last":
         sims = sims_last
@@ -107,9 +115,9 @@ def plot_age_growth_base(
 
     # add the labels here
     ax.add_labels(age_quantity + " [Myr]", "Cumulative Fraction")
-    if high:
+    if high and label_mass:
         ax.easy_add_text("M > $10^5 M_\odot$", "upper left")
-    else:
+    elif label_mass:
         ax.easy_add_text("M < $10^5 M_\odot$", "upper left")
 
     for sim in sims:
@@ -117,13 +125,16 @@ def plot_age_growth_base(
             continue
 
         # make the plot legend
-        label = sim.names[axis_name]
-        z = 1 / sim.ds.scale_factor - 1
-        if sim_share_type == "last" and not 1.49 < z < 1.51:
-            label += f": z = {z:.1f}"
+        if legend:
+            label = sim.names[axis_name]
+            z = 1 / sim.ds.scale_factor - 1
+            if sim_share_type == "last" and not 1.49 < z < 1.51:
+                label += f": z = {z:.1f}"
+        else:
+            label = None
 
         ages, fractions = time_cumulative_hist(sim, func, mass_side)
-        ax.plot(ages, fractions, c=sim.color, lw=2, label=label)
+        ax.plot(ages, fractions, c=sim.color, ls=ls, label=label)
 
     # add limits appropriately. This dictionary holds the maximum x value for
     # low and high mass, respectively. If we're plotting both, use the high mass for
@@ -155,16 +166,45 @@ def plot_age_growth(axis_name, age_quantity, sim_share_type, which_mass):
     if sim_share_type not in ["last", "common"]:
         raise ValueError("bad plot_name_suffix")
 
-    if which_mass not in ["lo", "hi", "both"]:
+    if which_mass not in ["lo", "hi", "both_split", "both_share"]:
         raise ValueError("bad which_mass")
 
-    if which_mass == "both":
+    if which_mass == "both_split":
         fig, axs = bpl.subplots(figsize=[14, 7], ncols=2)
         plot_age_growth_base(
             axs[0], axis_name, age_quantity, sim_share_type, "lo", True, True
         )
         plot_age_growth_base(
             axs[1], axis_name, age_quantity, sim_share_type, "hi", False, True
+        )
+    elif which_mass == "both_share":
+        fig, ax = bpl.subplots(figsize=[7, 7])
+        # add dummy legend for line styles. I do this here since the
+        # plot_age_growth_base function adds the legend.
+        ax.plot([0, 0], [2, 2], c="0.5", ls="--", label="M < $10^5 M_\odot$")
+        ax.plot([0, 0], [2, 2], c="0.5", ls="-", label="M > $10^5 M_\odot$")
+
+        plot_age_growth_base(
+            ax,
+            axis_name,
+            age_quantity,
+            sim_share_type,
+            "lo",
+            legend=False,
+            both=True,
+            ls="--",
+            label_mass=False,
+        )
+        plot_age_growth_base(
+            ax,
+            axis_name,
+            age_quantity,
+            sim_share_type,
+            "hi",
+            legend=True,
+            both=True,
+            ls="-",
+            label_mass=False,
         )
 
     else:
@@ -245,7 +285,7 @@ for plot_name in tqdm(load_galaxies.get_plot_names(sims_last)):
     for share_type in ["common", "last"]:
         for age_type in ["Duration", "Average Age", "Age Spread"]:
             plot_age_mass(plot_name, age_type, share_type)
-            for which_mass in ["lo", "hi", "both"]:
+            for which_mass in ["lo", "hi", "both_split", "both_share"]:
                 plot_age_growth(plot_name, age_type, share_type, which_mass)
 
 sentinel.touch()
