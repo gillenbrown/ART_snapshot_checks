@@ -450,11 +450,11 @@ $(galaxy_comparison_sentinel): $(galaxies) $(galaxies_comparison_script) $(gal_r
 	python $(galaxies_comparison_script) $(galaxy_comparison_sentinel) $(sim_checks_dirs)
 
 # the age-metallicity diagrams
-$(cluster_trends_sentinel): $(rockstar_sentinels) $(cluster_trends_script)
+$(cluster_trends_sentinel): $(rockstar_sentinels) $(cluster_trends_script) $(plot_utils_script)
 	python $(cluster_trends_script) $(cluster_trends_sentinel) $(sim_dirs_hydro)
 
 # the bound fraction plots
-$(bound_fraction_sentinel): $(rockstar_sentinels) $(bound_fraction_script)
+$(bound_fraction_sentinel): $(rockstar_sentinels) $(bound_fraction_script) $(plot_utils_script)
 	python $(bound_fraction_script) $(bound_fraction_sentinel) $(sim_dirs_hydro)
 
 # the list of galaxy stellar masses
