@@ -175,7 +175,7 @@ def plot_eps_int_histogram(axis_name, sim_share_type):
     # format axes. limits depend on which runs are shown
     ax.set_xscale("log")
     ax.set_limits(x_min, 1, 0)
-    ax.legend(loc=2, fontsize=15, frameon=False)
+    plot_utils.add_legend(loc=2, fontsize=15, frameon=False)
     plot_utils.nice_log_axis(ax, "x")
     ax.add_labels(
         "Integrated Star Formation Efficiency $\epsilon_{int}$",
