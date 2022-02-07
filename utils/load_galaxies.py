@@ -4,7 +4,7 @@ import numpy as np
 import yt
 from astropy import table
 
-from . import plot_utils
+from . import run_attributes
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
@@ -90,9 +90,9 @@ class Simulation(object):
 
         # get the axis names and other stuff. The dictionaries are defaultdicts, so
         # there is no need to worry about key errors
-        self.names = plot_utils.names[self.run_dir]
+        self.names = run_attributes.names[self.run_dir]
         self.axes = list(self.names.keys())
-        self.color = plot_utils.colors[self.run_dir]
+        self.color = run_attributes.colors[self.run_dir]
 
         # have the place to store some precalculated things, particularly those that
         # include all galaxies in the simulation
@@ -208,7 +208,7 @@ def get_outputs_in_dir(sim_dir):
     # This is useful to avoid loading things without names that won't appear on plots,
     # but it makes this code less useful elsewhere when I may want to use it to load
     # all kinds of simulations
-    # if directory not in plot_utils.names:
+    # if directory not in run_attributes.names:
     #     print(f"Skipping {directory}")
     #     return []
 
@@ -238,7 +238,7 @@ def get_common_scale_factor(sim_dirs, z_max):
     last_outputs = []
     for directory in sim_dirs:
         directory = Path(directory)
-        if directory not in plot_utils.names:
+        if directory not in run_attributes.names:
             continue
 
         all_outputs = get_outputs_in_dir(directory)
@@ -324,6 +324,6 @@ def get_plot_names(sims):
 def get_plot_names_dirs(dirs):
     all_plots = []
     for d in dirs:
-        for ax in plot_utils.names[d]:
+        for ax in run_attributes.names[d]:
             all_plots.append(ax)
     return list(set(all_plots))

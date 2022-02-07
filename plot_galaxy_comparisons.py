@@ -15,7 +15,7 @@ from astropy import units as u
 from matplotlib import pyplot as plt
 import betterplotlib as bpl
 
-from utils import load_galaxies, plot_utils
+from utils import load_galaxies, plot_utils, run_attributes
 
 bpl.set_style()
 
@@ -154,7 +154,7 @@ for checks_dir in sys.argv[2:]:
 # =============================================================================
 binned_summaries = defaultdict(list)
 for summary_path in parsed_summaries:
-    for full_dir in plot_utils.names.keys():
+    for full_dir in run_attributes.names.keys():
         if summary_path.startswith(str(full_dir / "checks")):
             binned_summaries[full_dir].append(summary_path)
 # then sort them to get the summaries in order
@@ -192,9 +192,9 @@ def get_quantities(summaries, rank, quantity, unit):
 
 def plot_quantities(quantity, unit, plot_name, ax):
     for idx, sim_dir in enumerate(binned_summaries):
-        if plot_name not in plot_utils.names[sim_dir]:
+        if plot_name not in run_attributes.names[sim_dir]:
             continue
-        color = plot_utils.colors[sim_dir]
+        color = run_attributes.colors[sim_dir]
         summaries = binned_summaries[sim_dir]
         # the number of halos to plot will not change throughout the history
         # of the simulation
@@ -203,7 +203,7 @@ def plot_quantities(quantity, unit, plot_name, ax):
             quantities, scale_factors = get_quantities(summaries, rank, quantity, unit)
             # only add the label for rank 1, so I don't duplicate
             if rank == 1:
-                label = plot_utils.names[sim_dir][plot_name]
+                label = run_attributes.names[sim_dir][plot_name]
             else:
                 label = None
 
@@ -214,9 +214,9 @@ def plot_quantities(quantity, unit, plot_name, ax):
 
 def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
     for idx, sim_dir in enumerate(binned_summaries):
-        if plot_name not in plot_utils.names[sim_dir]:
+        if plot_name not in run_attributes.names[sim_dir]:
             continue
-        color = plot_utils.colors[sim_dir]
+        color = run_attributes.colors[sim_dir]
         summaries = binned_summaries[sim_dir]
         # the number of halos to plot will not change throughout the history
         # of the simulation
@@ -227,7 +227,7 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
 
             # only add the label for rank 1, so I don't duplicate
             if rank == 1:
-                label = plot_utils.names[sim_dir][plot_name]
+                label = run_attributes.names[sim_dir][plot_name]
             else:
                 label = None
 
@@ -238,9 +238,9 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
 
 def plot_molecular_gas_fraction(plot_name, ax):
     for idx, sim_dir in enumerate(binned_summaries):
-        if plot_name not in plot_utils.names[sim_dir]:
+        if plot_name not in run_attributes.names[sim_dir]:
             continue
-        color = plot_utils.colors[sim_dir]
+        color = run_attributes.colors[sim_dir]
         summaries = binned_summaries[sim_dir]
         # the number of halos to plot will not change throughout the history
         # of the simulation
@@ -256,7 +256,7 @@ def plot_molecular_gas_fraction(plot_name, ax):
             ratio = [h2 / (h2 + hI) for h2, hI in zip(gas_h2, gas_hI)]
             # only add the label for rank 1, so I don't duplicate
             if rank == 1:
-                label = plot_utils.names[sim_dir][plot_name]
+                label = run_attributes.names[sim_dir][plot_name]
             else:
                 label = None
 
