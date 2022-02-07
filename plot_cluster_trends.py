@@ -63,7 +63,7 @@ def z_at_f_hn(hn_fraction, f_hn0):
     return f_hn_scale * np.log(hn_fraction / f_hn0)
 
 
-def age_metallicity_plot_base(ax, sim, add_hn_axis=False, label=None):
+def age_metallicity_plot_base(ax, sim, add_hn_axis=True, label=None):
     sim_name = get_sim_name(sim.run_dir)
     f_hn0 = get_f_hn0(sim_name)
     for gal in sim.galaxies:
@@ -75,8 +75,8 @@ def age_metallicity_plot_base(ax, sim, add_hn_axis=False, label=None):
 
     # format axes
     ax.set_yscale("log")
-    ax.set_limits(0, 5, 1e-4, 0.03)
-    ax.add_labels("Time of Cluster Formation [Gyr]", "Metallicity")
+    ax.set_limits(0, 5, 3e-4, 0.03)
+    ax.add_labels("Time of Cluster Formation [Gyr]", "Metallicity Z")
 
     def z_at_f_hn_wrapper(z):
         return z_at_f_hn(z, f_hn0)
