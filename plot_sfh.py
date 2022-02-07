@@ -212,10 +212,9 @@ def plot_sfh(axis_name):
         lw=0,
         color="0.3",
         zorder=0,
-        label="MW-like (Universe Machine)",
     )
 
-    plot_utils.add_legend(ax, loc=2, frameon=False, fontsize=10)
+    plot_utils.add_legend(ax, loc=2, frameon=False, fontsize=15)
     ax.set_yscale("log")
     plot_utils.nice_log_axis(ax, "y")
     ax.set_limits(0, 1.05 * max_time, 0.05, 10)
