@@ -107,13 +107,13 @@ names = defaultdict(
             "old_ic_molecular": "$c_\\rho$=3, GK11 Shielding",
         },
         old_ic("discrete_hn00_virial10_entropy_newagediff"): {
-            "old_ic_sn_timing": "Hybrid Approach",
+            "old_ic_sn_timing": "Hybrid",
         },
         old_ic("discrete_hn00_virial10_entropy_newagediffallave"): {
-            "old_ic_sn_timing": "Average Approach",
+            "old_ic_sn_timing": "Average",
         },
         old_ic("discrete_hn00_virial10_entropy_newagediffallbirth"): {
-            "old_ic_sn_timing": "Birth Approach",
+            "old_ic_sn_timing": "Birth",
         },
         old_ic("discrete_hn50_virial10_entropy_fboost1"): {
             "old_ic_sn_feedback": "$f_{boost}=1$, $f_{HN,0}=50$%",
