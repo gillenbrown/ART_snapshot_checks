@@ -70,6 +70,20 @@ def get_initial_bound_fraction(galaxy):
 # plotting functions
 #
 # ======================================================================================
+def get_eps_ff(sim_dir):
+    sim_path = Path(sim_dir)
+    if sim_path.name == "run":
+        sim_path = sim_path.parent
+
+    # now I should have the directory
+    if "sfe001" in sim_path.name:
+        return 0.01
+    elif "sfe010" in sim_path.name:
+        return 0.1
+    else:
+        return 1
+
+
 def plot_bound_fraction(axis_name, sim_share_type):
     """
     Plot the cluster initial bound fraction as a function of mass.
@@ -127,7 +141,7 @@ def plot_bound_fraction(axis_name, sim_share_type):
     plt.close(fig)  # to save memory
 
 
-def plot_eps_int_histogram(axis_name, sim_share_type):
+def plot_eps_int_histogram(axis_name, sim_share_type, scale_by_epsff=False):
     """
     Plot kde histograms of the cluster integrated star formation efficiency
 
@@ -149,16 +163,21 @@ def plot_eps_int_histogram(axis_name, sim_share_type):
         sims = sims_last
 
     fig, ax = bpl.subplots(figsize=[9, 7])
-    x_values = np.logspace(-3, 0, 301)
+    x_values = np.logspace(-3, 2, 501)
     # I need to adjust the limits of the plot depending on the SFE of the sims present
     # set a default value which will be adjusted
     x_min = 1e-2
+    x_max = 1
     for sim in sims:
         if axis_name not in sim.axes:
             continue
 
         mass = sim.func_all_galaxies(get_initial_mass_msun)
         eps_int = sim.func_all_galaxies(get_eps_int)
+
+        if scale_by_epsff:
+            eps_ff = get_eps_ff(sim.run_dir)
+            eps_int = eps_int / eps_ff
 
         plot_y = plot_utils.kde(x_values, eps_int, width=0.05, weights=mass, log=True)
         ax.plot(
@@ -171,23 +190,38 @@ def plot_eps_int_histogram(axis_name, sim_share_type):
 
         # if there is something other than sfe100, update the limit
         if "sfe010" in str(sim.run_dir) or "sfe001" in str(sim.run_dir):
-            x_min = 1e-3
+            if scale_by_epsff:
+                x_max = 10
+            else:
+                x_min = 1e-3
 
     # format axes. limits depend on which runs are shown
     ax.set_xscale("log")
-    ax.set_limits(x_min, 1, 0)
+    ax.set_limits(x_min, x_max, 0)
     plot_utils.add_legend(ax, loc=2, fontsize=15, frameon=False)
     plot_utils.nice_log_axis(ax, "x")
-    ax.add_labels(
-        "Integrated Star Formation Efficiency $\epsilon_{int}$",
-        "Mass Weighted KDE Density",
-    )
+    if scale_by_epsff:
+        ax.add_labels(
+            "$\epsilon_{int} / \epsilon_{ff}$",
+            "Mass Weighted KDE Density",
+        )
+    else:
+        ax.add_labels(
+            "Integrated Star Formation Efficiency $\epsilon_{int}$",
+            "Mass Weighted KDE Density",
+        )
 
     # if there is a common redshift, annotate it
     if sim_share_type == "common":
         ax.easy_add_text(f"z = {common_z:.1f}", "upper right")
 
-    fig.savefig(sentinel.parent / f"eps_int_hist_{axis_name}_{sim_share_type}.pdf")
+    if scale_by_epsff:
+        fig.savefig(
+            sentinel.parent / f"eps_int_ff_hist_{axis_name}_{sim_share_type}.pdf"
+        )
+
+    else:
+        fig.savefig(sentinel.parent / f"eps_int_hist_{axis_name}_{sim_share_type}.pdf")
     plt.close(fig)  # to save memory
 
 
@@ -258,9 +292,10 @@ def plot_eps_int(axis_name, sim_share_type):
 # ======================================================================================
 for plot_name in load_galaxies.get_plot_names(sims_last):
     for share_type in ["last", "common"]:
-        plot_bound_fraction(plot_name, share_type)
-        plot_eps_int_histogram(plot_name, share_type)
-        plot_eps_int(plot_name, share_type)
+        # plot_bound_fraction(plot_name, share_type)
+        plot_eps_int_histogram(plot_name, share_type, scale_by_epsff=False)
+        plot_eps_int_histogram(plot_name, share_type, scale_by_epsff=True)
+        # plot_eps_int(plot_name, share_type)
 
 # touch the sentinel once done
 sentinel.touch()
