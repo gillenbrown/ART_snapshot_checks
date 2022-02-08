@@ -210,7 +210,7 @@ def fit_power_law_base(masses, dn_dlogm):
         result[1] += np.log10(np.log(10))
         return result
     else:
-        return np.nan
+        return -99, -99
 
 
 def fit_power_law(sim_share_type, max_age_myr=np.inf, max_z=np.inf):
