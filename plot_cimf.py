@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from scipy import special
+from scipy import special, optimize
 from astropy import cosmology
 from astropy import units as u
 import yt
@@ -149,6 +149,106 @@ def evolve_cluster_population(galaxy):
         for log_m in tqdm(log_cluster_masses_msun)
     ]
     return np.array(evolved_masses)
+
+
+# ======================================================================================
+#
+# fitting power law to CIMF
+#
+# ======================================================================================
+# define the minium mass to use
+min_fit_m = 1e5
+
+
+def get_sim_name(sim_loc):
+    sim_path = Path(sim_loc)
+    if sim_path.name == "run":
+        sim_path = sim_path.parent
+
+    # now I should have the directory
+    return sim_path.name
+
+
+def log_power_law(log_xs, slope, log_norm):
+    return log_norm + slope * log_xs
+
+
+def fit_power_law_base(masses, dn_dlogm):
+    """
+    Fit a power law slope to the CIMF
+    """
+    # restrict the fitting to massive clusters and bins that actually have clusters
+    idxs = np.logical_and(dn_dlogm > 0, masses > min_fit_m)
+    masses = masses[idxs]
+    dn_dlogm = dn_dlogm[idxs]
+
+    # get errors. Assume Poisson errors. Turn dn_dlogm to N first
+    dlogm = np.log(10) * (np.log10(masses[1]) - np.log10(masses[0]))
+
+    dn = dn_dlogm * dlogm
+    dn_err = np.sqrt(dn)
+
+    # convert this to log, so I can do the fitting there
+    logm = np.log10(masses)
+    logn = np.log10(dn)
+    # symmetrize the error, which is symmetric in linear space
+    logn_err = np.mean([np.log10(dn + dn_err) - logn, logn - np.log10(dn - dn_err)])
+
+    # then do the fitting
+    def to_minimize(params):
+        slope, log_norm = params
+        predicted_logn = log_power_law(logm, slope, log_norm)
+        return np.sum((predicted_logn - logn) ** 2 / logn_err)
+
+    fit_result = optimize.minimize(to_minimize, x0=(-2, 10))
+    if fit_result.success:
+        # correct log_norm for the offset for the log10 in the normalization of the y
+        # value. We want to fit in raw numbers, but then plot in dN/dlogM, so we need to
+        # add this factor back. We take another log since we return the log of the
+        # normalization
+        result = fit_result.x
+        result[1] += np.log10(np.log(10))
+        return result
+    else:
+        return np.nan
+
+
+def fit_power_law(sim_share_type, max_age_myr=np.inf, max_z=np.inf):
+    # choose which simulations we're using
+    if sim_share_type == "common":
+        sims = sims_common
+    else:
+        sims = sims_last
+
+    with open(
+        cimf_sentinel.parent / f"cimf_slopes_{sim_share_type}.txt", "w"
+    ) as out_file:
+        for sim in sims:
+            sim_name = get_sim_name(sim.run_dir)
+            mass_plot, dn_dlogM = cimf(sim, "initial_bound", max_age_myr, max_z)
+            slope, log_norm = fit_power_law_base(mass_plot, dn_dlogM)
+
+            # make a plot
+            fig, ax = bpl.subplots()
+            ax.plot(mass_plot, dn_dlogM, c=sim.color)
+
+            # power law slope lines
+            fit_m = np.logspace(np.log10(min_fit_m), 7, 100)
+            fit_n = 10 ** log_power_law(np.log10(fit_m), slope, log_norm)
+            ax.plot(fit_m, fit_n, ls=":", lw=1, c=bpl.almost_black)
+            ax.easy_add_text("$\\alpha=" + f"{slope:.2f}" + "$", "upper right")
+
+            # format axes
+            ax.set_yscale("log")
+            ax.set_xscale("log")
+            ax.set_limits(1e3, 1e7, 1, 1e6)
+            ax.add_labels("$f_i M_i$ [$M_\odot$]", "dN/dlogM")
+            fig.savefig(cimf_sentinel.parent / f"cimf_slopefit_{sim_name}.pdf")
+            # then remove figure for memory purposes
+            plt.close(fig)
+
+            # write to output file
+            out_file.write(f"{str(sim_name)}: {slope:.2f}\n")
 
 
 # ======================================================================================
@@ -411,5 +511,7 @@ for plot_name in load_galaxies.get_plot_names(sims_last):
     plot_cimf(plot_name, "last", ["initial"], max_z=0.001)
     # plot cluster population evolved to z=0. Only use the last output for this
     # plot_cimf(plot_name, "last", ["evolved"])
+    # fit the power law slope
+    fit_power_law("last")
 
 cimf_sentinel.touch()
