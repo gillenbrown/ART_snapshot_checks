@@ -182,6 +182,9 @@ def fit_power_law_base(masses, dn_dlogm):
     masses = masses[idxs]
     dn_dlogm = dn_dlogm[idxs]
 
+    if len(masses) == 1:
+        return -99, -99
+
     # get errors. Assume Poisson errors. Turn dn_dlogm to N first
     dlogm = np.log(10) * (np.log10(masses[1]) - np.log10(masses[0]))
 
