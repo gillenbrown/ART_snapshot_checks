@@ -214,7 +214,11 @@ def plot_sfh(axis_name):
         zorder=0,
     )
 
-    plot_utils.add_legend(ax, loc=2, frameon=False, fontsize=15)
+    if axis_name == "adi_adv":
+        legend_fontsize = 12
+    else:
+        legend_fontsize = 15
+    plot_utils.add_legend(ax, loc=2, frameon=False, fontsize=legend_fontsize)
     ax.set_yscale("log")
     plot_utils.nice_log_axis(ax, "y")
     ax.set_limits(0, 1.05 * max_time, 0.05, 10)
