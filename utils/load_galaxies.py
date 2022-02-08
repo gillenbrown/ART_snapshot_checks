@@ -93,6 +93,8 @@ class Simulation(object):
         self.names = run_attributes.names[self.run_dir]
         self.axes = list(self.names.keys())
         self.color = run_attributes.colors[self.run_dir]
+        self.marker = run_attributes.markers[self.run_dir]
+        self.ls = run_attributes.lss[self.run_dir]
 
         # have the place to store some precalculated things, particularly those that
         # include all galaxies in the simulation

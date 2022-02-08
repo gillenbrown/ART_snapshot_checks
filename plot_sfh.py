@@ -186,16 +186,17 @@ def plot_sfh(axis_name):
                 label = sim.names[axis_name]
             else:
                 label = None
-            ax.scatter(
+            ax.plot(
                 plot_times,
                 plot_sfh,
-                s=100,
                 c=sim.color,
+                markersize=10,
+                marker=sim.marker,
+                lw=1,
                 alpha=1,
                 label=label,
                 zorder=z,
             )
-            ax.plot(plot_times, plot_sfh, lw=1.0, c=sim.color, zorder=z)
 
             # figure out the max time to use for the plot limit
             if max(plot_times) > max_time:

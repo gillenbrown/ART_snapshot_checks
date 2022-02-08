@@ -94,7 +94,7 @@ def plot_age_growth_base(
     mass_side,
     legend,
     both,
-    ls="-",
+    ls=None,
     label_mass=True,
 ):
     if sim_share_type == "last":
@@ -132,6 +132,9 @@ def plot_age_growth_base(
                 label += f": z = {z:.1f}"
         else:
             label = None
+
+        if ls is None:
+            ls = sim.ls
 
         ages, fractions = time_cumulative_hist(sim, func, mass_side)
         ax.plot(ages, fractions, c=sim.color, ls=ls, label=label)

@@ -165,6 +165,7 @@ def plot_eps_int_histogram(axis_name, sim_share_type):
             x_values,
             plot_y,
             c=sim.color,
+            ls=sim.ls,
             label=plot_utils.plot_label(sim, sim_share_type, axis_name),
         )
 

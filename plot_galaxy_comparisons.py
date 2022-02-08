@@ -195,6 +195,7 @@ def plot_quantities(quantity, unit, plot_name, ax):
         if plot_name not in run_attributes.names[sim_dir]:
             continue
         color = run_attributes.colors[sim_dir]
+        ls = run_attributes.lss[sim_dir]
         summaries = binned_summaries[sim_dir]
         # the number of halos to plot will not change throughout the history
         # of the simulation
@@ -209,7 +210,7 @@ def plot_quantities(quantity, unit, plot_name, ax):
 
             # only plot if at least one output has the quantity desired
             if len(scale_factors) > 0:
-                ax.plot(scale_factors, quantities, label=label, c=color)
+                ax.plot(scale_factors, quantities, label=label, c=color, ls=ls)
 
 
 def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
@@ -217,6 +218,7 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
         if plot_name not in run_attributes.names[sim_dir]:
             continue
         color = run_attributes.colors[sim_dir]
+        ls = run_attributes.lss[sim_dir]
         summaries = binned_summaries[sim_dir]
         # the number of halos to plot will not change throughout the history
         # of the simulation
@@ -233,7 +235,7 @@ def plot_two_quantities(quantity_x, unit_x, quantity_y, unit_y, plot_name, ax):
 
             # only plot if at least one output has the quantities desired
             if len(quantities_x) > 0 and len(quantities_x) == len(quantities_y):
-                ax.plot(quantities_x, quantities_y, label=label, c=color)
+                ax.plot(quantities_x, quantities_y, label=label, c=color, ls=ls)
 
 
 def plot_molecular_gas_fraction(plot_name, ax):
@@ -241,6 +243,7 @@ def plot_molecular_gas_fraction(plot_name, ax):
         if plot_name not in run_attributes.names[sim_dir]:
             continue
         color = run_attributes.colors[sim_dir]
+        ls = run_attributes.lss[sim_dir]
         summaries = binned_summaries[sim_dir]
         # the number of halos to plot will not change throughout the history
         # of the simulation
@@ -262,7 +265,7 @@ def plot_molecular_gas_fraction(plot_name, ax):
 
             # only plot if at least one output has the quantity desired
             if len(scale_factors) > 0:
-                ax.plot(scale_factors, ratio, label=label, c=color)
+                ax.plot(scale_factors, ratio, label=label, c=color, ls=ls)
 
 
 # =============================================================================

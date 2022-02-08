@@ -221,6 +221,33 @@ colors = defaultdict(
 if len(list(colors.values())) != len(set(colors.values())):
     raise ValueError("Not all colors are unique! Fix please!")
 
+
+# also set up markers. This doesn't do anything right now. I implemented this and
+# # didn't like the various linestyles and markers, but I thought I'd keep this in
+# case I decide to put it back later
+def default_marker():
+    return "o"
+
+
+markers = defaultdict(
+    default_marker,
+    {
+        old_ic("discrete_hn50_virial10_entropy_fboost1"): "o",
+    },
+)
+
+# also set up linestyles.
+def default_ls():
+    return "-"
+
+
+lss = defaultdict(
+    default_ls,
+    {
+        old_ic("discrete_hn50_virial10_entropy_fboost1"): "-",
+    },
+)
+
 # add duplicates for Stampede2 analysis
 production_list = [
     "tl_sfe001_hn20",
@@ -236,3 +263,5 @@ production_list = [
 for suffix in production_list:
     names[stampede2_analysis(suffix)] = names[production(suffix)]
     colors[stampede2_analysis(suffix)] = colors[production(suffix)]
+    markers[stampede2_analysis(suffix)] = markers[production(suffix)]
+    lss[stampede2_analysis(suffix)] = lss[production(suffix)]
