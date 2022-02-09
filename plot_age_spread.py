@@ -288,7 +288,7 @@ for plot_name in tqdm(load_galaxies.get_plot_names(sims_last)):
     for share_type in ["common", "last"]:
         for age_type in ["Duration", "Average Age", "Age Spread"]:
             plot_age_mass(plot_name, age_type, share_type)
-            for which_mass in ["lo", "hi", "both_split", "both_share"]:
+            for which_mass in ["both_split", "both_share"]:  # ["lo", "hi", ]
                 plot_age_growth(plot_name, age_type, share_type, which_mass)
 
 sentinel.touch()
