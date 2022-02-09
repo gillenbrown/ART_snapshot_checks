@@ -54,6 +54,7 @@ nbody_split_plot_script = ./utils/nbody_projection_split_species.py
 halo_growth_comp_script = ./halo_growth_comparison.py
 sfh_plots_script = ./plot_sfh.py
 cimf_plots_script = ./plot_cimf.py
+cimf_evolution_script = ./plot_cimf_evolution.py
 age_plot_script = ./plot_age_spread.py
 galaxies_comparison_script = ./plot_galaxy_comparisons.py
 cluster_trends_script = ./plot_cluster_trends.py
@@ -247,6 +248,16 @@ galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
+#  CIMF variation with redshift
+#
+# ------------------------------------------------------------------------------
+# This needs to be its own script since it takes a lot of memory, and doing it
+# for all galaxies at once crashes. This method is horribly ugly, I apologize
+sim_dir_to_cimf_evolution_plot = $(comparison_plots_dir)/cimf_zevolution_$(subst /,__,$(1)).pdf
+cimf_evolution_plots = $(foreach sim_dir,$(sim_dirs_hydro),$(call sim_dir_to_cimf_evolution_plot,$(sim_dir)))
+
+# ------------------------------------------------------------------------------
+#
 #  comparison plots that have all sims on one plot
 # 
 # ------------------------------------------------------------------------------
@@ -378,10 +389,10 @@ paper_plots = $(paper_halo_growth_plot)
 # 
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
-	outputs = $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(cluster_trends_sentinel) $(bound_fraction_sentinel) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxy_masses) $(debugs)
+	outputs = $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(cluster_trends_sentinel) $(bound_fraction_sentinel) $(cimf_evolution_plots) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxy_masses) $(debugs)
 	# $(dt_history_plots) $(cfl_plots) $(movies)
 else ifeq ($(machine),stampede2_analysis)
-	outputs = $(my_directories) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(cluster_trends_sentinel) $(bound_fraction_sentinel)
+	outputs = $(my_directories) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(cluster_trends_sentinel) $(bound_fraction_sentinel)  $(cimf_evolution_plots)
 else ifeq ($(machine),stampede2_halos)
 	outputs = $(my_directories) $(galaxy_masses) $(debugs)
 endif
@@ -442,6 +453,9 @@ $(sfh_sentinel): $(sfh_plots_script) $(utils_scripts) $(rockstar_sentinels)
 # target, but that required Make 4.3 or higher
 $(cimf_sentinel): $(cimf_plots_script) $(utils_scripts) $(rockstar_sentinels)
 	python $(cimf_plots_script) $(cimf_sentinel) $(sim_dirs_hydro)
+
+$(cimf_evolution_plots): $(cimf_evolution_script) $(utils_scripts) $(rockstar_sentinels)
+	python $(cimf_evolution_script) $@
 
 # Make the age spread plots. 
 $(age_spread_sentinel): $(age_plot_script) $(utils_scripts) $(rockstar_sentinels)
