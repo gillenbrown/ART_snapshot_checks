@@ -26,16 +26,7 @@ plot_dir = sentinel.parent
 # ======================================================================================
 sims = load_galaxies.get_simulations_last(sys.argv[2:])
 
-# functions to get the simulation name and hypernova fraction
-def get_sim_name(sim_loc):
-    sim_path = Path(sim_loc)
-    if sim_path.name == "run":
-        sim_path = sim_path.parent
-
-    # now I should have the directory
-    return sim_path.name
-
-
+# functions to get the hypernova fraction
 def get_f_hn0(sim_name):
     # find it in the name.
     for chunk in sim_name.split("_"):
@@ -64,7 +55,7 @@ def z_at_f_hn(hn_fraction, f_hn0):
 
 
 def age_metallicity_plot_base(ax, sim, add_hn_axis=True, label=None):
-    sim_name = get_sim_name(sim.run_dir)
+    sim_name = plot_utils.get_sim_dirname(sim.run_dir)
     f_hn0 = get_f_hn0(sim_name)
     for gal in sim.galaxies:
         metallicity = (
@@ -93,7 +84,7 @@ def age_metallicity_plot_base(ax, sim, add_hn_axis=True, label=None):
 
 def age_metallicity_plot(sim):
     # get basic info
-    sim_name = get_sim_name(sim.run_dir)
+    sim_name = plot_utils.get_sim_dirname(sim.run_dir)
 
     fig, ax = bpl.subplots()
     age_metallicity_plot_base(ax, sim)
@@ -106,7 +97,7 @@ def age_metallicity_plot(sim):
 
 def mass_metallicity_plot(sim):
     # get basic info
-    sim_name = get_sim_name(sim.run_dir)
+    sim_name = plot_utils.get_sim_dirname(sim.run_dir)
 
     n_galaxies = len(sim.galaxies)
     fig, axs = bpl.subplots(ncols=n_galaxies, figsize=[10 * n_galaxies, 7])
@@ -143,7 +134,7 @@ def mass_metallicity_plot(sim):
 
 def mass_age_plot(sim):
     # get basic info
-    sim_name = get_sim_name(sim.run_dir)
+    sim_name = plot_utils.get_sim_dirname(sim.run_dir)
 
     n_galaxies = len(sim.galaxies)
     fig, axs = bpl.subplots(ncols=n_galaxies, figsize=[10 * n_galaxies, 7])
@@ -198,7 +189,7 @@ for sim in sims:
 #     "discrete_hn00_virial10_entropy_fboost1",
 # ]
 # for sim in sims:
-#     if get_sim_name(sim.run_dir) in plot_sims:
+#     if plot_utils.get_sim_dirname(sim.run_dir) in plot_sims:
 #         age_metallicity_plot_base(
 #             ax, sim, add_hn_axis=False, label=sim.names["old_ic_sn_feedback"]
 #         )

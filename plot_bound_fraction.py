@@ -28,16 +28,6 @@ sims_last = load_galaxies.get_simulations_last(sys.argv[2:])
 common_z = 4.0
 sims_common = load_galaxies.get_simulations_same_scale(sys.argv[2:], common_z)
 
-
-def get_sim_dirname(sim_loc):
-    sim_path = Path(sim_loc)
-    if sim_path.name == "run":
-        sim_path = sim_path.parent
-
-    # now I should have the directory
-    return sim_path.name
-
-
 # ======================================================================================
 #
 # analysis functions
@@ -348,7 +338,9 @@ def plot_dynamical_bound(sim):
     ax.set_xscale("log")
     ax.set_limits(10, 5e3, 0.5, 1)
     ax.legend(loc=1, frameon=False)
-    fig.savefig(sentinel.parent / f"dynamical_{get_sim_dirname(sim.run_dir)}.pdf")
+    fig.savefig(
+        sentinel.parent / f"dynamical_{plot_utils.get_sim_dirname(sim.run_dir)}.pdf"
+    )
     plt.close(fig)  # to save memory
 
 

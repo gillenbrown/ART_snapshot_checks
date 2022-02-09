@@ -160,15 +160,6 @@ def evolve_cluster_population(galaxy):
 min_fit_m = 1e5
 
 
-def get_sim_name(sim_loc):
-    sim_path = Path(sim_loc)
-    if sim_path.name == "run":
-        sim_path = sim_path.parent
-
-    # now I should have the directory
-    return sim_path.name
-
-
 def log_power_law(log_xs, slope, log_norm):
     return log_norm + slope * log_xs
 
@@ -227,7 +218,7 @@ def fit_power_law(sim_share_type, max_age_myr=np.inf, max_z=np.inf):
         cimf_sentinel.parent / f"cimf_slopes_{sim_share_type}.txt", "w"
     ) as out_file:
         for sim in sims:
-            sim_name = get_sim_name(sim.run_dir)
+            sim_name = plot_utils.get_sim_dirname(sim.run_dir)
             mass_plot, dn_dlogM = cimf(sim, "initial_bound", max_age_myr, max_z)
             slope, log_norm = fit_power_law_base(mass_plot, dn_dlogM)
 

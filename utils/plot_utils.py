@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 from matplotlib import ticker
 
@@ -7,6 +9,15 @@ from matplotlib import ticker
 # functions for commonly used plotting ideas
 #
 # ======================================================================================
+def get_sim_dirname(sim_loc):
+    sim_path = Path(sim_loc)
+    if sim_path.name == "run":
+        sim_path = sim_path.parent
+
+    # now I should have the directory
+    return sim_path.name
+
+
 def plot_label(sim, sim_share_type, axis_name, include_z=True):
     label = sim.names[axis_name]
     # and include the redshift if it's different for each sim
