@@ -28,6 +28,16 @@ sims_last = load_galaxies.get_simulations_last(sys.argv[2:])
 common_z = 4.0
 sims_common = load_galaxies.get_simulations_same_scale(sys.argv[2:], common_z)
 
+
+def get_sim_dirname(sim_loc):
+    sim_path = Path(sim_loc)
+    if sim_path.name == "run":
+        sim_path = sim_path.parent
+
+    # now I should have the directory
+    return sim_path.name
+
+
 # ======================================================================================
 #
 # analysis functions
@@ -63,6 +73,14 @@ def get_initial_mass_msun(galaxy):
 
 def get_initial_bound_fraction(galaxy):
     return f_bound(get_eps_int(galaxy))
+
+
+def get_ages_myr(galaxy):
+    return galaxy[("STAR", "age")].to("Myr").value
+
+
+def get_dynamical_bound_fraction(galaxy):
+    return galaxy[("STAR", "BOUND_FRACTION")].value
 
 
 # ======================================================================================
@@ -287,8 +305,51 @@ def plot_eps_int(axis_name, sim_share_type):
 
 def plot_dynamical_bound(sim):
     """
-    Plot the dynamical bound fraction for
+    Plot the dynamical bound fraction for a given simulation
     """
+    m_initial = sim.func_all_galaxies(get_initial_mass_msun)
+    age = sim.func_all_galaxies(get_ages_myr)
+    f_bound_dyn = sim.func_all_galaxies(get_dynamical_bound_fraction)
+
+    # then make a plot showing the band with age for different mass ranges
+    fig, ax = bpl.subplots()
+
+    dlogm = 1
+    logm_min = 3
+    c_idx = 0
+    while logm_min < 5.5:
+        assert np.isclose(logm_min, int(logm_min))  # only integers for the legend
+        logm_max = logm_min + dlogm
+        label = (
+            "$10^{"
+            + f"{logm_min:.0f}"
+            + "} M_\odot < M_i < 10^{"
+            + f"{logm_max:.0f}"
+            + "} M_\odot$"
+        )
+
+        idx = np.logical_and(m_initial > 10 ** logm_min, m_initial < 10 ** logm_max)
+        plot_utils.shaded_region(
+            ax,
+            age[idx],
+            f_bound_dyn[idx],
+            bpl.color_cycle[c_idx],
+            p_lo=25,
+            p_hi=75,
+            dx=0.2,
+            log_x=True,
+            label=label,
+        )
+
+        c_idx += 1
+        logm_min += dlogm
+
+    ax.add_labels("Cluster Age [Myr]", "Dynamical Bound Fraction")
+    ax.set_xscale("log")
+    ax.set_limits(10, 5e3, 0.5, 1)
+    ax.legend(loc=1, frameon=False)
+    fig.savefig(sentinel.parent / f"dynamical_{get_sim_dirname(sim.run_dir)}.pdf")
+    plt.close(fig)  # to save memory
 
 
 # ======================================================================================
@@ -303,5 +364,7 @@ for plot_name in load_galaxies.get_plot_names(sims_last):
         plot_eps_int_histogram(plot_name, share_type, scale_by_epsff=True)
         plot_eps_int(plot_name, share_type)
 
+for sim in sims_last:
+    plot_dynamical_bound(sim)
 # touch the sentinel once done
 sentinel.touch()
