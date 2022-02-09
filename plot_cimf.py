@@ -135,8 +135,8 @@ def evolve_cluster_population(galaxy):
     # precalculate the disruption. This won't do anything if it already exists.
     precalculate_disruption(n_steps)
 
-    # then get star masses (note that this ignores stellar evolution).
-    raw_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun")
+    # then get star masses (include stellar evolution)
+    raw_mass = galaxy[("STAR", "MASS")].to("Msun")
     star_initial_bound = get_initial_bound_fraction(galaxy)
     tidal_bound_fraction = galaxy[("STAR", "BOUND_FRACTION")].value
     cluster_masses = raw_mass * star_initial_bound * tidal_bound_fraction
@@ -307,7 +307,8 @@ def cimf(sim, mass_type, max_age_myr, max_z):
                 star_initial_bound = get_initial_bound_fraction(galaxy)
                 this_mass = initial_mass * star_initial_bound
             elif mass_type == "current":
-                raw_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
+                # use mass that accounts for stellar evolution
+                raw_mass = galaxy[("STAR", "MASS")].to("Msun").value
                 star_initial_bound = get_initial_bound_fraction(galaxy)
                 tidal_bound_fraction = galaxy[("STAR", "BOUND_FRACTION")].value
                 this_mass = raw_mass * star_initial_bound * tidal_bound_fraction

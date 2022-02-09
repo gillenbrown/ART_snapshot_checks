@@ -64,8 +64,8 @@ def cimf(sim):
 
     mass = []
     for galaxy in sim.galaxies:
-
-        raw_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
+        # use mass that accounts for stellar evolution
+        raw_mass = galaxy[("STAR", "MASS")].to("Msun").value
         star_initial_bound = get_initial_bound_fraction(galaxy)
         tidal_bound_fraction = galaxy[("STAR", "BOUND_FRACTION")].value
         this_mass = raw_mass * star_initial_bound * tidal_bound_fraction
