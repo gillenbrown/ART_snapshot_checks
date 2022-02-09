@@ -285,6 +285,12 @@ def plot_eps_int(axis_name, sim_share_type):
     plt.close(fig)  # to save memory
 
 
+def plot_dynamical_bound(sim):
+    """
+    Plot the dynamical bound fraction for
+    """
+
+
 # ======================================================================================
 #
 # make the plots
@@ -292,10 +298,10 @@ def plot_eps_int(axis_name, sim_share_type):
 # ======================================================================================
 for plot_name in load_galaxies.get_plot_names(sims_last):
     for share_type in ["last", "common"]:
-        # plot_bound_fraction(plot_name, share_type)
+        plot_bound_fraction(plot_name, share_type)
         plot_eps_int_histogram(plot_name, share_type, scale_by_epsff=False)
         plot_eps_int_histogram(plot_name, share_type, scale_by_epsff=True)
-        # plot_eps_int(plot_name, share_type)
+        plot_eps_int(plot_name, share_type)
 
 # touch the sentinel once done
 sentinel.touch()
