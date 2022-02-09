@@ -173,7 +173,7 @@ def plot_age_growth(axis_name, age_quantity, sim_share_type, which_mass):
         raise ValueError("bad which_mass")
 
     if which_mass == "both_split":
-        fig, axs = bpl.subplots(figsize=[14, 7], ncols=2)
+        fig, axs = bpl.subplots(figsize=[20, 7], ncols=2)
         plot_age_growth_base(
             axs[0], axis_name, age_quantity, sim_share_type, "lo", True, True
         )
@@ -181,7 +181,7 @@ def plot_age_growth(axis_name, age_quantity, sim_share_type, which_mass):
             axs[1], axis_name, age_quantity, sim_share_type, "hi", False, True
         )
     elif which_mass == "both_share":
-        fig, ax = bpl.subplots(figsize=[7, 7])
+        fig, ax = bpl.subplots()
         # add dummy legend for line styles. I do this here since the
         # plot_age_growth_base function adds the legend.
         ax.plot([0, 0], [2, 2], c="0.5", ls="--", label="M < $10^5 M_\odot$")
@@ -211,7 +211,7 @@ def plot_age_growth(axis_name, age_quantity, sim_share_type, which_mass):
         )
 
     else:
-        fig, ax = bpl.subplots(figsize=[7, 7])
+        fig, ax = bpl.subplots()
         plot_age_growth_base(
             ax, axis_name, age_quantity, sim_share_type, which_mass, True, False
         )
