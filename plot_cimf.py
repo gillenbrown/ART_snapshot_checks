@@ -514,7 +514,7 @@ for plot_name in load_galaxies.get_plot_names(sims_last):
     plot_cimf(plot_name, "last", ["initial"], max_z=0.001)
     # plot cluster population evolved to z=0. Only use the last output for this
     # plot_cimf(plot_name, "last", ["evolved"])
-    # fit the power law slope
-    fit_power_law("last")
+# fit the power law slope
+fit_power_law("last")
 
 cimf_sentinel.touch()
