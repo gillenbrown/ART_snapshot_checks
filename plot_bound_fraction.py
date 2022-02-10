@@ -65,8 +65,12 @@ def get_initial_bound_fraction(galaxy):
     return f_bound(get_eps_int(galaxy))
 
 
-def get_ages_myr(galaxy):
-    return galaxy[("STAR", "age")].to("Myr").value
+def get_initial_bound_mass_msun(galaxy):
+    return get_initial_mass_msun(galaxy) * get_initial_bound_fraction(galaxy)
+
+
+def get_ages_gyr(galaxy):
+    return galaxy[("STAR", "age")].to("Gyr").value
 
 
 def get_dynamical_bound_fraction(galaxy):
@@ -297,8 +301,8 @@ def plot_dynamical_bound(sim):
     """
     Plot the dynamical bound fraction for a given simulation
     """
-    m_initial = sim.func_all_galaxies(get_initial_mass_msun)
-    age = sim.func_all_galaxies(get_ages_myr)
+    m_initial = sim.func_all_galaxies(get_initial_bound_mass_msun)
+    age = sim.func_all_galaxies(get_ages_gyr)
     f_bound_dyn = sim.func_all_galaxies(get_dynamical_bound_fraction)
 
     # then make a plot showing the band with age for different mass ranges
@@ -307,37 +311,43 @@ def plot_dynamical_bound(sim):
     dlogm = 1
     logm_min = 3
     c_idx = 0
+    colors = ["#E9DA67", "#76BD81", "#03A09B"]
     while logm_min < 5.5:
         assert np.isclose(logm_min, int(logm_min))  # only integers for the legend
         logm_max = logm_min + dlogm
+        # label = (
+        #     "$10^{"
+        #     + f"{logm_min:.0f}"
+        #     + "} M_\odot < M_{b, i} < 10^{"
+        #     + f"{logm_max:.0f}"
+        #     + "} M_\odot$"
+        # )
         label = (
-            "$10^{"
-            + f"{logm_min:.0f}"
-            + "} M_\odot < M_i < 10^{"
-            + f"{logm_max:.0f}"
-            + "} M_\odot$"
+            "$10^{" + f"{logm_min:.0f}" + "} - 10^{" + f"{logm_max:.0f}" + "} M_\odot$"
         )
 
         idx = np.logical_and(m_initial > 10 ** logm_min, m_initial < 10 ** logm_max)
+
         plot_utils.shaded_region(
             ax,
             age[idx],
             f_bound_dyn[idx],
-            bpl.color_cycle[c_idx],
+            colors[c_idx],
             p_lo=25,
             p_hi=75,
-            dx=0.2,
-            log_x=True,
+            dx={3: 0.1, 4: 0.3, 5: 0.3}[logm_min],
+            log_x=False,
             label=label,
         )
 
         c_idx += 1
         logm_min += dlogm
 
-    ax.add_labels("Cluster Age [Myr]", "Dynamical Bound Fraction")
-    ax.set_xscale("log")
-    ax.set_limits(10, 5e3, 0.5, 1)
-    ax.legend(loc=1, frameon=False)
+    ax.add_labels("Cluster Age [Gyr]", "Dynamical Bound Fraction")
+    # ax.set_xscale("log")
+    # ax.set_limits(0.01, 5, 0, 1)
+    ax.set_limits(0, 4.5, 0, 1)
+    ax.legend(loc=1, frameon=False, fontsize=14)
     fig.savefig(
         sentinel.parent / f"dynamical_{plot_utils.get_sim_dirname(sim.run_dir)}.pdf"
     )
