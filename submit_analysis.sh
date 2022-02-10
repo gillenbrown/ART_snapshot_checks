@@ -5,7 +5,7 @@
 #SBATCH --mail-type=FAIL
 #SBATCH --no-requeue
 #SBATCH --partition=skx-dev
-#SBATCH --time=0:10:00
+#SBATCH --time=0:20:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
@@ -24,5 +24,5 @@ source ~/.bashrc
 # I do run the halo finding, but just as a check. Nothing should ever run in reality.
 make dirs
 ibrun -n 1 -o 0 make halos
-make -j5
+make -j3
 # &>> $SLURM_JOB_NAME.stdout.$SLURM_JOB_ID
