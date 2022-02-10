@@ -120,6 +120,9 @@ def plot_age_growth_base(
     elif label_mass:
         ax.easy_add_text("M < $10^5 M_\odot$", "upper left")
 
+    # have horizontal line indicating median
+    ax.axhline(0.5, ls=":", c=bpl.almost_black, lw=1)
+
     for sim in sims:
         if axis_name not in sim.axes:
             continue
