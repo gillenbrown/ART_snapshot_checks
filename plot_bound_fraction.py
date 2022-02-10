@@ -309,12 +309,12 @@ def plot_dynamical_bound(sim):
     fig, ax = bpl.subplots()
 
     dlogm = 1
-    logm_min = 3
+    logm_max = 6
     c_idx = 0
-    colors = ["#E9DA67", "#76BD81", "#03A09B"]
-    while logm_min < 5.5:
+    colors = ["#03A09B", "#76BD81", "#E9DA67"]
+    while logm_max > 3.5:
+        logm_min = logm_max - dlogm
         assert np.isclose(logm_min, int(logm_min))  # only integers for the legend
-        logm_max = logm_min + dlogm
         # label = (
         #     "$10^{"
         #     + f"{logm_min:.0f}"
@@ -341,7 +341,7 @@ def plot_dynamical_bound(sim):
         )
 
         c_idx += 1
-        logm_min += dlogm
+        logm_max -= dlogm
 
     ax.add_labels("Cluster Age [Gyr]", "Dynamical Bound Fraction")
     # ax.set_xscale("log")
