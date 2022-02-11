@@ -81,6 +81,13 @@ def time_cumulative_hist(sim, time_func, mask_name):
     return sim.precalculated[quantity_name]
 
 
+def find_median_of_cumulative(xs, cumulative_fraction):
+    assert len(xs) > 100
+    for idx in range(len(xs)):
+        if cumulative_fraction[idx] > 0.5:
+            return xs[idx]
+
+
 # ======================================================================================
 #
 # plotting
@@ -96,6 +103,7 @@ def plot_age_growth_base(
     both,
     ls=None,
     label_mass=True,
+    plot_median=True,
 ):
     if sim_share_type == "last":
         sims = sims_last
@@ -120,9 +128,8 @@ def plot_age_growth_base(
     elif label_mass:
         ax.easy_add_text("M < $10^5 M_\odot$", "upper left")
 
-    # have horizontal line indicating median
-    ax.axhline(0.5, ls=":", c=bpl.almost_black, lw=1)
-
+    # I'll calculate the median of the latest run, the add that to the figure
+    last_median = -1
     for sim in sims:
         if axis_name not in sim.axes:
             continue
@@ -141,6 +148,23 @@ def plot_age_growth_base(
 
         ages, fractions = time_cumulative_hist(sim, func, mass_side)
         ax.plot(ages, fractions, c=sim.color, ls=ls, label=label)
+
+        # store the median if it's the last one
+        if plot_median:
+            this_median = find_median_of_cumulative(ages, fractions)
+            if this_median > last_median:
+                last_median = this_median
+
+    # then plot this median
+    if plot_median:
+        ax.plot(
+            [0, last_median, last_median],
+            [0.5, 0.5, 0],
+            ls=":",
+            lw=2,
+            c=bpl.almost_black,
+            zorder=0,
+        )
 
     # add limits appropriately. This dictionary holds the maximum x value for
     # low and high mass, respectively. If we're plotting both, use the high mass for
@@ -178,10 +202,22 @@ def plot_age_growth(axis_name, age_quantity, sim_share_type, which_mass):
     if which_mass == "both_split":
         fig, axs = bpl.subplots(figsize=[18, 7], ncols=2)
         plot_age_growth_base(
-            axs[0], axis_name, age_quantity, sim_share_type, "lo", True, True
+            axs[0],
+            axis_name,
+            age_quantity,
+            sim_share_type,
+            "lo",
+            True,
+            True,
         )
         plot_age_growth_base(
-            axs[1], axis_name, age_quantity, sim_share_type, "hi", False, True
+            axs[1],
+            axis_name,
+            age_quantity,
+            sim_share_type,
+            "hi",
+            False,
+            True,
         )
     elif which_mass == "both_share":
         fig, ax = bpl.subplots(figsize=[9, 7])
@@ -200,6 +236,7 @@ def plot_age_growth(axis_name, age_quantity, sim_share_type, which_mass):
             both=True,
             ls="--",
             label_mass=False,
+            plot_median=False,
         )
         plot_age_growth_base(
             ax,
@@ -211,6 +248,7 @@ def plot_age_growth(axis_name, age_quantity, sim_share_type, which_mass):
             both=True,
             ls="-",
             label_mass=False,
+            plot_median=True,
         )
 
     else:
