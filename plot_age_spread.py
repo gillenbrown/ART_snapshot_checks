@@ -82,10 +82,18 @@ def time_cumulative_hist(sim, time_func, mask_name):
 
 
 def find_median_of_cumulative(xs, cumulative_fraction):
-    assert len(xs) > 100
     for idx in range(len(xs)):
         if cumulative_fraction[idx] > 0.5:
-            return xs[idx]
+            # find the exact place it crosses, assuming a straight line between the
+            # point before median cross and after cross
+            x1 = xs[idx - 1]
+            x2 = xs[idx]
+            y1 = cumulative_fraction[idx - 1]
+            y2 = cumulative_fraction[idx]
+            # get the slope
+            slope = (y2 - y1) / (x2 - x1)
+            # then find the value at which y = 0.5
+            return x1 + (0.5 - y1) / slope
 
 
 # ======================================================================================
