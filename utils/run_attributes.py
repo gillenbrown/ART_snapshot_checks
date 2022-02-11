@@ -265,3 +265,8 @@ for suffix in production_list:
     colors[stampede2_analysis(suffix)] = colors[production(suffix)]
     markers[stampede2_analysis(suffix)] = markers[production(suffix)]
     lss[stampede2_analysis(suffix)] = lss[production(suffix)]
+
+# code to print out the hex colors
+if __name__ == "__main__":
+    for d, c in colors.items():
+        print(d, c)
