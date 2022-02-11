@@ -172,8 +172,12 @@ def plot_sfh(axis_name):
         if axis_name not in sim.axes:
             continue
 
+        # for MW, plot as circles, for M31 plot as squares.
+        # For both RJ and TL, at the high redshifts, MW is more massive.
+        galaxy_markers = ["o", "s"]
+
         z = 1 / sim.ds.scale_factor - 1
-        for galaxy in sim.galaxies:
+        for galaxy, marker in zip(sim.galaxies, galaxy_markers):
             times, sfh_values = sfh(galaxy)
             # don't plot halos without few points
             if len(times) < 2:
@@ -191,7 +195,7 @@ def plot_sfh(axis_name):
                 plot_sfh,
                 c=sim.color,
                 markersize=10,
-                marker=sim.marker,
+                marker=marker,
                 lw=1,
                 alpha=1,
                 label=label,

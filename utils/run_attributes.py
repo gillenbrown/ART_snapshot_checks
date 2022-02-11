@@ -232,7 +232,7 @@ def default_marker():
 markers = defaultdict(
     default_marker,
     {
-        production("tl_sfe100_hn00_fboost3"): "s",
+        production("tl_sfe100_hn00_fboost3"): "o",
     },
 )
 
