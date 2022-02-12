@@ -237,7 +237,6 @@ def fit_power_law(sim_share_type, max_age_myr=np.inf, max_z=np.inf):
     ) as out_file:
         for sim in sims:
             sim_name = plot_utils.get_sim_dirname(sim.run_dir)
-            mass_plot, dn_dlogM = cimf(sim, "initial_bound", max_age_myr, max_z)
             slope, log_norm = fit_power_law_base(mass_plot, dn_dlogM)
 
             # make a plot
