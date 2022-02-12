@@ -166,7 +166,23 @@ def log_power_law(log_xs, slope, log_norm):
 
 def fit_power_law_base(masses, dn_dlogm):
     """
-    Fit a power law slope to the CIMF
+    Fit a power law slope to the CIMF.
+
+    Note that this fit's the slope of dN/dlogM and reports that slope. Typically one
+    reports the slope dN/dM, so to correct for the one must subtract 1 from the value
+    returned here.
+
+    Proof for myself since I forget this every time (treat equals as proportional):
+    dN/dM = M^alpha
+
+    but dlogM = dM / M
+    so dM = M dlogM
+
+    dN/dM = dN/(M dlogM) = M^alpha
+    dN/dlogM = M^(alpha + 1) = M^k
+    where k is what I'm fitting here, the slope in dN/dlogM.
+    alpha + 1 = k
+    alpha = k - 1
     """
     # restrict the fitting to massive clusters and bins that actually have clusters
     idxs = np.logical_and(dn_dlogm > 0, masses > min_fit_m)
@@ -188,26 +204,6 @@ def fit_power_law_base(masses, dn_dlogm):
     # symmetrize the error, which is symmetric in linear space
     logn_err = np.mean([np.log10(dn + dn_err) - logn, logn - np.log10(dn - dn_err)])
 
-def fit_power_law_base(logm, logn, logn_err):
-    """
-    Fit a power law slope to the CIMF.
-
-    Note that this fit's the slope of dN/dlogM and reports that slope. Typically one
-    reports the slope dN/dM, so to correct for the one must subtract 1 from the value
-    returned here.
-
-    Proof for myself since I forget this every time (treat equals as proportional):
-    dN/dM = M^alpha
-
-    but dlogM = dM / M
-    so dM = M dlogM
-
-    dN/dM = dN/(M dlogM) = M^alpha
-    dN/dlogM = M^(alpha + 1) = M^k
-    where k is what I'm fitting here, the slope in dN/dlogM.
-    alpha + 1 = k
-    alpha = k - 1
-    """
     # do the fitting
     def to_minimize(params):
         slope, log_norm = params
