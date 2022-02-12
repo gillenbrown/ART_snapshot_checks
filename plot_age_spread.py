@@ -29,7 +29,8 @@ plot_dir = sentinel.parent
 #
 # ======================================================================================
 sims_last = load_galaxies.get_simulations_last(sys.argv[2:])
-sims_common, common_scale = load_galaxies.get_simulations_common(sys.argv[2:])
+common_redshift = 4
+sims_common = load_galaxies.get_simulations_same_scale(sys.argv[2:], common_redshift)
 
 
 def time_cumulative_hist(sim, time_func, mask_name):
@@ -187,7 +188,7 @@ def plot_age_growth_base(
     if legend:
         # if there is a common redshift, annotate it
         if sim_share_type == "common":
-            title = f"z = {1 / common_scale - 1:.1f}"
+            title = f"z = {common_redshift:.1f}"
         else:
             title = None
         plot_utils.add_legend(ax, loc=4, fontsize=16, title=title)
