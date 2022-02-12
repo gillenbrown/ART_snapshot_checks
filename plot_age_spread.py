@@ -338,7 +338,7 @@ def plot_spread_vs_duration(sim):
     # plot a scatterplot of duration vs age spread
     duration = sim.func_all_galaxies(lambda g: age_spreads.duration(g).to("Myr").value)
     spread = sim.func_all_galaxies(lambda g: age_spreads.age_spread(g).to("Myr").value)
-    ax.scatter(duration, spread, s=0.1, marker=",", alpha=1, edgecolor="")
+    ax.scatter(duration, spread, s=1, marker=",", alpha=1, edgecolor="none")
 
     # plot guiding lines for different accretion histories/
     # This uses equation 12 from Li et al paper 2
