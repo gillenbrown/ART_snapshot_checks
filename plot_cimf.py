@@ -158,10 +158,12 @@ def evolve_cluster_population(galaxy):
 # ======================================================================================
 # define the minium mass to use
 min_fit_m = 1e5
+max_fit_m = 1e7
+m_pivot = 1e5
 
 
-def log_power_law(log_xs, slope, log_norm):
-    return log_norm + slope * log_xs
+def power_law(xs, slope, log_norm):
+    return 10 ** log_norm * ((xs / m_pivot) ** slope)
 
 
 def fit_power_law_base(masses, dn_dlogm):
@@ -184,45 +186,40 @@ def fit_power_law_base(masses, dn_dlogm):
     alpha + 1 = k
     alpha = k - 1
     """
-    # restrict the fitting to massive clusters and bins that actually have clusters
-    idxs = np.logical_and(dn_dlogm > 0, masses > min_fit_m)
-    masses = masses[idxs]
-    dn_dlogm = dn_dlogm[idxs]
-
-    if len(masses) == 1:
-        return -99, -99
-
     # get errors. Assume Poisson errors. Turn dn_dlogm to N first
     dlogm = np.log(10) * (np.log10(masses[1]) - np.log10(masses[0]))
 
     dn = dn_dlogm * dlogm
     dn_err = np.sqrt(dn)
+    # the Poisson error for a bin with zero clusters is technically zero, but make it
+    # 0.5 so as to not break the fitting, and be less than the error for one cluster.
+    dn_err[np.isclose(dn_err, 0)] = 0.5
 
-    # convert this to log, so I can do the fitting there
-    logm = np.log10(masses)
-    logn = np.log10(dn)
-    # symmetrize the error, which is symmetric in linear space
-    logn_err = np.mean(
-        [np.log10(dn + dn_err) - logn, logn - np.log10(dn - dn_err)], axis=0
-    )
+    # restrict the fitting to the mass range. Note that I don't restrict that there are
+    # nonzero clusters in a bin, but I do change the errors to account for that.
+    idxs = np.logical_and(masses < max_fit_m, masses > min_fit_m)
+    fit_masses = masses[idxs]
+    fit_dn = dn[idxs]
+    fit_dn_err = dn_err[idxs]
+
+    if len(fit_masses) == 1:
+        return -99, -99
 
     # do the fitting
     def to_minimize(params):
         slope, log_norm = params
-        predicted_logn = log_power_law(logm, slope, log_norm)
-        return np.sum((predicted_logn - logn) ** 2 / logn_err)
+        predicted_n = power_law(fit_masses, slope, log_norm)
+        return np.sum((predicted_n - fit_dn) ** 2 / fit_dn_err)
 
-    fit_result = optimize.minimize(to_minimize, x0=(-2, 10))
+    fit_result = optimize.minimize(to_minimize, x0=(-2, 4), bounds=((-5, 0), (0, 6)))
     if fit_result.success:
         # correct log_norm for the offset for the log10 in the normalization of the y
         # value. We want to fit in raw numbers, but then plot in dN/dlogM, so we need to
         # add this factor back. We take another log since we return the log of the
         # normalization
-        result = fit_result.x
-        result[1] += np.log10(np.log(10))
-        return result
+        return fit_result.x[0], fit_result.x[1] + np.log10(np.log(10)), dn_err / dlogm
     else:
-        return -99, -99
+        return -99, -99, dn_err / dlogm
 
 
 def fit_power_law(sim_share_type, max_age_myr=np.inf, max_z=np.inf):
@@ -237,21 +234,35 @@ def fit_power_law(sim_share_type, max_age_myr=np.inf, max_z=np.inf):
     ) as out_file:
         for sim in sims:
             sim_name = plot_utils.get_sim_dirname(sim.run_dir)
-            slope, log_norm = fit_power_law_base(mass_plot, dn_dlogM)
+            mass_plot, dn_dlogM = cimf(sim, "initial", max_age_myr, max_z)
+            slope, log_norm, yerr = fit_power_law_base(mass_plot, dn_dlogM)
 
             # make a plot
             fig, ax = bpl.subplots()
             ax.plot(mass_plot, dn_dlogM, c=sim.color)
+            # include shaded region. Artificially adjust the shaded region for visual
+            # purposes
+            visual_factor = 2
+            ax.fill_between(
+                mass_plot,
+                dn_dlogM + visual_factor * yerr,
+                dn_dlogM - visual_factor * yerr,
+                color=sim.color,
+                alpha=0.5,
+            )
 
             # power law slope lines
-            fit_m = np.logspace(np.log10(min_fit_m), 7, 100)
-            fit_n = 10 ** log_power_law(np.log10(fit_m), slope, log_norm)
-            ax.plot(fit_m, fit_n, ls=":", lw=1, c=bpl.almost_black)
+            fit_m = np.logspace(np.log10(min_fit_m), np.log10(max_fit_m), 100)
+            fit_n = power_law(fit_m, slope, log_norm)
+            ax.plot(fit_m, fit_n, ls="--", lw=2, c=bpl.almost_black)
             ax.easy_add_text("$\\alpha=" + f"{slope - 1:.2f}" + "$", "upper right")
 
             # format axes
             ax.set_yscale("log")
             ax.set_xscale("log")
+            # annotate limits used in fit
+            ax.axvline(min_fit_m, ls=":", lw=1, c=bpl.almost_black)
+            ax.axvline(max_fit_m, ls=":", lw=1, c=bpl.almost_black)
             ax.set_limits(1e3, 1e7, 1, 1e6)
             ax.add_labels("$f_i M_i$ [$M_\odot$]", "dN/dlogM")
             fig.savefig(cimf_sentinel.parent / f"cimf_slopefit_{sim_name}.pdf")
