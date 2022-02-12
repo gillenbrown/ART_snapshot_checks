@@ -363,10 +363,12 @@ def plot_spread_vs_duration(sim):
     ax.set_limits(0, 15, 0, 15)
     ax.add_labels("Duration [Myr]", "Age Spread [Myr]")
 
-    ax.legend()
+    ax.legend(loc=2)
 
     plot_name = f"age_comparison_{plot_utils.get_sim_dirname(sim.run_dir)}.png"
     fig.savefig(plot_dir / plot_name)
+    # then remove figure for memory purposes
+    plt.close(fig)
 
 
 # ======================================================================================
@@ -380,7 +382,7 @@ for plot_name in tqdm(load_galaxies.get_plot_names(sims_last)):
             plot_age_mass(plot_name, age_type, share_type)
             for which_mass in ["both_split", "both_share"]:  # ["lo", "hi", ]
                 plot_age_growth(plot_name, age_type, share_type, which_mass)
-for sim in sims_last:
+for sim in tqdm(sims_last):
     plot_spread_vs_duration(sim)
 
 sentinel.touch()
