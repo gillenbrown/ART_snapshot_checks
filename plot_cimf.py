@@ -543,8 +543,9 @@ for plot_name in load_galaxies.get_plot_names(sims_last):
         plot_cimf(plot_name, share_type, ["initial_bound", "initial"])
         # plot recently formed clusters
         plot_cimf(plot_name, share_type, ["initial_bound", "initial"], max_age_myr=300)
-        # plot surviving clusters
-        plot_cimf(plot_name, share_type, ["current"])
+        # plot surviving clusters, with and without guiding lines
+        plot_cimf(plot_name, share_type, ["current"], guiding_lines=False)
+        plot_cimf(plot_name, share_type, ["current"], guiding_lines=True)
     # plot low metallicity clusters. Only do this on the last output
     plot_cimf(plot_name, "last", ["initial"], max_z=0.001)
     # plot cluster population evolved to z=0. Only use the last output for this
