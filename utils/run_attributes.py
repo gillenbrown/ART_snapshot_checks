@@ -82,10 +82,13 @@ names = defaultdict(
         },
         old_ic("discrete_hn00_virial10_entropy_fboost2"): {
             "old_ic_sn_feedback": "$f_{boost}=2$, $f_{HN,0}=0$",
+            "old_ic_sfe": "$f_{boost}=2$, $\epsilon_{ff}=100$%",
+            "old_ic_sfe_fb2": "$\epsilon_{ff}=100$%",
         },
         old_ic("discrete_hn00_virial10_entropy_fboost1"): {
             "old_ic_sn_feedback": "$f_{boost}=1$, $f_{HN,0}=0$",
-            "old_ic_sfe": "$\epsilon_{ff}=100$%",
+            "old_ic_sfe": "$f_{boost}=1$, $\epsilon_{ff}=100$%",
+            "old_ic_sfe_fb1": "$\epsilon_{ff}=100$%",
             "old_ic_virial": "Virial Criterion",
             "old_ic_discreteness": "Discrete SN",
             "old_ic_molecular": "$c_\\rho$=10",
@@ -97,10 +100,20 @@ names = defaultdict(
             "old_ic_molecular": "$c_\\rho$=30",
         },
         old_ic("discrete_hn00_virial10_entropy_fboost1_sfe001"): {
-            "old_ic_sfe": "$\epsilon_{ff}=1$%",
+            "old_ic_sfe": "$f_{boost}=1$, $\epsilon_{ff}=1$%",
+            "old_ic_sfe_fb1": "$\epsilon_{ff}=1$%",
         },
         old_ic("discrete_hn00_virial10_entropy_fboost1_sfe010"): {
-            "old_ic_sfe": "$\epsilon_{ff}=10$%",
+            "old_ic_sfe": "$f_{boost}=1$, $\epsilon_{ff}=10$%",
+            "old_ic_sfe_fb1": "$\epsilon_{ff}=10$%",
+        },
+        old_ic("discrete_hn00_virial10_entropy_fboost2_sfe001"): {
+            "old_ic_sfe": "$f_{boost}=2$, $\epsilon_{ff}=1$%",
+            "old_ic_sfe_fb2": "$\epsilon_{ff}=1$%",
+        },
+        old_ic("discrete_hn00_virial10_entropy_fboost2_sfe010"): {
+            "old_ic_sfe": "$f_{boost}=2$, $\epsilon_{ff}=10$%",
+            "old_ic_sfe_fb2": "$\epsilon_{ff}=10$%",
         },
         old_ic("discrete_hn00_virial10_entropy_molvadim_fboost1"): {
             "old_ic_molecular": "$c_\\rho$=3, GK11 Shielding",
@@ -187,6 +200,8 @@ colors = defaultdict(
         old_ic("discrete_hn50_virial10_entropy_fboost1"): h(0.80, 0.3, 0.7),
         old_ic("discrete_hn00_virial10_entropy_fboost1_sfe010"): h(0.00, 0.35, 0.70),
         old_ic("discrete_hn00_virial10_entropy_fboost1_sfe001"): h(0.00, 0.20, 0.80),
+        old_ic("discrete_hn00_virial10_entropy_fboost2_sfe010"): h(0.08, 0.50, 0.80),
+        old_ic("discrete_hn00_virial10_entropy_fboost2_sfe001"): h(0.08, 0.30, 0.90),
         old_ic("discrete_hn00_virial10_advect"): bpl.almost_black,
         old_ic("discrete_hn00_virial10"): h(0.06, 0.70, 0.80),
         old_ic("continuoushui_hn00_novirial"): h(0.06, 0.30, 0.85),
