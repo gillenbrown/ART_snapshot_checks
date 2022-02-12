@@ -202,7 +202,9 @@ def fit_power_law_base(masses, dn_dlogm):
     logm = np.log10(masses)
     logn = np.log10(dn)
     # symmetrize the error, which is symmetric in linear space
-    logn_err = np.mean([np.log10(dn + dn_err) - logn, logn - np.log10(dn - dn_err)])
+    logn_err = np.mean(
+        [np.log10(dn + dn_err) - logn, logn - np.log10(dn - dn_err)], axis=0
+    )
 
     # do the fitting
     def to_minimize(params):
