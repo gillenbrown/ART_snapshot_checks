@@ -361,7 +361,12 @@ def plot_power_law(ax, slope, x1, x2, y1):
 
 
 def plot_cimf(
-    axis_name, sim_share_type, masses_to_plot, max_age_myr=np.inf, max_z=np.inf
+    axis_name,
+    sim_share_type,
+    masses_to_plot,
+    max_age_myr=np.inf,
+    max_z=np.inf,
+    guiding_lines=False,
 ):
     """
     Plot various versions of the cluster mass function.
@@ -401,6 +406,11 @@ def plot_cimf(
         plot_name += "_initial_with_bound"
     else:
         raise ValueError("This plot not yet named:", masses_to_plot)
+
+    # note that guiding lines are added
+    if guiding_lines:
+        plot_name += "_slopeguide"
+
     # add the age if it's not infinity
     if not np.isinf(max_age_myr):
         plot_name += f"_{max_age_myr}myr"
@@ -465,10 +475,11 @@ def plot_cimf(
     ax.set_limits(1e3, 1e7, y_min, y_max)
 
     # plot the guiding lines
-    # log_space = 0.4 * (np.log10(y_max) - np.log10(y_min))
-    # y_guide = 10 ** (np.log10(y_min) + log_space)
-    # plot_power_law(ax, -2, 1e6, 3e6, y_guide)
-    # plot_power_law(ax, -3, 1e6, 3e6, y_guide)
+    if guiding_lines:
+        log_space = 0.5 * (np.log10(y_max) - np.log10(y_min))
+        y_guide = 10 ** (np.log10(y_min) + log_space)
+        plot_power_law(ax, -2, 2e6, 5e6, y_guide)
+        plot_power_law(ax, -3, 2e6, 5e6, y_guide)
 
     # if there is a common redshift, annotate it
     if sim_share_type == "common":
@@ -494,9 +505,10 @@ def plot_cimf(
 # then actually call this function to build the plots
 for plot_name in load_galaxies.get_plot_names(sims_last):
     for share_type in ["common", "last"]:
-        # plot particle masses
-        plot_cimf(plot_name, share_type, ["initial"])
-        # plot main CIMF and unbound CIMF
+        # plot particle masses with and without guiding lines.
+        plot_cimf(plot_name, share_type, ["initial"], guiding_lines=False)
+        plot_cimf(plot_name, share_type, ["initial"], guiding_lines=True)
+        # plot main CIMF and unbound CIMF. Guiding lines off by default
         plot_cimf(plot_name, share_type, ["initial_bound", "initial"])
         # plot recently formed clusters
         plot_cimf(plot_name, share_type, ["initial_bound", "initial"], max_age_myr=300)
