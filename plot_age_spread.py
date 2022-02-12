@@ -178,7 +178,7 @@ def plot_age_growth_base(
     # add limits appropriately. This dictionary holds the maximum x value for
     # low and high mass, respectively. If we're plotting both, use the high mass for
     # both panels.
-    limits = {"Duration": (5, 15), "Average Age": (3, 6), "Age Spread": (2, 15)}
+    limits = {"Duration": (5, 15), "Average Age": (3, 15), "Age Spread": (2, 15)}
     if both or high:
         idx = 1
     else:
