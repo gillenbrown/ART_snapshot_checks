@@ -185,10 +185,12 @@ def plot_age_growth_base(
     ax.set_limits(0, limits[age_quantity][idx], 0, 1)
 
     if legend:
-        plot_utils.add_legend(ax, loc=4, fontsize=16)
         # if there is a common redshift, annotate it
         if sim_share_type == "common":
-            ax.easy_add_text(f"z = {1/common_scale - 1:.1f}", "upper right")
+            title = f"z = {1 / common_scale - 1:.1f}"
+        else:
+            title = None
+        plot_utils.add_legend(ax, loc=4, fontsize=16, title=title)
 
 
 def plot_age_growth(axis_name, age_quantity, sim_share_type, which_mass):
