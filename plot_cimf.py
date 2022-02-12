@@ -188,7 +188,27 @@ def fit_power_law_base(masses, dn_dlogm):
     # symmetrize the error, which is symmetric in linear space
     logn_err = np.mean([np.log10(dn + dn_err) - logn, logn - np.log10(dn - dn_err)])
 
-    # then do the fitting
+def fit_power_law_base(logm, logn, logn_err):
+    """
+    Fit a power law slope to the CIMF.
+
+    Note that this fit's the slope of dN/dlogM and reports that slope. Typically one
+    reports the slope dN/dM, so to correct for the one must subtract 1 from the value
+    returned here.
+
+    Proof for myself since I forget this every time (treat equals as proportional):
+    dN/dM = M^alpha
+
+    but dlogM = dM / M
+    so dM = M dlogM
+
+    dN/dM = dN/(M dlogM) = M^alpha
+    dN/dlogM = M^(alpha + 1) = M^k
+    where k is what I'm fitting here, the slope in dN/dlogM.
+    alpha + 1 = k
+    alpha = k - 1
+    """
+    # do the fitting
     def to_minimize(params):
         slope, log_norm = params
         predicted_logn = log_power_law(logm, slope, log_norm)
@@ -230,7 +250,7 @@ def fit_power_law(sim_share_type, max_age_myr=np.inf, max_z=np.inf):
             fit_m = np.logspace(np.log10(min_fit_m), 7, 100)
             fit_n = 10 ** log_power_law(np.log10(fit_m), slope, log_norm)
             ax.plot(fit_m, fit_n, ls=":", lw=1, c=bpl.almost_black)
-            ax.easy_add_text("$\\alpha=" + f"{slope:.2f}" + "$", "upper right")
+            ax.easy_add_text("$\\alpha=" + f"{slope - 1:.2f}" + "$", "upper right")
 
             # format axes
             ax.set_yscale("log")
@@ -242,7 +262,7 @@ def fit_power_law(sim_share_type, max_age_myr=np.inf, max_z=np.inf):
             plt.close(fig)
 
             # write to output file
-            out_file.write(f"{str(sim_name)}: {slope:.2f}\n")
+            out_file.write(f"{str(sim_name)}: {slope - 1:.2f}\n")
 
 
 # ======================================================================================
