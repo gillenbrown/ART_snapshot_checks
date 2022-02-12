@@ -265,7 +265,7 @@ def fit_power_law(sim_share_type, max_age_myr=np.inf, max_z=np.inf):
             ax.axvline(max_fit_m, ls=":", lw=1, c=bpl.almost_black)
             ax.set_limits(1e3, 1e7, 1, 1e6)
             ax.add_labels("$f_i M_i$ [$M_\odot$]", "dN/dlogM")
-            ax.easy_add_text(f"z={sim.z}:.1f", "upper left")
+            ax.easy_add_text(f"z={sim.z:.1f}", "upper left")
             fig.savefig(
                 cimf_sentinel.parent / f"cimf_slopefit_{sim_name}_{sim_share_type}.pdf"
             )
