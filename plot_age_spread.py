@@ -178,7 +178,7 @@ def plot_age_growth_base(
     # add limits appropriately. This dictionary holds the maximum x value for
     # low and high mass, respectively. If we're plotting both, use the high mass for
     # both panels.
-    limits = {"Duration": (5, 15), "Average Age": (3, 6), "Age Spread": (2, 4)}
+    limits = {"Duration": (5, 15), "Average Age": (3, 6), "Age Spread": (2, 15)}
     if both or high:
         idx = 1
     else:
@@ -338,7 +338,7 @@ def plot_spread_vs_duration(sim):
     # plot a scatterplot of duration vs age spread
     duration = sim.func_all_galaxies(lambda g: age_spreads.duration(g).to("Myr").value)
     spread = sim.func_all_galaxies(lambda g: age_spreads.age_spread(g).to("Myr").value)
-    ax.scatter(duration, spread, s=1, alpha=1)
+    ax.scatter(duration, spread, s=0.1, marker=",", alpha=1, edgecolor="")
 
     # plot guiding lines for different accretion histories/
     # This uses equation 12 from Li et al paper 2
