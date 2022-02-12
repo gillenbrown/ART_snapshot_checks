@@ -321,7 +321,7 @@ def plot_age_mass(axis_name, age_quantity, sim_share_type):
     # add limits appropriately. This dictionary holds the maximum x value for
     # low and high mass, respectively. If we're plotting both, use the high mass for
     # both panels.
-    limits = {"Duration": 15, "Average Age": 6, "Age Spread": 4}
+    limits = {"Duration": 15, "Average Age": 10, "Age Spread": 10}
     ax.set_limits(1e2, 1e7, 0, limits[age_quantity])
 
     plot_name = f"age_mass_{age_quantity.lower().replace(' ', '_')}"
@@ -329,6 +329,44 @@ def plot_age_mass(axis_name, age_quantity, sim_share_type):
     fig.savefig(plot_dir / plot_name)
     # then remove figure for memory purposes
     plt.close(fig)
+
+
+def plot_spread_vs_duration(sim):
+    fig, ax = bpl.subplots(figsize=[8, 8])
+    ax.equal_scale()
+
+    # plot a scatterplot of duration vs age spread
+    duration = sim.func_all_galaxies(lambda g: age_spreads.duration(g).to("Myr").value)
+    spread = sim.func_all_galaxies(lambda g: age_spreads.age_spread(g).to("Myr").value)
+    ax.scatter(duration, spread, s=1, alpha=1)
+
+    # plot guiding lines for different accretion histories/
+    # This uses equation 12 from Li et al paper 2
+    def t_spread_power_law(t_dur, alpha):
+        return t_dur * (2 * alpha + 1) / (alpha + 1) ** 2
+
+    toy_duration = np.arange(0, 15, 0.01)
+    ax.plot(
+        toy_duration,
+        t_spread_power_law(toy_duration, 0),
+        c=bpl.almost_black,
+        ls="--",
+        label="$\dot{M}=const$",
+    )
+    ax.plot(
+        toy_duration,
+        t_spread_power_law(toy_duration, 1),
+        c=bpl.almost_black,
+        ls=":",
+        label="$\dot{M}\propto t$",
+    )
+    ax.set_limits(0, 15, 0, 15)
+    ax.add_labels("Duration [Myr]", "Age Spread [Myr]")
+
+    ax.legend()
+
+    plot_name = f"age_comparison_{plot_utils.get_sim_dirname(sim.run_dir)}.png"
+    fig.savefig(plot_dir / plot_name)
 
 
 # ======================================================================================
@@ -342,5 +380,7 @@ for plot_name in tqdm(load_galaxies.get_plot_names(sims_last)):
             plot_age_mass(plot_name, age_type, share_type)
             for which_mass in ["both_split", "both_share"]:  # ["lo", "hi", ]
                 plot_age_growth(plot_name, age_type, share_type, which_mass)
+for sim in sims_last:
+    plot_spread_vs_duration(sim)
 
 sentinel.touch()
