@@ -34,9 +34,9 @@ for share_type in ["common", "last"]:
     for scaled in [True, False]:
         key = (share_type, scaled)
         if scaled:
-            filename = f"fit_eps_int_hist_{share_type}.txt"
-        else:
             filename = f"fit_eps_int_ff_hist_{share_type}.txt"
+        else:
+            filename = f"fit_eps_int_hist_{share_type}.txt"
         files[key] = open(sentinel.parent / filename, "w")
 
         files[key].write("Format of the file is as follows:\n")
@@ -192,7 +192,7 @@ def plot_eps_int_histogram(axis_name, sim_share_type, scale_by_epsff=False):
 
         # write them to the correct file
         out_file.write(
-            f"{sim.names[axis_name]} {log_mean:.2f} {10**log_mean:.2f} {std_dex:.2f}\n"
+            f"{sim.names[axis_name]} {log_mean:.2f} {10**log_mean:.4f} {std_dex:.2f}\n"
         )
 
         # if there is something other than sfe100, update the limit
