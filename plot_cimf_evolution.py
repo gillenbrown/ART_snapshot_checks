@@ -11,11 +11,11 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from scipy import special
 import yt
 import betterplotlib as bpl
 
 from utils import load_galaxies, plot_utils, run_attributes
+from analysis_functions import cimf
 
 bpl.set_style()
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -29,75 +29,6 @@ sim_dir = Path(
 
 # ======================================================================================
 #
-# CIMF calculations borrowed from plot_cimf.py and simplified
-#
-# ======================================================================================
-# Then the functions to calculate the CIMF. Here we need to do some analysis
-# of the bound fraction.
-def f_bound(eps_int):
-    # Li et al 2019: https://ui.adsabs.harvard.edu/abs/2019MNRAS.487..364L/abstract
-    # equation 17
-    alpha_star = 0.48
-    f_sat = 0.94
-    term_a = special.erf(np.sqrt(3 * eps_int / alpha_star))
-    term_b = np.sqrt(12 * eps_int / (np.pi * alpha_star))
-    term_c = np.exp(-3 * eps_int / alpha_star)
-    return (term_a - (term_b * term_c)) * f_sat
-
-
-def get_initial_bound_fraction(galaxy):
-    star_initial_mass = galaxy[("STAR", "INITIAL_MASS")].to("Msun").value
-    # the variable named INITIAL_BOUND_FRACTION is not the initial_bound fraction,
-    # it's actually the accumulated mass nearby through the course of accretion, in
-    # code masses. This is used to calculate the formation efficiency, which is then
-    # used to get the bound fraction.
-    star_accumulated_mass = galaxy[("STAR", "INITIAL_BOUND_FRACTION")].to("").value
-    star_accumulated_mass *= galaxy.ds.mass_unit
-    star_accumulated_mass = star_accumulated_mass.to("Msun").value
-
-    eps_int = star_initial_mass / star_accumulated_mass
-
-    return f_bound(eps_int)
-
-
-def cimf(sim):
-
-    mass = []
-    for galaxy in sim.galaxies:
-        # use mass that accounts for stellar evolution
-        raw_mass = galaxy[("STAR", "MASS")].to("Msun").value
-        star_initial_bound = get_initial_bound_fraction(galaxy)
-        tidal_bound_fraction = galaxy[("STAR", "BOUND_FRACTION")].value
-        this_mass = raw_mass * star_initial_bound * tidal_bound_fraction
-
-        mass = np.concatenate([this_mass, mass])
-
-    # create bins with spacing of 0.16 dex
-    bin_width = 0.16  # dex
-    m_boundaries_log = np.arange(3 - 0.5 * bin_width, 7, 0.16)
-    m_centers_log = [
-        np.mean([m_boundaries_log[idx], m_boundaries_log[idx + 1]])
-        for idx in range(len(m_boundaries_log) - 1)
-    ]
-
-    m_boundaries = 10 ** m_boundaries_log
-    m_centers = 10 ** np.array(m_centers_log)
-
-    # then make the histogram showing how many there are per bin
-    hist, edges = np.histogram(mass, bins=m_boundaries)
-    assert np.array_equiv(m_boundaries, edges)
-
-    # We have dN, make it per dLogM
-    hist = np.array(hist) / (bin_width * np.log(10))
-
-    # Also normalize for the number of galaxies
-    hist = hist / sim.n_galaxies
-
-    return m_centers, hist
-
-
-# ======================================================================================
-#
 # redshift evolution of a single run
 #
 # ======================================================================================
@@ -108,24 +39,55 @@ fig, ax = bpl.subplots()
 colors = [
     run_attributes.h(*hsv)
     for hsv in [
-        (0.90, 0.20, 0.90),
-        (0.80, 0.35, 0.75),
-        (0.70, 0.50, 0.60),
-        (0.60, 0.80, 0.10),
+        (0.95, 0.20, 0.95),
+        (0.85, 0.30, 0.85),
+        (0.75, 0.40, 0.72),
+        (0.65, 0.50, 0.60),
+        (0.65, 0.00, 0.15),  # consistent with bpl.almost_black
     ]
 ]
-for z, c in zip([7, 6, 5, 4], colors):
+
+# first figure out which redshifts to show. I'll show z=0, the last output, and 3 others
+sim_last = load_galaxies.get_simulations_last([sim_dir])
+assert len(sim_last) == 1  # check that this worked
+sim_last = sim_last[0]
+last_z = sim_last.z
+# then figure out other zs to show
+if last_z < 2:
+    zs = [6, 5, 4, 3, last_z]
+elif last_z < 3:
+    zs = [7, 6, 5, 4, last_z]
+elif last_z < 4:
+    zs = [7, 6, 5, last_z]
+else:
+    zs = [last_z]
+
+max_yvalue = 0
+for z, c in zip(zs, colors):
     sim = load_galaxies.get_simulations_same_scale([sim_dir], z)
     if len(sim) == 0:  # no sim at this redshift found
         continue
     assert len(sim) == 1
-    plot_masses, dn_dlogM = cimf(sim[0])
-    ax.plot(plot_masses, dn_dlogM, c=c, label=f"z={z}")
+    plot_masses, dn_dlogM = cimf.cimf(sim[0], "current", np.inf, np.inf)
+
+    # determine whether to just show integers in the legend
+    if np.isclose(int(z), z, atol=0.05):
+        label = f"z={z:.0f}"
+    else:
+        label = f"z={z:.1f}"
+    ax.plot(plot_masses, dn_dlogM, c=c, label=label)
+
+    if np.max(dn_dlogM) > max_yvalue:
+        max_yvalue = np.max(dn_dlogM)
+
+# then show analytical disruption to z=0
+plot_masses, dn_dlogM = cimf.cimf(sim_last, "evolved", np.inf, np.inf)
+ax.plot(plot_masses, dn_dlogM, c=bpl.almost_black, ls="--", label=f"z=0")
 
 # format axis
 plot_utils.add_legend(ax, loc=1, fontsize=18)
 ax.set_yscale("log")
 ax.set_xscale("log")
-ax.set_limits(1e3, 1e7, 10, 1e4)
+ax.set_limits(1e3, 1e7, 10, 10 ** (np.ceil(np.log10(max_yvalue))))
 ax.add_labels("$f_b$M [$M_\odot$]", "dN/dlogM")
 fig.savefig(plot)

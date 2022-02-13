@@ -64,6 +64,8 @@ gal_readin_script = ./utils/load_galaxies.py
 plot_utils_script = ./utils/plot_utils.py
 run_attributes_script = ./utils/run_attributes.py
 utils_scripts = $(gal_readin_script) $(plot_utils_script) $(run_attributes_script)
+age_spread_utils = ./analysis_functions/age_spreads.py
+cimf_utils = ./analysis_functions/cimf.py
 dt_history_script = ./dt_history.py
 cfl_script = ./cfl_violations.py
 tidal_consolidation_script = ./tidal_consolidation.py
@@ -451,14 +453,14 @@ $(sfh_sentinel): $(sfh_plots_script) $(utils_scripts) $(rockstar_sentinels)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
-$(cimf_sentinel): $(cimf_plots_script) $(utils_scripts) $(rockstar_sentinels)
+$(cimf_sentinel): $(cimf_plots_script) $(utils_scripts) $(cimf_utils) $(rockstar_sentinels)
 	python $(cimf_plots_script) $(cimf_sentinel) $(sim_dirs_hydro)
 
-$(cimf_evolution_plots): $(cimf_evolution_script) $(utils_scripts) $(rockstar_sentinels)
+$(cimf_evolution_plots): $(cimf_evolution_script) $(utils_scripts) $(cimf_utils) $(rockstar_sentinels)
 	python $(cimf_evolution_script) $@
 
 # Make the age spread plots. 
-$(age_spread_sentinel): $(age_plot_script) $(utils_scripts) $(rockstar_sentinels)
+$(age_spread_sentinel): $(age_plot_script) $(utils_scripts) $(age_spread_utils) $(rockstar_sentinels)
 	python $(age_plot_script) $(age_spread_sentinel) $(sim_dirs_hydro)
 
 # and the galaxy comparison plots
