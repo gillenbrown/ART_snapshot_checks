@@ -66,6 +66,7 @@ elif last_z < 4:
 else:
     zs = [last_z]
 
+max_yvalue = 0
 for z, c in zip(zs, colors):
     sim = load_galaxies.get_simulations_same_scale([sim_dir], z)
     if len(sim) == 0:  # no sim at this redshift found
