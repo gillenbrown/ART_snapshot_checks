@@ -95,7 +95,19 @@ def moving_percentiles(xs, ys, percentile, dx):
     return np.array(bin_centers), np.array(radii_percentiles)
 
 
-def shaded_region(ax, xs, ys, color, p_lo=10, p_hi=90, dx=0.2, log_x=False, label=None):
+def shaded_region(
+    ax,
+    xs,
+    ys,
+    color,
+    p_lo=10,
+    p_hi=90,
+    dx=0.2,
+    alpha=0.5,
+    zorder=0,
+    log_x=False,
+    label=None,
+):
     if log_x:
         xs = np.log10(xs)
 
@@ -113,7 +125,7 @@ def shaded_region(ax, xs, ys, color, p_lo=10, p_hi=90, dx=0.2, log_x=False, labe
     assert np.allclose(c_hi, c_50)
 
     ax.plot(c_50, p_50, c=color, zorder=1, label=label)
-    ax.fill_between(x=c_lo, y1=p_lo, y2=p_hi, color=color, alpha=0.5, zorder=0)
+    ax.fill_between(x=c_lo, y1=p_lo, y2=p_hi, color=color, alpha=alpha, zorder=zorder)
 
 
 # Function to use to set the ticks

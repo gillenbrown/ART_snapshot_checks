@@ -54,7 +54,7 @@ def z_at_f_hn(hn_fraction, f_hn0):
     return f_hn_scale * np.log(hn_fraction / f_hn0)
 
 
-def age_metallicity_plot_base(ax, sim, add_hn_axis=True, label=None):
+def age_metallicity_plot_base(ax, sim, add_hn_axis=True, multiple=False, label=None):
     sim_name = plot_utils.get_sim_dirname(sim.run_dir)
     f_hn0 = get_f_hn0(sim_name)
     for gal in sim.galaxies:
@@ -62,7 +62,24 @@ def age_metallicity_plot_base(ax, sim, add_hn_axis=True, label=None):
             gal[("STAR", "METALLICITY_SNII")] + gal[("STAR", "METALLICITY_SNIa")]
         )
         creation_time = gal[("STAR", "creation_time")].to("Gyr").value
-        plot_utils.shaded_region(ax, creation_time, metallicity, sim.color, label=label)
+
+        if multiple:
+            percentiles = [1, 10, 25]
+        else:
+            percentiles = [25]
+
+        for dp, zorder in zip(percentiles, [0, 1, 2]):
+            plot_utils.shaded_region(
+                ax,
+                creation_time,
+                metallicity,
+                sim.color,
+                p_lo=dp,
+                p_hi=100 - dp,
+                zorder=zorder,
+                label=label,
+                alpha=0.1 + 0.2 * zorder,
+            )
 
     # format axes
     ax.set_yscale("log")
@@ -82,15 +99,19 @@ def age_metallicity_plot_base(ax, sim, add_hn_axis=True, label=None):
         )
 
 
-def age_metallicity_plot(sim):
+def age_metallicity_plot(sim, multiple):
     # get basic info
     sim_name = plot_utils.get_sim_dirname(sim.run_dir)
 
     fig, ax = bpl.subplots()
-    age_metallicity_plot_base(ax, sim)
+    age_metallicity_plot_base(ax, sim, multiple)
 
     # then save the plot
-    fig.savefig(plot_dir / f"cluster_age_metallicity_{sim_name}.pdf")
+    if multiple:
+        plot_name = f"cluster_age_metallicity_{sim_name}_multiple.pdf"
+    else:
+        plot_name = f"cluster_age_metallicity_{sim_name}.pdf"
+    fig.savefig(plot_dir / plot_name)
     # then remove figure for memory purposes
     plt.close(fig)
 
@@ -174,7 +195,8 @@ def mass_age_plot(sim):
 #
 # ======================================================================================
 for sim in sims:
-    age_metallicity_plot(sim)
+    age_metallicity_plot(sim, True)
+    age_metallicity_plot(sim, False)
     mass_metallicity_plot(sim)
     mass_age_plot(sim)
 
