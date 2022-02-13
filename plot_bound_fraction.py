@@ -7,7 +7,7 @@ from pathlib import Path
 
 import sys
 import numpy as np
-from scipy import special
+from scipy import special, optimize
 from matplotlib import pyplot as plt
 
 from utils import load_galaxies, plot_utils
@@ -27,6 +27,23 @@ plot_dir = sentinel.parent
 sims_last = load_galaxies.get_simulations_last(sys.argv[2:])
 common_z = 4.0
 sims_common = load_galaxies.get_simulations_same_scale(sys.argv[2:], common_z)
+
+# and set up files to write mean and std to
+files = dict()
+for share_type in ["common", "last"]:
+    for scaled in [True, False]:
+        key = (share_type, scaled)
+        if scaled:
+            filename = f"fit_eps_int_hist_{share_type}.txt"
+        else:
+            filename = f"fit_eps_int_ff_hist_{share_type}.txt"
+        files[key] = open(sentinel.parent / filename, "w")
+
+        files[key].write("Format of the file is as follows:\n")
+        files[key].write("Simulations are organized by the plots they are on.\n")
+        files[key].write("A given simulation can appear multiple times.\n")
+        files[key].write("Each row is log(mean), mean, std[dex]\n")
+        files[key].write("\n\n")
 
 # ======================================================================================
 #
@@ -79,7 +96,7 @@ def get_dynamical_bound_fraction(galaxy):
 
 # ======================================================================================
 #
-# plotting functions
+# histograms of eps_int
 #
 # ======================================================================================
 def get_eps_ff(sim_dir):
@@ -96,6 +113,131 @@ def get_eps_ff(sim_dir):
         return 1
 
 
+def fit_gaussian(xs, ys, log=True):
+    if log:
+        xs = np.log10(xs)
+
+    def to_minimize(params):
+        norm = 10 ** params[2]
+        test_ys = norm * plot_utils.gaussian(xs, params[0], params[1] ** 2)
+        return np.sum((test_ys - ys) ** 2)
+
+    result = optimize.minimize(
+        to_minimize,
+        x0=np.array([-1, 0.5, 0]),
+        bounds=((-2, 1), (0.001, 0.5), (-3, 1)),
+        tol=1e-10,
+    )
+    assert result.success
+    return result.x
+
+
+def plot_eps_int_histogram(axis_name, sim_share_type, scale_by_epsff=False):
+    """
+    Plot kde histograms of the cluster integrated star formation efficiency
+
+    :param axis_name: The name of the axis, so we can select which simulations go
+                      on this plot.
+    :param sim_share_type: Either "last" or "common". This will determine if
+                           the redshift is labeled as common to all, or
+                           individually per simulation
+
+    """
+    # validate options given
+    if sim_share_type not in ["last", "common"]:
+        raise ValueError("bad sim_share_type")
+
+    # choose which simulations we're using
+    if sim_share_type == "common":
+        sims = sims_common
+    else:
+        sims = sims_last
+
+    fig, ax = bpl.subplots(figsize=[9, 7])
+    x_values = np.logspace(-3, 2, 501)
+    # I need to adjust the limits of the plot depending on the SFE of the sims present
+    # set a default value which will be adjusted
+    x_min = 1e-2
+    x_max = 1
+
+    # set up the file to write out the gaussian fits
+    out_file = files[(sim_share_type, scale_by_epsff)]
+    out_file.write(f"{axis_name}\n")
+    for sim in sims:
+        if axis_name not in sim.axes:
+            continue
+
+        mass = sim.func_all_galaxies(get_initial_mass_msun)
+        eps_int = sim.func_all_galaxies(get_eps_int)
+
+        if scale_by_epsff:
+            eps_ff = get_eps_ff(sim.run_dir)
+            eps_int = eps_int / eps_ff
+
+        plot_y = plot_utils.kde(x_values, eps_int, width=0.05, weights=mass, log=True)
+        ax.plot(
+            x_values,
+            plot_y,
+            c=sim.color,
+            ls=sim.ls,
+            label=plot_utils.plot_label(sim, sim_share_type, axis_name),
+        )
+
+        # also fit a Gaussian to this distribution
+        log_mean, std_dex, log_norm = fit_gaussian(x_values, plot_y, log=True)
+        # gauss_ys = 10 ** log_norm * plot_utils.gaussian(
+        #     np.log10(x_values), mean, std ** 2
+        # )
+        # ax.plot(x_values, gauss_ys, ls=":", c=sim.color)
+
+        # write them to the correct file
+        out_file.write(
+            f"{sim.names[axis_name]} {log_mean:.2f} {10**log_mean:.2f} {std_dex:.2f}"
+        )
+
+        # if there is something other than sfe100, update the limit
+        if "sfe010" in str(sim.run_dir) or "sfe001" in str(sim.run_dir):
+            if scale_by_epsff:
+                x_max = 10
+            else:
+                x_min = 1e-3
+
+    # format axes. limits depend on which runs are shown
+    ax.set_xscale("log")
+    ax.set_limits(x_min, x_max, 0)
+    plot_utils.add_legend(ax, loc=2, fontsize=15, frameon=False)
+    plot_utils.nice_log_axis(ax, "x")
+    if scale_by_epsff:
+        ax.add_labels(
+            "$\epsilon_{int} / \epsilon_{ff}$",
+            "Mass Weighted KDE Density",
+        )
+    else:
+        ax.add_labels(
+            "Integrated Star Formation Efficiency $\epsilon_{int}$",
+            "Mass Weighted KDE Density",
+        )
+
+    # if there is a common redshift, annotate it
+    if sim_share_type == "common":
+        ax.easy_add_text(f"z = {common_z:.1f}", "upper right")
+
+    if scale_by_epsff:
+        fig.savefig(
+            sentinel.parent / f"eps_int_ff_hist_{axis_name}_{sim_share_type}.pdf"
+        )
+
+    else:
+        fig.savefig(sentinel.parent / f"eps_int_hist_{axis_name}_{sim_share_type}.pdf")
+    plt.close(fig)  # to save memory
+    out_file.write("\n\n")
+
+
+# ======================================================================================
+#
+# plotting functions
+#
+# ======================================================================================
 def plot_bound_fraction(axis_name, sim_share_type):
     """
     Plot the cluster initial bound fraction as a function of mass.
@@ -150,90 +292,6 @@ def plot_bound_fraction(axis_name, sim_share_type):
         ax.easy_add_text(f"z = {common_z:.1f}", "upper left")
 
     fig.savefig(sentinel.parent / f"bound_fraction_{axis_name}_{sim_share_type}.pdf")
-    plt.close(fig)  # to save memory
-
-
-def plot_eps_int_histogram(axis_name, sim_share_type, scale_by_epsff=False):
-    """
-    Plot kde histograms of the cluster integrated star formation efficiency
-
-    :param axis_name: The name of the axis, so we can select which simulations go
-                      on this plot.
-    :param sim_share_type: Either "last" or "common". This will determine if
-                           the redshift is labeled as common to all, or
-                           individually per simulation
-
-    """
-    # validate options given
-    if sim_share_type not in ["last", "common"]:
-        raise ValueError("bad sim_share_type")
-
-    # choose which simulations we're using
-    if sim_share_type == "common":
-        sims = sims_common
-    else:
-        sims = sims_last
-
-    fig, ax = bpl.subplots(figsize=[9, 7])
-    x_values = np.logspace(-3, 2, 501)
-    # I need to adjust the limits of the plot depending on the SFE of the sims present
-    # set a default value which will be adjusted
-    x_min = 1e-2
-    x_max = 1
-    for sim in sims:
-        if axis_name not in sim.axes:
-            continue
-
-        mass = sim.func_all_galaxies(get_initial_mass_msun)
-        eps_int = sim.func_all_galaxies(get_eps_int)
-
-        if scale_by_epsff:
-            eps_ff = get_eps_ff(sim.run_dir)
-            eps_int = eps_int / eps_ff
-
-        plot_y = plot_utils.kde(x_values, eps_int, width=0.05, weights=mass, log=True)
-        ax.plot(
-            x_values,
-            plot_y,
-            c=sim.color,
-            ls=sim.ls,
-            label=plot_utils.plot_label(sim, sim_share_type, axis_name),
-        )
-
-        # if there is something other than sfe100, update the limit
-        if "sfe010" in str(sim.run_dir) or "sfe001" in str(sim.run_dir):
-            if scale_by_epsff:
-                x_max = 10
-            else:
-                x_min = 1e-3
-
-    # format axes. limits depend on which runs are shown
-    ax.set_xscale("log")
-    ax.set_limits(x_min, x_max, 0)
-    plot_utils.add_legend(ax, loc=2, fontsize=15, frameon=False)
-    plot_utils.nice_log_axis(ax, "x")
-    if scale_by_epsff:
-        ax.add_labels(
-            "$\epsilon_{int} / \epsilon_{ff}$",
-            "Mass Weighted KDE Density",
-        )
-    else:
-        ax.add_labels(
-            "Integrated Star Formation Efficiency $\epsilon_{int}$",
-            "Mass Weighted KDE Density",
-        )
-
-    # if there is a common redshift, annotate it
-    if sim_share_type == "common":
-        ax.easy_add_text(f"z = {common_z:.1f}", "upper right")
-
-    if scale_by_epsff:
-        fig.savefig(
-            sentinel.parent / f"eps_int_ff_hist_{axis_name}_{sim_share_type}.pdf"
-        )
-
-    else:
-        fig.savefig(sentinel.parent / f"eps_int_hist_{axis_name}_{sim_share_type}.pdf")
     plt.close(fig)  # to save memory
 
 
@@ -368,5 +426,10 @@ for plot_name in load_galaxies.get_plot_names(sims_last):
 
 for sim in sims_last:
     plot_dynamical_bound(sim)
+
+# close the files
+for f in files.values():
+    f.close()
+
 # touch the sentinel once done
 sentinel.touch()
