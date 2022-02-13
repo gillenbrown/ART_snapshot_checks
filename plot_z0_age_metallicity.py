@@ -81,24 +81,25 @@ def plot_age_metallicity(sim):
 
     good_idx = evolved_masses > 1e4
 
-    # ax.scatter(feh[good_idx], ages[good_idx], alpha=1, label="Simulations")
-    ax.shaded_density(
-        feh[good_idx],
-        ages[good_idx],
-        bin_size=0.05,
-        smoothing=0.2,
-        cmap="Greys",
-        log_hist=False,
-    )
-    ax.density_contour(
-        feh[good_idx],
-        ages[good_idx],
-        bin_size=0.05,
-        percent_levels=[0.5, 0.9],
-        smoothing=0.2,
-        colors=bpl.color_cycle[2],
-        labels=True,
-    )
+    if np.sum(good_idx) > 0:  # only plot if we have clusters!
+        # ax.scatter(feh[good_idx], ages[good_idx], alpha=1, label="Simulations")
+        ax.shaded_density(
+            feh[good_idx],
+            ages[good_idx],
+            bin_size=0.05,
+            smoothing=0.2,
+            cmap="Greys",
+            log_hist=False,
+        )
+        ax.density_contour(
+            feh[good_idx],
+            ages[good_idx],
+            bin_size=0.05,
+            percent_levels=[0.5, 0.9],
+            smoothing=0.2,
+            colors=bpl.color_cycle[2],
+            labels=True,
+        )
 
     # plot observational data
     ax.errorbar(
