@@ -49,7 +49,11 @@ colors = [
 
 # first figure out which redshifts to show. I'll show z=0, the last output, and 3 others
 sim_last = load_galaxies.get_simulations_last([sim_dir])
-assert len(sim_last) == 1  # check that this worked
+if len(sim_last) == 0:  # when running on shangrila, Stampede2 sims are not there
+    fig.savefig(plot)
+    exit()
+
+assert len(sim_last) == 1  # check that there aren't 2 for some reason
 sim_last = sim_last[0]
 last_z = sim_last.z
 # then figure out other zs to show
@@ -62,7 +66,6 @@ elif last_z < 4:
 else:
     zs = [last_z]
 
-max_yvalue = 0
 for z, c in zip(zs, colors):
     sim = load_galaxies.get_simulations_same_scale([sim_dir], z)
     if len(sim) == 0:  # no sim at this redshift found
@@ -83,6 +86,9 @@ for z, c in zip(zs, colors):
 # then show analytical disruption to z=0
 plot_masses, dn_dlogM = cimf.cimf(sim_last, "evolved", np.inf, np.inf)
 ax.plot(plot_masses, dn_dlogM, c=bpl.almost_black, ls="--", label=f"z=0")
+
+# and the observed GC mass function
+ax.plot(*cimf.harric_gc_mass_function(), c=bpl.color_cycle[3], ls=":", label="MW GCs")
 
 # format axis
 plot_utils.add_legend(ax, loc=1, fontsize=18)

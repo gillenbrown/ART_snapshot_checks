@@ -1,6 +1,7 @@
+from pathlib import Path
 import numpy as np
 from scipy import special
-from astropy import cosmology
+from astropy import cosmology, table
 from astropy import units as u
 import yt
 
@@ -129,6 +130,27 @@ def evolve_cluster_population(galaxy):
 # CIMF itself
 #
 # ======================================================================================
+def _cimf_base(masses, bin_width=0.16):
+    # create bins with spacing of 0.16 dex
+    m_boundaries_log = np.arange(3 - 0.5 * bin_width, 7, bin_width)
+    m_centers_log = [
+        np.mean([m_boundaries_log[idx], m_boundaries_log[idx + 1]])
+        for idx in range(len(m_boundaries_log) - 1)
+    ]
+
+    m_boundaries = 10 ** m_boundaries_log
+    m_centers = 10 ** np.array(m_centers_log)
+
+    # then make the histogram showing how many there are per bin
+    hist, edges = np.histogram(masses, bins=m_boundaries)
+    assert np.array_equiv(m_boundaries, edges)
+
+    # We have dN, make it per dLogM
+    hist = np.array(hist) / (bin_width * np.log(10))
+
+    return m_centers, hist
+
+
 def cimf(sim, mass_type, max_age_myr, max_z):
     """
     Make the cluster initial mass function.
@@ -198,26 +220,28 @@ def cimf(sim, mass_type, max_age_myr, max_z):
 
             mass = np.concatenate([this_mass, mass])
 
-        # create bins with spacing of 0.16 dex
-        bin_width = 0.16  # dex
-        m_boundaries_log = np.arange(3 - 0.5 * bin_width, 7, 0.16)
-        m_centers_log = [
-            np.mean([m_boundaries_log[idx], m_boundaries_log[idx + 1]])
-            for idx in range(len(m_boundaries_log) - 1)
-        ]
-
-        m_boundaries = 10 ** m_boundaries_log
-        m_centers = 10 ** np.array(m_centers_log)
-
-        # then make the histogram showing how many there are per bin
-        hist, edges = np.histogram(mass, bins=m_boundaries)
-        assert np.array_equiv(m_boundaries, edges)
-
-        # We have dN, make it per dLogM
-        hist = np.array(hist) / (bin_width * np.log(10))
+        m_centers, hist = _cimf_base(mass)
 
         # Also normalize for the number of galaxies
         hist = hist / sim.n_galaxies
 
         sim.precalculated[id_string] = m_centers, hist
     return sim.precalculated[id_string]
+
+
+def harric_gc_mass_function():
+    # Note that I carefully checked this against Figure 3 from Hui paper 3. My
+    # normalization is different than his. I think he forgot the ln(10) factor when
+    # using dlogM. When I remove that factor, I get the same distributions as him.
+    cat_path = Path(__file__).resolve().parent.parent / "data" / "harris_gc_catalog.txt"
+    harris_catalog = table.Table.read(str(cat_path), format="ascii")
+    abs_mag = harris_catalog["M_V,t"]
+    harris_catalog["m_to_l"] = 1.3 + 4.5 / (1 + np.exp(2 * abs_mag + 21.4))
+    # convert abs_mag to luminosity
+    # M - M_sun = -2.5 log (L / L_sun)
+    # (M_sun - M) / 2.5 = log(L / L_sun)
+    # L = L_sun * 10**((M - M_sun) / 2.5)
+    M_sun = 4.83
+    harris_catalog["luminosity"] = 10 ** ((M_sun - abs_mag) / 2.5)
+    harris_catalog["mass"] = harris_catalog["luminosity"] * harris_catalog["m_to_l"]
+    return _cimf_base(harris_catalog["mass"])

@@ -264,6 +264,11 @@ def plot_cimf(
 
             ax.plot(mass_plot, dn_dlogM, c=sim.color, ls=ls, label=label)
 
+    # if we're plotting evolved masses, include the MW GCs
+    if "current" in masses_to_plot:
+        ax.plot(
+            *cimf.harric_gc_mass_function(), ls="--", c=bpl.almost_black, label="MW GCs"
+        )
     # format axes
     plot_utils.add_legend(ax, loc=1, fontsize=18)
     ax.set_yscale("log")
