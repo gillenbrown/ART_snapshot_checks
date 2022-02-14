@@ -85,6 +85,12 @@ def plot_age_metallicity(sim):
 
         good_idx = evolved_masses > 1e4
 
+        # notate runs that are unreliable
+        if sim.unreliable_mass < np.inf:
+            ls = ":"
+        else:
+            ls = "-"
+
         if np.sum(good_idx) > 0:  # only plot if we have clusters!
             # ax.scatter(feh[good_idx], ages[good_idx], alpha=1, label="Simulations")
             ax.density_contour(
@@ -94,6 +100,7 @@ def plot_age_metallicity(sim):
                 percent_levels=[0.5, 0.9],
                 smoothing=0.2,
                 colors=color,
+                linestyles=ls,
                 labels=True,
             )
         total_feh = np.concatenate([total_feh, feh[good_idx]])
