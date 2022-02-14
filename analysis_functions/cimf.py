@@ -45,7 +45,7 @@ def get_initial_bound_fraction(galaxy):
 # tidal evolution to z=0
 #
 # ======================================================================================
-omega_tid = 200 / yt.units.Gyr
+omega_tid = 175 / yt.units.Gyr  # calibrated to match MW GC number
 dt = 100 * yt.units.Myr
 
 
