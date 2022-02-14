@@ -88,6 +88,16 @@ class Simulation(object):
         self.z = self.ds.current_redshift
         self.scale_factor = 1 / (1 + self.z)
 
+        # we need to be careful with a couple of runs. Runs with epsff=1% or runs
+        # with 10% and fboost=1 are unreliable above 10^5 Msun
+        run_dir_str = str(self.run_dir)
+        if "sfe001" in run_dir_str or (
+            "sfe010" in run_dir_str and "fboost1" in run_dir_str
+        ):
+            self.reliable = False
+        else:
+            self.reliable = True
+
         # get the axis names and other stuff. The dictionaries are defaultdicts, so
         # there is no need to worry about key errors
         self.names = run_attributes.names[self.run_dir]
