@@ -175,18 +175,22 @@ def plot_eps_int_histogram(axis_name, sim_share_type, scale_by_epsff=False):
             eps_int = eps_int / eps_ff
 
         plot_y = plot_utils.kde(x_values, eps_int, width=0.05, weights=mass, log=True)
+        if sim.reliable:
+            ls = "-"
+        else:
+            ls = "--"
         ax.plot(
             x_values,
             plot_y,
             c=sim.color,
-            ls=sim.ls,
+            ls=ls,
             label=plot_utils.plot_label(sim, sim_share_type, axis_name),
         )
 
         # also fit a Gaussian to this distribution
         log_mean, std_dex, log_norm = fit_gaussian(x_values, plot_y, log=True)
         # gauss_ys = 10 ** log_norm * plot_utils.gaussian(
-        #     np.log10(x_values), mean, std ** 2
+        #     np.log10(x_values), log_mean, std_dex ** 2
         # )
         # ax.plot(x_values, gauss_ys, ls=":", c=sim.color)
 
@@ -276,6 +280,7 @@ def plot_bound_fraction(axis_name, sim_share_type):
             p_lo=25,
             p_hi=75,
             log_x=True,
+            cut_x=sim.unreliable_mass,
             label=plot_utils.plot_label(sim, sim_share_type, axis_name),
         )
 
@@ -333,6 +338,7 @@ def plot_eps_int(axis_name, sim_share_type):
             p_lo=25,
             p_hi=75,
             log_x=True,
+            cut_x=sim.unreliable_mass,
             label=plot_utils.plot_label(sim, sim_share_type, axis_name),
         )
 
@@ -373,18 +379,18 @@ def plot_dynamical_bound(sim):
     while logm_max > 3.5:
         logm_min = logm_max - dlogm
         assert np.isclose(logm_min, int(logm_min))  # only integers for the legend
-        # label = (
-        #     "$10^{"
-        #     + f"{logm_min:.0f}"
-        #     + "} M_\odot < M_{b, i} < 10^{"
-        #     + f"{logm_max:.0f}"
-        #     + "} M_\odot$"
-        # )
         label = (
             "$10^{" + f"{logm_min:.0f}" + "} - 10^{" + f"{logm_max:.0f}" + "} M_\odot$"
         )
 
         idx = np.logical_and(m_initial > 10 ** logm_min, m_initial < 10 ** logm_max)
+
+        # figure out if this mass range is reliable. To do this we assign the whole
+        # age range to be unreliable at this mass range
+        if logm_min >= np.log10(sim.unreliable_mass):
+            cut_age = 0
+        else:
+            cut_age = np.inf
 
         plot_utils.shaded_region(
             ax,
@@ -393,6 +399,7 @@ def plot_dynamical_bound(sim):
             colors[c_idx],
             p_lo=25,
             p_hi=75,
+            cut_x=cut_age,
             dx={3: 0.1, 4: 0.3, 5: 0.3}[logm_min],
             log_x=False,
             label=label,
