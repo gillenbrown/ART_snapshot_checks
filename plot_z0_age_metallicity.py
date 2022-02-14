@@ -65,7 +65,51 @@ def get_birth_time(galaxy):
     return galaxy[("STAR", "creation_time")].to("Gyr").value
 
 
-def plot_age_metallicity(sim):
+def _plot_age_metallicity_contours(ax, feh, ages, color, ls):
+    if len(feh) > 0:  # only plot if we have clusters!
+        # ax.scatter(feh[good_idx], ages[good_idx], alpha=1, label="Simulations")
+        ax.density_contour(
+            feh,
+            ages,
+            bin_size=0.05,
+            percent_levels=[0.5, 0.9],
+            smoothing=0.2,
+            colors=color,
+            linestyles=ls,
+            labels=True,
+        )
+
+
+def _plot_age_metallicity_base_combine(ax, sim, t_z_0, ls):
+    total_feh = sim.func_all_galaxies(get_feh)
+    total_ages = t_z_0 - sim.func_all_galaxies(get_birth_time)
+    evolved_masses = sim.func_all_galaxies(cimf.evolve_cluster_population)
+    good_idx = evolved_masses > 1e4
+
+    _plot_age_metallicity_contours(
+        ax, total_feh[good_idx], total_ages[good_idx], bpl.color_cycle[0], ls
+    )
+
+    return total_feh, total_ages
+
+
+def _plot_age_metallicity_base_split(ax, sim, t_z_0, ls):
+    total_feh, total_ages = [], []
+    for galaxy, color in zip(sim.galaxies, [bpl.color_cycle[0], bpl.color_cycle[3]]):
+        feh = get_feh(galaxy)
+        ages = t_z_0 - get_birth_time(galaxy)
+        evolved_masses = cimf.evolve_cluster_population(galaxy)
+        good_idx = evolved_masses > 1e4
+
+        _plot_age_metallicity_contours(ax, feh[good_idx], ages[good_idx], color, ls)
+
+        total_feh = np.concatenate([total_feh, feh[good_idx]])
+        total_ages = np.concatenate([total_ages, ages[good_idx]])
+
+    return total_feh, total_ages
+
+
+def plot_age_metallicity(sim, combine=False):
     fig, ax = bpl.subplots(figsize=[8, 7])
 
     # get cosmology to get age of the universe at z=0
@@ -74,37 +118,17 @@ def plot_age_metallicity(sim):
     cosmo = cosmology.FlatLambdaCDM(H0=H_0, Om0=omega_matter, Tcmb0=2.725)
     t_z_0 = cosmo.age(0).to("Gyr").value
 
+    # notate runs that are unreliable
+    if sim.unreliable_mass < np.inf:
+        ls = ":"
+    else:
+        ls = "-"
+
     # Use all clusters for the shaded density, but plot contours individually
-    total_feh = []
-    total_ages = []
-    for galaxy, color in zip(sim.galaxies, [bpl.color_cycle[0], bpl.color_cycle[3]]):
-        feh = get_feh(galaxy)
-        birth_time = get_birth_time(galaxy)
-        ages = t_z_0 - birth_time
-        evolved_masses = cimf.evolve_cluster_population(galaxy)
-
-        good_idx = evolved_masses > 1e4
-
-        # notate runs that are unreliable
-        if sim.unreliable_mass < np.inf:
-            ls = ":"
-        else:
-            ls = "-"
-
-        if np.sum(good_idx) > 0:  # only plot if we have clusters!
-            # ax.scatter(feh[good_idx], ages[good_idx], alpha=1, label="Simulations")
-            ax.density_contour(
-                feh[good_idx],
-                ages[good_idx],
-                bin_size=0.05,
-                percent_levels=[0.5, 0.9],
-                smoothing=0.2,
-                colors=color,
-                linestyles=ls,
-                labels=True,
-            )
-        total_feh = np.concatenate([total_feh, feh[good_idx]])
-        total_ages = np.concatenate([total_ages, ages[good_idx]])
+    if combine:
+        total_feh, total_ages = _plot_age_metallicity_base_combine(ax, sim, t_z_0, ls)
+    else:
+        total_feh, total_ages = _plot_age_metallicity_base_split(ax, sim, t_z_0, ls)
 
     if len(total_feh) > 0:
         ax.shaded_density(
@@ -134,7 +158,12 @@ def plot_age_metallicity(sim):
 
     # then save the plot
     sim_name = plot_utils.get_sim_dirname(sim.run_dir)
-    fig.savefig(plot_dir / f"z0_age_metallicity_{sim_name}.pdf")
+    if combine:
+        plot_name = f"z0_age_metallicity_{sim_name}.pdf"
+    else:
+        plot_name = f"z0_age_metallicity_{sim_name}_split.pdf"
+
+    fig.savefig(plot_dir / plot_name)
     # then remove figure for memory purposes
     plt.close(fig)
 
@@ -145,6 +174,8 @@ def plot_age_metallicity(sim):
 #
 # ======================================================================================
 for sim in sims:
-    plot_age_metallicity(sim)
+    plot_age_metallicity(sim, combine=True)
+    if len(sim.galaxies) > 1:
+        plot_age_metallicity(sim, combine=False)
 
 sentinel.touch()
