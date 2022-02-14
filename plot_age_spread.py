@@ -29,8 +29,8 @@ plot_dir = sentinel.parent
 #
 # ======================================================================================
 sims_last = load_galaxies.get_simulations_last(sys.argv[2:])
-# common_redshift = 4
-# sims_common = load_galaxies.get_simulations_same_scale(sys.argv[2:], common_redshift)
+common_redshift = 4
+sims_common = load_galaxies.get_simulations_same_scale(sys.argv[2:], common_redshift)
 
 
 def time_cumulative_hist(sim, time_func, mask_name):
@@ -387,15 +387,12 @@ def plot_spread_vs_duration(sim):
 #
 # ======================================================================================
 for plot_name in tqdm(load_galaxies.get_plot_names(sims_last)):
-    if plot_name != "old_ic_sfe_fb1":
-        continue
-    for share_type in ["last"]:
-        for age_type in ["Age Spread"]:
+    for share_type in ["common", "last"]:
+        for age_type in ["Duration", "Average Age", "Age Spread"]:
             plot_age_mass(plot_name, age_type, share_type)
             for which_mass in ["both_split"]:  # ["lo", "hi", "both_share"]
                 plot_age_growth(plot_name, age_type, share_type, which_mass)
-# for sim in tqdm(sims_last):
-#     plot_spread_vs_duration(sim)
+for sim in tqdm(sims_last):
+    plot_spread_vs_duration(sim)
 
-raise ValueError("reset, but keep out both_share")
 sentinel.touch()
