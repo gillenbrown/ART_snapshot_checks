@@ -131,7 +131,7 @@ def evolve_cluster_population(galaxy):
 # ======================================================================================
 def _cimf_base(masses, bin_width=0.16):
     # create bins with spacing of 0.16 dex
-    m_boundaries_log = np.arange(3 - 0.5 * bin_width, 7, bin_width)
+    m_boundaries_log = np.arange(3 - 0.5 * bin_width, 8, bin_width)
     m_centers_log = [
         np.mean([m_boundaries_log[idx], m_boundaries_log[idx + 1]])
         for idx in range(len(m_boundaries_log) - 1)

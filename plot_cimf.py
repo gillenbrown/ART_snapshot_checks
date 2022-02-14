@@ -286,20 +286,16 @@ def plot_cimf(
     ax.set_xscale("log")
     # have different y limits for different versions of the plot
     # the minimum value in the plot is 1 / (0.16 * ln(10) = 2.5
-    # put the plot limit just above that, to make it cleaner and stop
-    # weird vertical lines.
+    # put the plot limit just below that to show the maximum cluster mass
+    y_min = 2
     if not np.isinf(max_age_myr):
         # small timeframe, don't need to show much.
-        y_min = 3
         y_max = 1e4
     elif "current" in masses_to_plot:
-        y_min = 10
         y_max = 1e4
     elif sim_share_type == "common" or axis_name == "lg_sfe":
-        y_min = 10
         y_max = 1e5
     else:
-        y_min = 10
         y_max = 1e6
     ax.set_limits(1e3, 1e7, y_min, y_max)
 
