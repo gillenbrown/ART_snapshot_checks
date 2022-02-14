@@ -79,7 +79,7 @@ for z, c in zip(zs, colors):
         label = f"z={z:.0f}"
     else:
         label = f"z={z:.1f}"
-    ax.plot(plot_masses, dn_dlogM, c=c, label=label)
+    ax.plot(plot_masses, dn_dlogM, c=c, label=label, zorder=5)
 
     if np.max(dn_dlogM) > max_yvalue:
         max_yvalue = np.max(dn_dlogM)
@@ -89,12 +89,17 @@ plot_masses, dn_dlogM = cimf.cimf(sim_last, "evolved", np.inf, np.inf)
 ax.plot(plot_masses, dn_dlogM, c=bpl.almost_black, ls="--", label=f"z=0")
 
 # and the observed GC mass function
-ax.plot(*cimf.harric_gc_mass_function(), c=bpl.color_cycle[3], ls=":", label="MW GCs")
+m_mw_gc, y_mw_gc = cimf.harric_gc_mass_function()
+# ax.plot(m_mw_gc, y_mw_gc, c="0.5", ls=":", label="MW GCs", zorder=0)
+ax.fill_between(x=m_mw_gc, y1=0, y2=y_mw_gc, color="0.5", alpha=0.5, zorder=1)
 
 # format axis
 plot_utils.add_legend(ax, loc=1, fontsize=18)
 ax.set_yscale("log")
 ax.set_xscale("log")
-ax.set_limits(1e3, 1e7, 10, 10 ** (np.ceil(np.log10(max_yvalue))))
+# put 1 cluster as the y lower limit of the plot
+ax.set_limits(
+    1e3, 1e7, 0.8 / (0.16 * np.log(10)), 10 ** (np.ceil(np.log10(max_yvalue)))
+)
 ax.add_labels("$f_b$M [$M_\odot$]", "dN/dlogM")
 fig.savefig(plot)

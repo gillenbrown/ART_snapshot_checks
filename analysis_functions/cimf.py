@@ -45,7 +45,7 @@ def get_initial_bound_fraction(galaxy):
 # tidal evolution to z=0
 #
 # ======================================================================================
-dt = 100 * yt.units.Myr
+dt = 200 * yt.units.Myr
 
 
 def t_tidal(M):
@@ -232,7 +232,7 @@ def cimf(sim, mass_type, max_age_myr, max_z):
 def harric_gc_mass_function():
     # Note that I carefully checked this against Figure 3 from Hui paper 3. My
     # normalization is different than his. I think he forgot the ln(10) factor when
-    # using dlogM. When I remove that factor, I get the same distributions as him.
+    # using dlogM. When I remove that factor, I get similar normalizations as him.
     cat_path = Path(__file__).resolve().parent.parent / "data" / "harris_gc_catalog.txt"
     harris_catalog = table.Table.read(str(cat_path), format="ascii")
     abs_mag = harris_catalog["M_V,t"]
@@ -241,7 +241,7 @@ def harric_gc_mass_function():
     # M - M_sun = -2.5 log (L / L_sun)
     # (M_sun - M) / 2.5 = log(L / L_sun)
     # L = L_sun * 10**((M - M_sun) / 2.5)
-    M_sun = 4.83
+    M_sun = 4.81  # Willmer 2018 ApJS 236 47
     harris_catalog["luminosity"] = 10 ** ((M_sun - abs_mag) / 2.5)
     harris_catalog["mass"] = harris_catalog["luminosity"] * harris_catalog["m_to_l"]
     return _cimf_base(harris_catalog["mass"])
