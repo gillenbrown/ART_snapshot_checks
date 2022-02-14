@@ -74,31 +74,39 @@ def plot_age_metallicity(sim):
     cosmo = cosmology.FlatLambdaCDM(H0=H_0, Om0=omega_matter, Tcmb0=2.725)
     t_z_0 = cosmo.age(0).to("Gyr").value
 
-    feh = sim.func_all_galaxies(get_feh)
-    birth_time = sim.func_all_galaxies(get_birth_time)
-    ages = t_z_0 - birth_time
-    evolved_masses = sim.func_all_galaxies(cimf.evolve_cluster_population)
+    # Use all clusters for the shaded density, but plot contours individually
+    total_feh = []
+    total_ages = []
+    for galaxy, color in zip(sim.galaxies, [bpl.color_cycle[0], bpl.color_cycle[3]]):
+        feh = get_feh(galaxy)
+        birth_time = get_birth_time(galaxy)
+        ages = t_z_0 - birth_time
+        evolved_masses = cimf.evolve_cluster_population(galaxy)
 
-    good_idx = evolved_masses > 1e4
+        good_idx = evolved_masses > 1e4
 
-    if np.sum(good_idx) > 0:  # only plot if we have clusters!
-        # ax.scatter(feh[good_idx], ages[good_idx], alpha=1, label="Simulations")
+        if np.sum(good_idx) > 0:  # only plot if we have clusters!
+            # ax.scatter(feh[good_idx], ages[good_idx], alpha=1, label="Simulations")
+            ax.density_contour(
+                feh[good_idx],
+                ages[good_idx],
+                bin_size=0.05,
+                percent_levels=[0.5, 0.9],
+                smoothing=0.2,
+                colors=color,
+                labels=True,
+            )
+        total_feh = np.concatenate([total_feh, feh[good_idx]])
+        total_ages = np.concatenate([total_ages, ages[good_idx]])
+
+    if len(total_feh) > 0:
         ax.shaded_density(
-            feh[good_idx],
-            ages[good_idx],
+            total_feh,
+            total_ages,
             bin_size=0.05,
             smoothing=0.2,
             cmap="Greys",
             log_hist=False,
-        )
-        ax.density_contour(
-            feh[good_idx],
-            ages[good_idx],
-            bin_size=0.05,
-            percent_levels=[0.5, 0.9],
-            smoothing=0.2,
-            colors=bpl.color_cycle[2],
-            labels=True,
         )
 
     # plot observational data
@@ -107,7 +115,7 @@ def plot_age_metallicity(sim):
         y=gc_age,
         yerr=gc_age_err,
         xerr=0.15,
-        c=bpl.color_cycle[0],
+        c=bpl.color_cycle[2],
         label="MW GCs",
         zorder=100,
     )
