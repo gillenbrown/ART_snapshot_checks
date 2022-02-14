@@ -141,6 +141,12 @@ def mass_metallicity_plot(sim):
             ax, metallicity, mass, sim.color, p_lo=50, p_hi=50, log_x=True, dx=0.2
         )
 
+        # note where the masses can be unreliable
+        if sim.unreliable_mass < np.inf:
+            ax.axhline(
+                sim.unreliable_mass, ls=":", lw=4, zorder=10, c=bpl.color_cycle[3]
+            )
+
         # format axes
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -175,6 +181,12 @@ def mass_age_plot(sim):
         plot_utils.shaded_region(
             ax, creation_time, mass, sim.color, p_lo=50, p_hi=50, log_x=False, dx=0.2
         )
+
+        # note where the masses can be unreliable
+        if sim.unreliable_mass < np.inf:
+            ax.axhline(
+                sim.unreliable_mass, ls=":", lw=4, zorder=10, c=bpl.color_cycle[3]
+            )
 
         # format axes
         ax.set_yscale("log")
