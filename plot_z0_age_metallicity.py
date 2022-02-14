@@ -129,7 +129,7 @@ def plot_age_metallicity(sim):
 
     # format plot
     ax.add_labels("[Fe/H]", "Age [Gyr]")
-    ax.set_limits(-3, 0.5, 10, 14)
+    ax.set_limits(-3, 0, 10, 14)
     ax.legend()
 
     # then save the plot
