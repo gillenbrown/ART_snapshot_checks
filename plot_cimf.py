@@ -264,32 +264,17 @@ def plot_cimf(
 
             # for runs that are unreliable, plot them with solid lines up to 10^5, then
             # dashed lines above that
-            if sim.reliable:
-                ax.plot(mass_plot, dn_dlogM, c=sim.color, ls=ls, label=label)
-            else:
-                # find the first index where the mass is above 10^5
-                for cut_idx in range(len(mass_plot)):
-                    if mass_plot[cut_idx] > 1e5:
-                        break
+            plot_utils.plot_line_with_cut(
+                ax,
+                mass_plot,
+                dn_dlogM,
+                cut_x=sim.unreliable_mass,
+                c=sim.color,
+                ls1=ls,
+                ls2="--",
+                label=label,
+            )
 
-                # when plotting the reliable range, stick to the clusters below 10^5, so
-                # ones before cut_idx. In python slicing last index is not included
-                ax.plot(
-                    mass_plot[:cut_idx],
-                    dn_dlogM[:cut_idx],
-                    c=sim.color,
-                    ls="-",
-                    label=label,
-                )
-                # then the unreliable clusters. We start at the place the unreliable
-                # range ended to get a continuous line
-                ax.plot(
-                    mass_plot[cut_idx - 1 :],
-                    dn_dlogM[cut_idx - 1 :],
-                    c=sim.color,
-                    ls="--",
-                    label=None,
-                )
     # if we're plotting evolved masses, include the MW GCs
     if "current" in masses_to_plot:
         ax.plot(

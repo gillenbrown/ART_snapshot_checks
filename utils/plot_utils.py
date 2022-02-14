@@ -105,11 +105,14 @@ def shaded_region(
     dx=0.2,
     alpha=0.5,
     zorder=0,
+    cut_x=np.inf,
     log_x=False,
     label=None,
 ):
+    # cut_x is the x value above which we plot dashed lines.
     if log_x:
         xs = np.log10(xs)
+        cut_x = np.log10(cut_x)
 
     c_lo, p_lo = moving_percentiles(xs, ys, p_lo, dx)
     c_50, p_50 = moving_percentiles(xs, ys, 50, dx)
@@ -124,8 +127,25 @@ def shaded_region(
     assert np.allclose(c_lo, c_50)
     assert np.allclose(c_hi, c_50)
 
-    ax.plot(c_50, p_50, c=color, zorder=1, label=label)
+    plot_line_with_cut(ax, c_50, p_50, cut_x, color=color, zorder=1, label=label)
     ax.fill_between(x=c_lo, y1=p_lo, y2=p_hi, color=color, alpha=alpha, zorder=zorder)
+
+
+def plot_line_with_cut(ax, xs, ys, cut_x, label, ls1="-", ls2="--", **kwargs):
+    """
+    plot a line, with different linestyles before and after a given point
+    """
+    # find the range at which we need to start plotting dashed lines
+    for cut_idx in range(len(xs)):
+        if xs[cut_idx] > cut_x:
+            # cut at the index we're at now
+            ax.plot(xs[:cut_idx], ys[:cut_idx], ls=ls1, label=label, **kwargs)
+            # then the unreliable range. We start at the place the unreliable
+            # range ended to get a continuous line
+            ax.plot(xs[cut_idx - 1 :], ys[cut_idx - 1 :], ls=ls2, label=None, **kwargs)
+            break  # end the loop so we don't plot more
+    else:  # no break found
+        ax.plot(xs, ys, ls=ls1, label=label, **kwargs)
 
 
 # Function to use to set the ticks
