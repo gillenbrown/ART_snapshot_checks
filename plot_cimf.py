@@ -294,9 +294,9 @@ def plot_cimf(
     elif "current" in masses_to_plot:
         y_max = 1e4
     elif (
-        sim_share_type == "common"
+        sim_share_type == "last"
         and axis_name == "lg_sfe"
-        and "current" in masses_to_plot
+        and "initial" in masses_to_plot
     ):
         y_max = 1e6
     elif sim_share_type == "common" or axis_name == "lg_sfe":
