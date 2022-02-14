@@ -46,7 +46,7 @@ def get_initial_bound_fraction(galaxy):
 #
 # ======================================================================================
 omega_tid = 100 / yt.units.Gyr
-dt = 10 * yt.units.Myr
+dt = 100 * yt.units.Myr
 
 
 def t_tidal(M):
