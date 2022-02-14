@@ -112,7 +112,7 @@ def shaded_region(
     # cut_x is the x value above which we plot dashed lines.
     if log_x:
         xs = np.log10(xs)
-        cut_x = np.log10(cut_x)
+        # don't take the log of cut, since it's not used until later.
 
     c_lo, p_lo = moving_percentiles(xs, ys, p_lo, dx)
     c_50, p_50 = moving_percentiles(xs, ys, 50, dx)
@@ -127,7 +127,9 @@ def shaded_region(
     assert np.allclose(c_lo, c_50)
     assert np.allclose(c_hi, c_50)
 
-    plot_line_with_cut(ax, c_50, p_50, cut_x, color=color, zorder=1, label=label)
+    plot_line_with_cut(
+        ax, c_50, p_50, cut_x, color=color, zorder=zorder + 1, label=label
+    )
     ax.fill_between(x=c_lo, y1=p_lo, y2=p_hi, color=color, alpha=alpha, zorder=zorder)
 
 
@@ -136,6 +138,11 @@ def plot_line_with_cut(ax, xs, ys, cut_x, label, ls1="-", ls2="--", **kwargs):
     plot a line, with different linestyles before and after a given point
     """
     # find the range at which we need to start plotting dashed lines
+    # the below code breaks if the cut is below all values, so do that independently
+    if cut_x < np.min(xs):
+        ax.plot(xs, ys, ls=ls2, label=label, **kwargs)
+        return
+    # somewhere in the middle
     for cut_idx in range(len(xs)):
         if xs[cut_idx] > cut_x:
             # cut at the index we're at now

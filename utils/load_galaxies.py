@@ -95,8 +95,10 @@ class Simulation(object):
             "sfe010" in run_dir_str and "fboost1" in run_dir_str
         ):
             self.unreliable_mass = 1e5
+            self.reliable = False
         else:
             self.unreliable_mass = np.inf
+            self.reliable = True
 
         # get the axis names and other stuff. The dictionaries are defaultdicts, so
         # there is no need to worry about key errors
