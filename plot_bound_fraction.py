@@ -385,7 +385,7 @@ def plot_dynamical_bound(sim):
 
         # select the clusters in this mass range.
         idx = np.logical_and(m_initial > 10 ** logm_min, m_initial < 10 ** logm_max)
-        if np.sum(idx) == 0:  # no clusters in this range
+        if np.sum(idx) < 2:  # not enough clusters in this range
             continue
 
         # figure out if this mass range is reliable. To do this we assign the whole
