@@ -96,7 +96,7 @@ for z, c in zip(zs, colors):
 
 # then show analytical disruption to z=0
 plot_masses, dn_dlogM = cimf.cimf(sim_last, "evolved", np.inf, np.inf)
-ax.plot(plot_masses, dn_dlogM, c=bpl.almost_black, ls="--", label=f"z=0")
+ax.plot(plot_masses, dn_dlogM, c=bpl.almost_black, ls="--", label=f"z=0", zorder=100)
 
 # and the observed GC mass function
 m_mw_gc, y_mw_gc = cimf.harric_gc_mass_function()
