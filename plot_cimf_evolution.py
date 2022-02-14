@@ -79,7 +79,17 @@ for z, c in zip(zs, colors):
         label = f"z={z:.0f}"
     else:
         label = f"z={z:.1f}"
-    ax.plot(plot_masses, dn_dlogM, c=c, label=label, zorder=5)
+
+    plot_utils.plot_line_with_cut(
+        ax,
+        plot_masses,
+        dn_dlogM,
+        cut_x=sim_last.unreliable_mass,
+        c=c,
+        label=label,
+        ls2=":",  # to distinguish from evolved z=0 line
+        zorder=5,
+    )
 
     if np.max(dn_dlogM) > max_yvalue:
         max_yvalue = np.max(dn_dlogM)
