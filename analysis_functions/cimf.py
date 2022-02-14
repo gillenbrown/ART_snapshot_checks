@@ -45,12 +45,11 @@ def get_initial_bound_fraction(galaxy):
 # tidal evolution to z=0
 #
 # ======================================================================================
-dt = 200 * yt.units.Myr
+omega_tid = 100 / yt.units.Gyr
+dt = 10 * yt.units.Myr
 
 
 def t_tidal(M):
-    omega_tid = 50 / yt.units.Gyr
-
     term_1 = 10 * yt.units.Gyr
     term_2 = (M / (2e5 * yt.units.Msun)) ** (2 / 3)
     term_3 = 100 / (omega_tid * yt.units.Gyr)
