@@ -29,8 +29,8 @@ plot_dir = sentinel.parent
 #
 # ======================================================================================
 sims_last = load_galaxies.get_simulations_last(sys.argv[2:])
-common_redshift = 4
-sims_common = load_galaxies.get_simulations_same_scale(sys.argv[2:], common_redshift)
+# common_redshift = 4
+# sims_common = load_galaxies.get_simulations_same_scale(sys.argv[2:], common_redshift)
 
 
 def time_cumulative_hist(sim, time_func, mask_name):
@@ -132,10 +132,14 @@ def plot_age_growth_base(
 
     # add the labels here
     ax.add_labels(age_quantity + " [Myr]", "Cumulative Fraction")
+    if age_quantity == "Age Spread":
+        mass_loc = "upper right"
+    else:
+        mass_loc = "upper left"
     if high and label_mass:
-        ax.easy_add_text("M > $10^5 M_\odot$", "upper left")
+        ax.easy_add_text("M > $10^5 M_\odot$", mass_loc)
     elif label_mass:
-        ax.easy_add_text("M < $10^5 M_\odot$", "upper left")
+        ax.easy_add_text("M < $10^5 M_\odot$", mass_loc)
 
     # I'll calculate the median of the latest run, the add that to the figure
     last_median = -1
@@ -161,6 +165,12 @@ def plot_age_growth_base(
         # store the median if it's the last one
         if plot_median:
             this_median = find_median_of_cumulative(ages, fractions)
+            # print(
+            #     this_median,
+            #     mass_side,
+            #     age_quantity,
+            #     plot_utils.get_sim_dirname(sim.run_dir),
+            # )
             if this_median > last_median:
                 last_median = this_median
 
@@ -177,9 +187,9 @@ def plot_age_growth_base(
 
     # add limits appropriately. This dictionary holds the maximum x value for
     # low and high mass, respectively. If we're plotting both, use the high mass for
-    # both panels.
-    limits = {"Duration": (5, 15), "Average Age": (3, 15), "Age Spread": (2, 15)}
-    if both or high:
+    # both panels. Except for age spread, where we split individually
+    limits = {"Duration": (5, 15), "Average Age": (3, 15), "Age Spread": (8, 15)}
+    if high or (both and age_quantity != "Age Spread"):
         idx = 1
     else:
         idx = 0
@@ -377,12 +387,15 @@ def plot_spread_vs_duration(sim):
 #
 # ======================================================================================
 for plot_name in tqdm(load_galaxies.get_plot_names(sims_last)):
-    for share_type in ["common", "last"]:
-        for age_type in ["Duration", "Average Age", "Age Spread"]:
+    if plot_name != "old_ic_sfe_fb1":
+        continue
+    for share_type in ["last"]:
+        for age_type in ["Age Spread"]:
             plot_age_mass(plot_name, age_type, share_type)
-            for which_mass in ["both_split", "both_share"]:  # ["lo", "hi", ]
+            for which_mass in ["both_split"]:  # ["lo", "hi", "both_share"]
                 plot_age_growth(plot_name, age_type, share_type, which_mass)
-for sim in tqdm(sims_last):
-    plot_spread_vs_duration(sim)
+# for sim in tqdm(sims_last):
+#     plot_spread_vs_duration(sim)
 
+raise ValueError("reset, but keep out both_share")
 sentinel.touch()
