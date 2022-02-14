@@ -276,7 +276,7 @@ def plot_cimf(
             )
 
     # if we're plotting evolved masses, include the MW GCs
-    if "current" in masses_to_plot:
+    if "evolved" in masses_to_plot:
         ax.plot(
             *cimf.harric_gc_mass_function(), ls="--", c=bpl.almost_black, label="MW GCs"
         )
