@@ -90,7 +90,7 @@ def _plot_age_metallicity_base_combine(ax, sim, t_z_0, ls):
         ax, total_feh[good_idx], total_ages[good_idx], bpl.color_cycle[2], ls
     )
 
-    return total_feh, total_ages
+    return total_feh[good_idx], total_ages[good_idx]
 
 
 def _plot_age_metallicity_base_split(ax, sim, t_z_0, ls):
