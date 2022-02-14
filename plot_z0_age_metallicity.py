@@ -87,7 +87,7 @@ def _plot_age_metallicity_base_combine(ax, sim, t_z_0, ls):
     good_idx = evolved_masses > 1e4
 
     _plot_age_metallicity_contours(
-        ax, total_feh[good_idx], total_ages[good_idx], bpl.color_cycle[0], ls
+        ax, total_feh[good_idx], total_ages[good_idx], bpl.color_cycle[2], ls
     )
 
     return total_feh, total_ages
@@ -95,7 +95,7 @@ def _plot_age_metallicity_base_combine(ax, sim, t_z_0, ls):
 
 def _plot_age_metallicity_base_split(ax, sim, t_z_0, ls):
     total_feh, total_ages = [], []
-    for galaxy, color in zip(sim.galaxies, [bpl.color_cycle[0], bpl.color_cycle[3]]):
+    for galaxy, color in zip(sim.galaxies, [bpl.color_cycle[1], bpl.color_cycle[3]]):
         feh = get_feh(galaxy)
         ages = t_z_0 - get_birth_time(galaxy)
         evolved_masses = cimf.evolve_cluster_population(galaxy)
@@ -146,7 +146,7 @@ def plot_age_metallicity(sim, combine=False):
         y=gc_age,
         yerr=gc_age_err,
         xerr=0.15,
-        c=bpl.color_cycle[2],
+        c=bpl.color_cycle[0],
         label="MW GCs",
         zorder=100,
     )
