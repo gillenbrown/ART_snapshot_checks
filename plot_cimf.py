@@ -293,6 +293,12 @@ def plot_cimf(
         y_max = 1e4
     elif "current" in masses_to_plot:
         y_max = 1e4
+    elif (
+        sim_share_type == "common"
+        and axis_name == "lg_sfe"
+        and "current" in masses_to_plot
+    ):
+        y_max = 1e6
     elif sim_share_type == "common" or axis_name == "lg_sfe":
         y_max = 1e5
     else:
