@@ -6,22 +6,36 @@ import yt
 # Gas PDFs
 #
 # ==============================================================================
-def get_gas_density(region):
+def get_gas_number_density(region):
     n = region[("gas", "density")] / yt.units.mass_hydrogen
-    return n.to("cm**(-3)").value
+    return n.to("cm**(-3)")
+
+
+def get_gas_density(region):
+    n = region[("gas", "density")]
+    return n.to("g * cm**(-3)")
 
 
 def get_gas_volume(region):
-    return region[("gas", "cell_volume")].to("pc**3").value
+    return region[("gas", "cell_volume")].to("pc**3")
 
 
 def get_gas_mass(region):
-    return region[("gas", "cell_mass")].to("Msun").value
+    return region[("gas", "cell_mass")].to("Msun")
+
+
+def get_h2_mass(region):
+    return 2 * region[("artio", "RT_HVAR_H2")] * get_gas_volume(region)
+
+
+def get_h2_frac(region):
+    frac = get_h2_mass(region) / get_gas_mass(region)
+    return frac.to("").value
 
 
 def get_gas_temp(region):
     try:
-        return region[("gas", "temperature")].to("K").value
+        return region[("gas", "temperature")].to("K")
     except:
         # The runs with Vadim's entropy scheme do not have temperature. I have to
         # calculate it, based on cell_gas_temperature in hydro.c
@@ -34,12 +48,12 @@ def get_gas_temp(region):
         rho = region[("artio", "HVAR_GAS_DENSITY")]
         # there's also a m_H / k_B correction factor in the ART temp units
         temp = (gamma - 1) * wmu * internal_energy * mb / (rho * yt.units.kboltz)
-        return temp.to("K").value
+        return temp.to("K")
 
 
 def get_gas_p_over_k(region):
     p_over_k = region[("gas", "pressure")] / yt.units.kboltz
-    return p_over_k.to("K/cm**3").value
+    return p_over_k.to("K/cm**3")
 
 
 def get_gas_turbulent_temp(region):
@@ -63,7 +77,7 @@ def get_gas_turbulent_temp(region):
         * yt.units.mass_hydrogen  # technically is mb in ART, but that's basically m_H
         / (density * yt.units.kboltz)
     )
-    return temp.to("K").value
+    return temp.to("K")
 
 
 def get_gas_turbulent_velocity_dispersion(region):
@@ -81,6 +95,19 @@ def get_gas_turbulent_velocity_dispersion(region):
     sigma_squared = 2 * turbulent_energy_density / density
     sigma = np.sqrt(sigma_squared).to("km/s")
     return sigma
+
+
+def get_cell_size_pc(region):
+    return region[("index", "dx")]
+
+
+def get_gas_virial_criterion(region):
+    sigma = get_gas_turbulent_velocity_dispersion(region)
+    rho = get_gas_density(region)
+    l = get_cell_size_pc(region)
+
+    alpha = 5 * sigma ** 2 / (np.pi * yt.units.gravitational_constant * rho * (l ** 2))
+    return alpha.to("").value
 
 
 def get_gas_metallicity_ii(region):
@@ -105,7 +132,7 @@ def get_gas_velocity(region):
     dvz = vz - mean_vz
 
     gas_velocity = np.sqrt(dvx ** 2 + dvy ** 2 + dvz ** 2)
-    return gas_velocity
+    return gas_velocity * yt.units.m / yt.units.s
 
 
 def get_gas_level(region):
