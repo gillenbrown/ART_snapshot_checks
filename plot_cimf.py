@@ -262,13 +262,24 @@ def plot_cimf(
                     "evolved": "-",
                 }[mass_type]
 
+            # for runs that use the current mass, move the unreliable mass down. Also
+            # be cruel to 1% and just say the whole thing is unreliable
+            if mass_type == "current":
+                if "sfe001" in str(sim.run_dir):
+                    unreliable_mass = 0.1
+                elif np.isinf(sim.unreliable_mass):
+                    unreliable_mass = np.inf
+                else:
+                    unreliable_mass = sim.unreliable_mass / 10
+            else:
+                unreliable_mass = sim.unreliable_mass
             # for runs that are unreliable, plot them with solid lines up to 10^5, then
             # dashed lines above that
             plot_utils.plot_line_with_cut(
                 ax,
                 mass_plot,
                 dn_dlogM,
-                cut_x=sim.unreliable_mass,
+                cut_x=unreliable_mass,
                 c=sim.color,
                 ls1=ls,
                 ls2="--",
