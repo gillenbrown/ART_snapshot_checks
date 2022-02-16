@@ -8,6 +8,16 @@ from . import run_attributes
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
+
+def time_units(ds, array):
+    return ds._handle.tphys_from_tcode_array(array) * yt.units.year
+
+
+def duration(region):
+    end_time = time_units(region.ds, region[("STAR", "TERMINATION_TIME")])
+    return end_time - region[("STAR", "creation_time")]
+
+
 # ======================================================================================
 #
 # Setup for precalculation of key quantities
@@ -87,18 +97,6 @@ class Simulation(object):
 
         self.z = self.ds.current_redshift
         self.scale_factor = 1 / (1 + self.z)
-
-        # we need to be careful with a couple of runs. Runs with epsff=1% or runs
-        # with 10% and fboost=1 are unreliable above 10^5 Msun
-        run_dir_str = str(self.run_dir)
-        if "sfe001" in run_dir_str or (
-            "sfe010" in run_dir_str and "fboost1" in run_dir_str
-        ):
-            self.unreliable_mass = 1e5
-            self.reliable = False
-        else:
-            self.unreliable_mass = np.inf
-            self.reliable = True
 
         # get the axis names and other stuff. The dictionaries are defaultdicts, so
         # there is no need to worry about key errors
@@ -190,6 +188,52 @@ class Simulation(object):
                     radius = self.ds.arr(sphere_radius_kpc, "kpc")
 
             self.galaxies.append(Galaxy(self.ds, center, radius, M_vir, r_vir, rank))
+
+        # # we need to be careful with a couple of runs. Runs with epsff=1% or runs
+        # # with 10% and fboost=1 are unreliable above 10^5 Msun
+        # run_dir_str = str(self.run_dir)
+        # if "sfe001" in run_dir_str or (
+        #     "sfe010" in run_dir_str and "fboost1" in run_dir_str
+        # ):
+        #     self.unreliable_mass = 1e5
+        #     self.reliable = False
+        # else:
+        #     self.unreliable_mass = np.inf
+        #     self.reliable = True
+        self._determine_failed()
+
+    def _determine_failed(self):
+        # probably change this at some point
+        if "sfe010" not in str(self.run_dir) and "sfe001" not in str(self.run_dir):
+            self.reliable = True
+            self.unreliable_mass = np.inf
+            return
+        # Figure out at what mass the durations reach a median of 14 Myr
+        durations = self.func_all_galaxies(lambda g: duration(g).to("Myr").value)
+        masses = self.func_all_galaxies(
+            lambda g: g[("STAR", "INITIAL_MASS")].to("Msun").value
+        )
+        # assume I'm reliable, then break otherwise
+        self.reliable = True
+        self.unreliable_mass = np.inf
+        dm = 0.25
+        m_min = 3
+        while m_min < 7:
+            m_max = m_min + dm
+            good_idx = np.logical_and(masses > 10 ** m_min, masses < 10 ** m_max)
+            # check that there aren't too few clusters
+            if np.sum(good_idx) < 10:
+                m_min += dm
+                continue
+
+            this_durations = durations[good_idx]
+            median = np.median(this_durations)
+            if median > 14:
+                self.unreliable_mass = 10 ** m_min
+                self.reliable = False
+                break
+
+            m_min += dm
 
     def __repr__(self):
         return str(self.run_dir)
