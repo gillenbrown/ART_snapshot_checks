@@ -54,8 +54,16 @@
 7089  |  M2      | -1.66  |  11.75 | 0.25
 7099  |  M30     | -2.33  |  13.00 | 0.25
       | Arp 2    | -1.74  |  12.00 | 0.38
-      | Pal 12   |  -0.81 |   9.0  | 0.38
+      | Pal 12   | -0.81  |   9.0  | 0.38
       | Ter 8    | -2.34  |  13.00 | 0.38
+      | IC 4499  | -1.62  |  11.25 | 0.25
+      | Rupr 106 | -1.78  |  10.75 | 0.25
+6426  |          | -2.15  |  12.25 | 0.25
+7006  |          | -1.46  |  11.25 | 0.25
+      | Pyaxis   | -1.20  |  10.50 | 0.25
+      | Ter 7    | -0.45  |   7.75 | 0.50
 # Notes.
 # a Ages are based on the vertical (V) or horizontal (H) methods, or an average (A) of the former.
 # b This range encompasses the ages independently derived by DAV, KB, and RL.
+# Last 6 clusters added from Leaman etal 13 MNRAS 436, 122
+# numbers are in Fig 1 (not any table!. Uncertainties were estmated from Fig 2.
