@@ -132,14 +132,20 @@ def plot_age_growth_base(
 
     # add the labels here
     ax.add_labels(age_quantity + " [Myr]", "Cumulative Fraction")
+    # one run needs special formatting to get the label right
     if age_quantity == "Age Spread":
-        mass_loc = "upper right"
+        if not high and axis_name == "old_ic_sfe_fb1":
+            ax.add_text(
+                0.96, 0.90, "M < $10^5 M_\odot$", coords="axes", ha="right", va="top"
+            )
+
+        else:
+            ax.easy_add_text("M < $10^5 M_\odot$", "upper right")
     else:
-        mass_loc = "upper left"
-    if high and label_mass:
-        ax.easy_add_text("M > $10^5 M_\odot$", mass_loc)
-    elif label_mass:
-        ax.easy_add_text("M < $10^5 M_\odot$", mass_loc)
+        if high and label_mass:
+            ax.easy_add_text("M > $10^5 M_\odot$", "upper left")
+        elif label_mass:
+            ax.easy_add_text("M < $10^5 M_\odot$", "upper left")
 
     # I'll calculate the median of the latest run, the add that to the figure
     last_median = -1
@@ -188,7 +194,7 @@ def plot_age_growth_base(
     # add limits appropriately. This dictionary holds the maximum x value for
     # low and high mass, respectively. If we're plotting both, use the high mass for
     # both panels. Except for age spread, where we split individually
-    limits = {"Duration": (5, 15), "Average Age": (3, 15), "Age Spread": (8, 15)}
+    limits = {"Duration": (5, 15), "Average Age": (3, 15), "Age Spread": (5, 15)}
     if high or (both and age_quantity != "Age Spread"):
         idx = 1
     else:
