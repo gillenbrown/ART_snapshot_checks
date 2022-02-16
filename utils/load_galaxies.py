@@ -204,7 +204,9 @@ class Simulation(object):
 
     def _determine_failed(self):
         # probably change this at some point
-        if "sfe010" not in str(self.run_dir) and "sfe001" not in str(self.run_dir):
+        if (
+            "sfe010" not in str(self.run_dir) and "sfe001" not in str(self.run_dir)
+        ) or "rj" in str(self.run_dir):
             self.reliable = True
             self.unreliable_mass = np.inf
             return
