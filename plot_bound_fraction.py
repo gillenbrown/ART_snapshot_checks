@@ -416,8 +416,8 @@ def plot_dynamical_bound(sim):
     ax.add_labels("Cluster Age [Gyr]", "Dynamical Bound Fraction")
     # ax.set_xscale("log")
     # ax.set_limits(0.01, 5, 0, 1)
-    ax.set_limits(0, 4.5, 0, 1)
-    ax.legend(loc=1, frameon=False, fontsize=14)
+    ax.set_limits(0, 4, 0, 1)
+    ax.legend(loc="center right", frameon=False, fontsize=14)
     fig.savefig(
         sentinel.parent / f"dynamical_{plot_utils.get_sim_dirname(sim.run_dir)}.pdf"
     )
