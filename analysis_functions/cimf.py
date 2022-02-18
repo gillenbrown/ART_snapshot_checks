@@ -130,12 +130,16 @@ def evolve_cluster_population(galaxy):
 #
 # ======================================================================================
 def _cimf_base(masses, bin_width=0.16):
-    # create bins with spacing of 0.16 dex
-    m_boundaries_log = np.arange(3 - 0.5 * bin_width, 8, bin_width)
-    m_centers_log = [
-        np.mean([m_boundaries_log[idx], m_boundaries_log[idx + 1]])
-        for idx in range(len(m_boundaries_log) - 1)
-    ]
+    # create bins with spacing of 0.16 dex.
+    # I use the maximum mass as the second to last bin, so that it drops to
+    # zero after that.
+    max_mass = np.max(masses)
+    m_centers_log = np.arange(np.log10(max_mass) + bin_width, 2, -bin_width)[::-1]
+    m_boundaries_log = np.arange(
+        np.min(m_centers_log) - 0.5 * bin_width,
+        np.max(m_centers_log) + 0.6 * bin_width,
+        bin_width,
+    )
 
     m_boundaries = 10 ** m_boundaries_log
     m_centers = 10 ** np.array(m_centers_log)
