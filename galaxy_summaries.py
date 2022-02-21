@@ -24,6 +24,7 @@ from pathlib import Path
 
 import yt
 import numpy as np
+from analysis_functions import gas_pdfs
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
@@ -258,6 +259,41 @@ def write_star_formation_rate(galaxy, timescale_myr):
     out(f"SFR within {galaxy.name} in last {timescale_myr} Myr: {sfr:.6f} Msun / yr")
 
 
+def find_sf_cells(region, seed=True):
+    density = gas_pdfs.get_gas_number_density(region).to("cm**(-3)").value
+    temp = gas_pdfs.get_gas_temp(region).to("K").value
+    alpha = gas_pdfs.get_gas_virial_criterion(region)
+    f_h2 = gas_pdfs.get_h2_frac(region)
+
+    idx_1 = density > 1000
+    idx_2 = temp < 1e4
+    idx_3 = alpha < 10
+    idx_4 = f_h2 > 0.5
+
+    if seed:
+        idxs = np.logical_and.reduce((idx_1, idx_2, idx_3, idx_4))
+    else:
+        idxs = np.logical_and.reduce((idx_1, idx_2))
+    levels = gas_pdfs.get_gas_level(region)
+    sizes = gas_pdfs.get_cell_size_pc(region).to("pc").value
+    return levels[idxs], sizes[idxs]
+
+
+def write_sf_levels(galaxy):
+    for seed, name in zip([True, False], ["seeding", "growth"]):
+        levels, sizes = find_sf_cells(galaxy.sphere, seed)
+        unique_levels, count_levels = np.unique(levels, return_counts=True)
+        unique_sizes, count_sizes = np.unique(sizes, return_counts=True)
+
+        out_line = f"Cells that satisfy SF {name} criteria"
+        for ul, us, cl, cs in zip(
+            unique_levels, unique_sizes[::-1], count_levels, count_sizes[::-1]
+        ):
+            assert cl == cs
+            out_line += f" - level {ul} = {us:.2f} pc = {cl} cells"
+        out(out_line)
+
+
 # =========================================================================
 #
 # Then we go through and print information about the halos present
@@ -301,6 +337,8 @@ for gal in sim.galaxies:
     write_star_formation_rate(gal_virial, 50)
     write_star_formation_rate(gal_virial, 100)
     write_star_formation_rate(gal_virial, 1000)
+    out("")
+    write_sf_levels(gal_30kpc)
 
 out("\n==================================\n")
 

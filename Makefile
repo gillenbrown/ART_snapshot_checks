@@ -246,7 +246,6 @@ debugs = $(foreach snapshot,$(snapshots),$(call sim_to_debug,$(snapshot)))
 # ------------------------------------------------------------------------------
 sim_to_galaxies = $(subst .art,.txt,$(subst out/continuous,checks/galaxy_summaries, $(1)))
 galaxies_to_sim = $(subst .txt,.art,$(subst checks/galaxy_summaries,out/continuous, $(1)))
-galaxies_to_halo = $(subst .txt,.0.bin,$(subst checks/galaxy_summaries,halos/halos, $(1)))
 galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
 
 # ------------------------------------------------------------------------------
@@ -445,8 +444,8 @@ $(debugs): %: $(debug_script)
 	python $(debug_script) $(call debug_to_sim, $@) clobber silent
 
 # Make the summary files
-$(galaxies): %: $$(call galaxies_to_halo, %) $(galaxies_script)
-	python $(galaxies_script) $(call galaxies_to_sim, $@) $(call galaxies_to_halo, $@) clobber silent
+$(galaxies): %: $(galaxies_script) $(rockstar_sentinels)
+	python $(galaxies_script) $(call galaxies_to_sim, $@) clobber silent
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher

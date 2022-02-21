@@ -7,7 +7,14 @@ import yt
 #
 # ==============================================================================
 def get_gas_number_density(region):
-    n = region[("gas", "density")] / yt.units.mass_hydrogen
+    # exactly following ART: see units.c
+    Y_p = 0.24  # He mass fraction
+    X_H = 1.0 - Y_p
+    X_He = 0.25 * Y_p
+    m_H = yt.units.mass_hydrogen
+    m_He = m_H * (4.002602 / 1.007825)
+    m_b = X_H * m_H + X_He * m_He
+    n = region[("gas", "density")] / m_b
     return n.to("cm**(-3)")
 
 
