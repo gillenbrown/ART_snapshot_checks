@@ -44,20 +44,6 @@ def write(out_str):
     print(out_str, flush=True)
 
 
-def find_sf_cells(ad):
-    density = gas_pdfs.get_gas_number_density(ad).to("cm**(-3)").value
-    temp = gas_pdfs.get_gas_temp(ad).to("K").value
-    alpha = gas_pdfs.get_gas_virial_criterion(ad)
-    f_h2 = gas_pdfs.get_h2_frac(ad)
-
-    idx_1 = density > 1000
-    idx_2 = temp < 1e4
-    idx_3 = alpha < 10
-    idx_4 = f_h2 > 0.5
-
-    return np.logical_and.reduce((idx_1, idx_2, idx_3, idx_4))
-
-
 # ======================================================================================
 #
 # Then actually doing things
@@ -71,51 +57,29 @@ for d in directories:
 
     # then parse this to get the halo files
     for output in art_files:
-        # try:
-        sim = load_galaxies.Simulation(output, sphere_radius_kpc=30, n_galaxies=1)
-        # except:
-        #     print("", flush=True)
-        #     print("FAILED - sim creation failed", flush=True)
-        #     print(output, flush=True)
-        #     print("", flush=True)
-        #     continue
-
+        gc.collect()
+        try:
+            sim = load_galaxies.Simulation(output, sphere_radius_kpc=30, n_galaxies=1)
+        except:
+            write(f"Error in creation! {output.name}")
+            gc.collect()
+            continue
+        # then do analysis
         try:
             ad = sim.ds.all_data()
-            idx_sf = find_sf_cells(ad)
-            levels = gas_pdfs.get_gas_level(ad)
-            sizes = gas_pdfs.get_cell_size_pc(ad).to("pc").value
-
-            # match levels to cell size
-            level_size_dict = {
-                l: s for l, s in zip(np.unique(levels), np.unique(sizes)[::-1])
-            }
-
-            # then count the number of cells at the levels that have sf
-            good_levels = levels[idx_sf]
-            uniques, counts = np.unique(good_levels, return_counts=True)
-
-            # then write this all. I'll do each output on one line
-            out_str = f" z={sim.z:6.4f}"
-            for idx in range(len(uniques)):
-                out_str += (
-                    f" - level {uniques[idx]:>2.0f} = "
-                    f"{level_size_dict[uniques[idx]]:>5.2f} pc = "
-                    f"{counts[idx]} cells"
-                )
-            write(out_str)
-
-            del ad
-            del levels
-            del sizes
-            del level_size_dict
-            del good_levels
-            del uniques
-            del counts
-
         except:
-            write(f"{run_name} {sim.z:.4f} Error!")
+            write(f"{sim.z:.4f} Error in ad!")
+            gc.collect()
+            continue
 
+        try:
+            densities = gas_pdfs.get_gas_number_density(ad).to("cm**(-3)").value
+            write(f"z={sim.z:.4f} max number density = {np.max(densities):.2e} cm^-3")
+            del densities
+        except:
+            write(f"{sim.z:.4f} Error in densities!")
+
+        del ad
         del sim
         gc.collect()
 
