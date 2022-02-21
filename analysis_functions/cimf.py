@@ -132,8 +132,12 @@ def evolve_cluster_population(galaxy):
 def _cimf_base(masses, bin_width=0.16):
     # create bins with spacing of 0.16 dex.
     # I use the maximum mass as the second to last bin, so that it drops to
-    # zero after that.
-    max_mass = max(np.max(masses), 1e4)  # guard against no high mass clusters
+    # zero after that. But I do have to check for having zero clusters, which I think
+    # only happens for the evolved to z=0 plot or one restricting the age range
+    if len(masses) == 0:
+        max_mass = 1e5
+    else:
+        max_mass = max(np.max(masses), 1e4)  # guard against no high mass clusters
     m_centers_log = np.arange(np.log10(max_mass) + bin_width, 2, -bin_width)[::-1]
     m_boundaries_log = np.arange(
         np.min(m_centers_log) - 0.5 * bin_width,
