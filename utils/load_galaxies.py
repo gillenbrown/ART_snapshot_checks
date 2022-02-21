@@ -200,7 +200,8 @@ class Simulation(object):
         # else:
         #     self.unreliable_mass = np.inf
         #     self.reliable = True
-        self._determine_failed()
+        if sphere_radius_kpc is not None:
+            self._determine_failed()
 
     def _determine_failed(self):
         # probably change this at some point
