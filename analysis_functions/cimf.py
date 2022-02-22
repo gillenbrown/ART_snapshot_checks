@@ -125,6 +125,7 @@ def t_tidal(M):
 
 
 def evolve_cluster_population(galaxy):
+    # this is validated against the numerical calculation above
     # get cosmology to get times
     # Initialize the cosmology object, used to put a redshift scale on the plots
     H_0 = galaxy.ds.artio_parameters["hubble"][0] * 100 * u.km / (u.Mpc * u.second)
