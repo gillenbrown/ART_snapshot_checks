@@ -143,9 +143,12 @@ def evolve_cluster_population(galaxy):
     cluster_masses = raw_mass * star_initial_bound * tidal_bound_fraction
 
     timescales_initial = t_tidal(cluster_masses)
-    evolved_masses = cluster_masses * (1 - 3 * dt / (2 * timescales_initial)) ** (3 / 2)
+    evolved_masses = cluster_masses * (1 - 2 * dt / (3 * timescales_initial)) ** (3 / 2)
+    # replace nans with zeros
+    bad_idx = np.isnan(evolved_masses)
+    evolved_masses[bad_idx] = 0
 
-    return np.array(evolved_masses)
+    return evolved_masses.to("Msun").value
 
 
 # ======================================================================================
