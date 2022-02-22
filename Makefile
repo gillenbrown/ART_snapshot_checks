@@ -46,6 +46,7 @@ endif
 halo_finding_script = ./run_rockstar.py
 debug_script = ./debug_output.py
 galaxies_script = ./galaxy_summaries.py
+forming_clusters_script = ./forming_clusters.py
 nbody_single_halo_plots_script = ./plot_single_halo_nbody.py
 nbody_refined_plot_script = ./plot_refined_region_nbody.py
 nbody_local_group_plot_script = ./plot_local_group_nbody.py
@@ -250,6 +251,15 @@ galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
 
 # ------------------------------------------------------------------------------
 #
+#  forming clusters output files
+#
+# ------------------------------------------------------------------------------
+sim_to_forming = $(subst .art,.txt,$(subst out/continuous,checks/forming_clusters, $(1)))
+forming_to_sim = $(subst .txt,.art,$(subst checks/forming_clusters,out/continuous, $(1)))
+forming_clusters = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_forming,$(snapshot)))
+
+# ------------------------------------------------------------------------------
+#
 #  CIMF variation with redshift
 #
 # ------------------------------------------------------------------------------
@@ -392,12 +402,12 @@ paper_plots = $(paper_halo_growth_plot)
 # 
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
-	outputs = $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(cluster_trends_sentinel) $(age_metallicity_z0_sentinel) $(bound_fraction_sentinel) $(cimf_evolution_plots) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxy_masses) $(debugs)
+	outputs = $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(cluster_trends_sentinel) $(age_metallicity_z0_sentinel) $(bound_fraction_sentinel) $(cimf_evolution_plots) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(galaxy_masses) $(debugs) $(forming_clusters)
 	# $(dt_history_plots) $(cfl_plots) $(movies)
 else ifeq ($(machine),stampede2_analysis)
 	outputs = $(my_directories) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(cluster_trends_sentinel) $(age_metallicity_z0_sentinel) $(bound_fraction_sentinel)  $(cimf_evolution_plots)
 else ifeq ($(machine),stampede2_halos)
-	outputs = $(my_directories) $(galaxy_masses) $(debugs)
+	outputs = $(my_directories) $(galaxy_masses) $(debugs) $(forming_clusters)
 endif
 
 all: $(outputs)
@@ -446,6 +456,9 @@ $(debugs): %: $(debug_script)
 # Make the summary files
 $(galaxies): %: $(galaxies_script) $(rockstar_sentinels)
 	python $(galaxies_script) $(call galaxies_to_sim, $@) clobber silent
+
+$(forming_clusters): %: $(forming_clusters_script) $(rockstar_sentinels)
+	python $(forming_clusters_script) $@ $(call forming_to_sim, $@)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
 # target, but that required Make 4.3 or higher
