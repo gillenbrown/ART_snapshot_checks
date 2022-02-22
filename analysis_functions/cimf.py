@@ -46,7 +46,7 @@ def get_initial_bound_fraction(galaxy):
 #
 # ======================================================================================
 omega_tid = 175 / yt.units.Gyr  # calibrated to match MW GC number
-dt = 100 * yt.units.Myr
+# dt = 100 * yt.units.Myr
 
 
 def t_tidal(M):
@@ -57,40 +57,71 @@ def t_tidal(M):
     return total.to("Myr")
 
 
-def get_n_steps(t_now, t_z_0):
-    return int(np.ceil((t_z_0 - t_now).to("Myr") / dt))
-
-
-precalculated_disruption = dict()
-
-
-def precalculate_disruption(n_steps):
-    if n_steps in precalculated_disruption:
-        return
-    else:
-        precalculated_disruption[n_steps] = dict()
-
-    # otherwise, we need to build this
-    print(f"\n\n\nprecalculating\n{n_steps}\n\n\n")
-    for log_m in tqdm(np.arange(2, 8, 0.01)):
-        key_m = str(round(log_m, 2))
-
-        m = 10 ** log_m * yt.units.Msun
-        for _ in range(n_steps):
-            if m < 100 * yt.units.Msun:
-                m = 0
-                break
-            m *= np.exp(-dt / t_tidal(m))
-        precalculated_disruption[n_steps][key_m] = m
-
-
-def get_evolution_single_cluster(n_steps, log_m):
-    try:
-        key_m = str(round(log_m, 2))
-        return precalculated_disruption[n_steps][key_m]
-    except KeyError:  # only happens for initial M below 100, which will be fully
-        # disrupted by z=0
-        return 0
+# def get_n_steps(t_now, t_z_0):
+#     return int(np.ceil((t_z_0 - t_now).to("Myr") / dt))
+#
+#
+# precalculated_disruption = dict()
+#
+#
+# def precalculate_disruption(n_steps):
+#     if n_steps in precalculated_disruption:
+#         return
+#     else:
+#         precalculated_disruption[n_steps] = dict()
+#
+#     # otherwise, we need to build this
+#     print(f"\n\n\nprecalculating\n{n_steps}\n\n\n")
+#     for log_m in tqdm(np.arange(2, 8, 0.01)):
+#         key_m = str(round(log_m, 2))
+#
+#         m = 10 ** log_m * yt.units.Msun
+#         for _ in range(n_steps):
+#             if m < 100 * yt.units.Msun:
+#                 m = 0
+#                 break
+#             m *= np.exp(-dt / t_tidal(m))
+#         precalculated_disruption[n_steps][key_m] = m
+#
+#
+# def get_evolution_single_cluster(n_steps, log_m):
+#     try:
+#         key_m = str(round(log_m, 2))
+#         return precalculated_disruption[n_steps][key_m]
+#     except KeyError:  # only happens for initial M below 100, which will be fully
+#         # disrupted by z=0
+#         return 0
+#
+#
+# def evolve_cluster_population_old(galaxy):
+#     # get cosmology to get times
+#     # Initialize the cosmology object, used to put a redshift scale on the plots
+#     H_0 = galaxy.ds.artio_parameters["hubble"][0] * 100 * u.km / (u.Mpc * u.second)
+#     omega_matter = galaxy.ds.artio_parameters["OmegaM"][0]
+#     cosmo = cosmology.FlatLambdaCDM(H0=H_0, Om0=omega_matter, Tcmb0=2.725)
+#
+#     t_now = galaxy.ds.current_time
+#     # need to convert the astropy units into yt units.
+#     t_z_0 = cosmo.age(0).to("Gyr").value * yt.units.Gyr
+#     n_steps = get_n_steps(t_now, t_z_0)
+#
+#     # precalculate the disruption. This won't do anything if it already exists.
+#     precalculate_disruption(n_steps)
+#
+#     # then get star masses (include stellar evolution)
+#     raw_mass = galaxy[("STAR", "MASS")].to("Msun")
+#     star_initial_bound = get_initial_bound_fraction(galaxy)
+#     tidal_bound_fraction = galaxy[("STAR", "BOUND_FRACTION")].value
+#     cluster_masses = raw_mass * star_initial_bound * tidal_bound_fraction
+#     # get the log here. This makes using it in precalculation easier, as this is
+#     # vectorized. Set a minimum of 0.1 to avoid log of zero errors.
+#     log_cluster_masses_msun = np.log10(np.maximum(0.1, cluster_masses.to("Msun").value))
+#
+#     evolved_masses = [
+#         get_evolution_single_cluster(n_steps, log_m)
+#         for log_m in tqdm(log_cluster_masses_msun)
+#     ]
+#     return np.array(evolved_masses)
 
 
 def evolve_cluster_population(galaxy):
@@ -103,24 +134,17 @@ def evolve_cluster_population(galaxy):
     t_now = galaxy.ds.current_time
     # need to convert the astropy units into yt units.
     t_z_0 = cosmo.age(0).to("Gyr").value * yt.units.Gyr
-    n_steps = get_n_steps(t_now, t_z_0)
-
-    # precalculate the disruption. This won't do anything if it already exists.
-    precalculate_disruption(n_steps)
+    dt = t_z_0 - t_now
 
     # then get star masses (include stellar evolution)
     raw_mass = galaxy[("STAR", "MASS")].to("Msun")
     star_initial_bound = get_initial_bound_fraction(galaxy)
     tidal_bound_fraction = galaxy[("STAR", "BOUND_FRACTION")].value
     cluster_masses = raw_mass * star_initial_bound * tidal_bound_fraction
-    # get the log here. This makes using it in precalculation easier, as this is
-    # vectorized. Set a minimum of 0.1 to avoid log of zero errors.
-    log_cluster_masses_msun = np.log10(np.maximum(0.1, cluster_masses.to("Msun").value))
 
-    evolved_masses = [
-        get_evolution_single_cluster(n_steps, log_m)
-        for log_m in tqdm(log_cluster_masses_msun)
-    ]
+    timescales_initial = t_tidal(cluster_masses)
+    evolved_masses = cluster_masses * (1 - 3 * dt / (2 * timescales_initial)) ** (3 / 2)
+
     return np.array(evolved_masses)
 
 
