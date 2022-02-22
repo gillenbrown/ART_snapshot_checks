@@ -6,17 +6,12 @@ from astropy import table
 
 from . import run_attributes
 
+import sys
+
+sys.path.append(str(Path(__file__).parent.parent / "analysis_functions"))
+import age_spreads
+
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
-
-
-def time_units(ds, array):
-    return ds._handle.tphys_from_tcode_array(array) * yt.units.year
-
-
-def duration(region):
-    end_time = time_units(region.ds, region[("STAR", "TERMINATION_TIME")])
-    return end_time - region[("STAR", "creation_time")]
-
 
 # ======================================================================================
 #
@@ -62,12 +57,15 @@ class Galaxy(object):
 
         # then get the mask showing which clusters are done forming
         if self.mask_done_forming is None and property[0] == "STAR":
-            self.mask_done_forming = self.sphere[("STAR", "age")] > 15 * yt.units.Myr
+            self.make_finished_cluster_mask()
 
         quantity = self.sphere[property]
         if property[0] == "STAR":
             quantity = quantity[self.mask_done_forming]
         return quantity
+
+    def make_finished_cluster_mask(self):
+        self.mask_done_forming = self.sphere[("STAR", "age")] > 15 * yt.units.Myr
 
     def prop_all_clusters(self, property):
         """
@@ -212,7 +210,9 @@ class Simulation(object):
             self.unreliable_mass = np.inf
             return
         # Figure out at what mass the durations reach a median of 14 Myr
-        durations = self.func_all_galaxies(lambda g: duration(g).to("Myr").value)
+        durations = self.func_all_galaxies(
+            lambda g: age_spreads.duration(g).to("Myr").value
+        )
         masses = self.func_all_galaxies(
             lambda g: g[("STAR", "INITIAL_MASS")].to("Msun").value
         )
