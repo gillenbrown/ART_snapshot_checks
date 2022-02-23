@@ -13,6 +13,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from astropy import table
 import betterplotlib as bpl
+from tqdm import tqdm
 
 from utils import load_galaxies, plot_utils, run_attributes
 from analysis_functions import age_spreads
@@ -47,11 +48,15 @@ def read_file(file_loc):
     cat["col5"].name = "H2_frac"
     cat["col6"].name = "temp"
 
+    # check on the maximum H2_frac -- it should be 1.
+    if np.isclose(np.max(cat["H2_frac"]), 0.76, atol=0.01):
+        cat["H2_frac"] *= 1.0 / 0.76
+
     return cat
 
 
 tables = dict()
-for checks_dir in sys.argv[2:]:
+for checks_dir in tqdm(sys.argv[2:], desc="Loading Catalogs"):
     this_cats = []
     for summary_path in [
         str(f)
@@ -71,7 +76,7 @@ for checks_dir in sys.argv[2:]:
 # Add info to the table based on the last output
 #
 # ======================================================================================
-for run_dir, this_cat in tables.items():
+for run_dir, this_cat in tqdm(tables.items(), desc="Matching Catalogs"):
     # add dummy columns
     this_cat["matched"] = False
     this_cat["duration"] = -99.9
@@ -119,18 +124,21 @@ for run_dir, this_cat in tables.items():
         else:
             idx_table += 1
 
-    # add derived properties: whether the cluster failed formation, and whether or not
-    # we recorded its properties while it was still forming.
-    this_cat["failed"] = this_cat["duration"] > 14
-    this_cat["still_forming"] = this_cat["Age_Myr"] < this_cat["duration"]
     # restrict to only clusters that matched and are still forming
-    this_cat = this_cat[this_cat["matched"]]
-    this_cat = this_cat[this_cat["still_forming"]]
+    this_cat.remove_rows(np.where(~this_cat["matched"]))
+
+    # add derived properties: whether the cluster failed formation. Note that I do not
+    # care whether I recorded this info while the cluster was still forming. If it is
+    # still forming, by definition it will be above the star formation thresholds
+    this_cat["failed"] = this_cat["duration"] > 14
+
+    # double check the mask for success
+    assert np.all(this_cat["duration"][~this_cat["failed"]] < 14)
+    assert np.all(this_cat["duration"][this_cat["failed"]] > 14)
 
     # Delete unnecessary columns
     del this_cat["ID"]
     del this_cat["matched"]
-    del this_cat["still_forming"]
     del this_cat["duration"]
 
 
@@ -150,20 +158,27 @@ class YAxisProp(object):
         else:
             self.y_scale = "linear"
 
-    def plot_shaded_region_age_vs_prop(self, ax, data_table, color, idxs):
+    def plot_shaded_region_age_vs_prop(self, ax, data_table, color, idxs, label=None):
+        assert len(idxs) == len(data_table)
+
+        self.format(ax)
+        if np.sum(idxs) < 10:  # not enough data to plot, just exit.
+            return
+
+        bins = np.arange(0, 0.01 + np.ceil(np.max(data_table["Age_Myr"][idxs])), 1)
+
         plot_utils.shaded_region(
             ax,
             xs=data_table["Age_Myr"][idxs],
             ys=data_table[self.table_name][idxs],
             color=color,
-            p_lo=10,
-            p_hi=90,
-            dx=1,
+            p_lo=25,
+            p_hi=75,
+            bins=bins,
             cut_x=np.inf,
             log_x=False,
-            label=self.label,
+            label=label,
         )
-        self.format(ax)
 
     def format(self, ax):
         ax.add_labels("Cluster Age [Myr]", self.label)
@@ -172,33 +187,148 @@ class YAxisProp(object):
 
 
 y_attributes = [
-    YAxisProp("number_density", "Number Density", 1, 1e5, True),
-    YAxisProp("H2_mass", "H$_2$ Mass [M$_\odot$]", 1, 1e5, True),
-    YAxisProp("H2_frac", "Fraction of Mass in H$_2$", 0, 1, False),
+    YAxisProp("number_density", "Number Density", 1, 1e6, True),
+    # YAxisProp("H2_mass", "H$_2$ Mass [M$_\odot$]", 1, 1e7, True),
+    YAxisProp("H2_frac", "Fraction of Hydrogen in H$_2$", -0.02, 1.02, False),
     YAxisProp("temp", "Temperature [K]", 1, 1e8, True),
 ]
 
 
-def plot_single_sim_massive_split_failure(run_dir):
+def plot_single_sim_split_mass_split_failure(run_dir):
     this_table = tables[run_dir]
     for prop in y_attributes:
         fig, axs = bpl.subplots(figsize=[14, 7], ncols=2)
 
-        idxs_left = (this_table["M_initial"] > 1e5) & ~this_table["failed"]
-        idxs_right = (this_table["M_initial"] > 1e5) & this_table["failed"]
+        idxs_left = this_table["M_initial"] < 1e5
+        idxs_right = this_table["M_initial"] > 1e5
+        idx_success = ~this_table["failed"]
+        idx_failure = this_table["failed"]
+        failure_color = bpl.almost_black
+        success_color = run_attributes.colors[run_dir]
 
         prop.plot_shaded_region_age_vs_prop(
-            axs[0], this_table, run_attributes.colors[run_dir], idxs_left
+            axs[0],
+            this_table,
+            failure_color,
+            idxs_left & idx_failure,
+            "Failure",
         )
         prop.plot_shaded_region_age_vs_prop(
-            axs[1], this_table, run_attributes.colors[run_dir], idxs_right
+            axs[0],
+            this_table,
+            success_color,
+            idxs_left & idx_success,
+            "Success",
+        )
+        prop.plot_shaded_region_age_vs_prop(
+            axs[1],
+            this_table,
+            failure_color,
+            idxs_right & idx_failure,
+            "Failure",
+        )
+        prop.plot_shaded_region_age_vs_prop(
+            axs[1],
+            this_table,
+            success_color,
+            idxs_right & idx_success,
+            "Success",
         )
 
-        axs[0].easy_add_text("M > $10^5 M_\odot$\nSuccessfull", "upper right")
-        axs[1].easy_add_text("M > $10^5 M_\odot$\nFailures", "upper right")
+        axs[0].easy_add_text(f"M < $10^5 M_\odot$", "upper right")
+        axs[1].easy_add_text(f"M > $10^5 M_\odot$", "upper right")
+        plot_utils.add_legend(axs[0], loc=2, fontsize=16)
 
         sim_name = plot_utils.get_sim_dirname(run_dir)
-        plot_name = f"forming_clusters_age_{prop.table_name}_{sim_name}.pdf"
+        plot_name = f"forming_clusters_{sim_name}_{prop.table_name}.pdf"
+        fig.savefig(plot_dir / plot_name)
+        # close figures to save memory
+        plt.close(fig)
+
+
+def plot_multiple_sims_double_split(group_name):
+    for prop in y_attributes:
+        fig, axs = bpl.subplots(figsize=[14, 14], ncols=2, nrows=2)
+        for run_dir, this_table in tables.items():
+            if group_name not in run_attributes.names[run_dir]:
+                continue
+
+            # otherwise, do the plot
+            idxs_left = this_table["M_initial"] < 1e5
+            idxs_right = this_table["M_initial"] > 1e5
+            idx_top = ~this_table["failed"]
+            idx_bottom = this_table["failed"]
+
+            prop.plot_shaded_region_age_vs_prop(
+                axs[0][0],
+                this_table,
+                run_attributes.colors[run_dir],
+                idx_top & idxs_left,
+                label=run_attributes.names[run_dir][group_name],
+            )
+            prop.plot_shaded_region_age_vs_prop(
+                axs[0][1],
+                this_table,
+                run_attributes.colors[run_dir],
+                idx_top & idxs_right,
+            )
+            prop.plot_shaded_region_age_vs_prop(
+                axs[1][0],
+                this_table,
+                run_attributes.colors[run_dir],
+                idx_bottom & idxs_left,
+            )
+            prop.plot_shaded_region_age_vs_prop(
+                axs[1][1],
+                this_table,
+                run_attributes.colors[run_dir],
+                idx_bottom & idxs_right,
+            )
+
+        axs[0][0].easy_add_text("M < $10^5 M_\odot$\nSuccess", "upper right")
+        axs[0][1].easy_add_text("M > $10^5 M_\odot$\nSuccess", "upper right")
+        axs[1][0].easy_add_text("M < $10^5 M_\odot$\nFailure", "upper right")
+        axs[1][1].easy_add_text("M > $10^5 M_\odot$\nFailure", "upper right")
+
+        plot_utils.add_legend(axs[0][0], loc=2)
+
+        plot_name = f"forming_clusters_doublesplit_{group_name}_{prop.table_name}.pdf"
+        fig.savefig(plot_dir / plot_name)
+        # close figures to save memory
+        plt.close(fig)
+
+
+def plot_multiple_sims_mass_split(group_name):
+    for prop in y_attributes:
+        fig, axs = bpl.subplots(figsize=[14, 7], ncols=2, nrows=1)
+        for run_dir, this_table in tables.items():
+            if group_name not in run_attributes.names[run_dir]:
+                continue
+
+            # otherwise, do the plot
+            idxs_left = this_table["M_initial"] < 1e5
+            idxs_right = this_table["M_initial"] > 1e5
+
+            prop.plot_shaded_region_age_vs_prop(
+                axs[0],
+                this_table,
+                run_attributes.colors[run_dir],
+                idxs_left,
+                label=run_attributes.names[run_dir][group_name],
+            )
+            prop.plot_shaded_region_age_vs_prop(
+                axs[1],
+                this_table,
+                run_attributes.colors[run_dir],
+                idxs_right,
+            )
+
+        axs[0].easy_add_text("M < $10^5 M_\odot$", "upper right")
+        axs[1].easy_add_text("M > $10^5 M_\odot$", "upper right")
+
+        plot_utils.add_legend(axs[0], loc=2)
+
+        plot_name = f"forming_clusters_masssplit_{group_name}_{prop.table_name}.pdf"
         fig.savefig(plot_dir / plot_name)
         # close figures to save memory
         plt.close(fig)
@@ -210,11 +340,12 @@ def plot_single_sim_massive_split_failure(run_dir):
 #
 # ======================================================================================
 for run_dir in tables.keys():
-    plot_single_sim_massive_split_failure(run_dir)
+    plot_single_sim_split_mass_split_failure(run_dir)
 
 # figure out which groupings are needed when plotting
-# sim_groups = load_galaxies.get_plot_names_dirs(tables.keys())
-# for group in sim_groups:
-#     pass
+sim_groups = load_galaxies.get_plot_names_dirs(tables.keys())
+for group in sim_groups:
+    plot_multiple_sims_mass_split(group)
+    # plot_multiple_sims_double_split(group)
 
 sentinel_file.touch()
