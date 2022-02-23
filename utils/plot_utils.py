@@ -72,8 +72,9 @@ def add_legend(ax, loc=0, fontsize=12, frameon=False, **kwargs):
     )
 
 
-def moving_percentiles(xs, ys, percentile, dx):
-    bins = np.arange(min(xs), max(xs) + dx, dx)
+def moving_percentiles(xs, ys, percentile, dx, bins=None):
+    if bins is None:
+        bins = np.arange(min(xs), max(xs) + dx, dx)
 
     bin_centers = []
     radii_percentiles = []
@@ -108,15 +109,16 @@ def shaded_region(
     cut_x=np.inf,
     log_x=False,
     label=None,
+    bins=None,
 ):
     # cut_x is the x value above which we plot dashed lines.
     if log_x:
         xs = np.log10(xs)
         # don't take the log of cut, since it's not used until later.
 
-    c_lo, p_lo = moving_percentiles(xs, ys, p_lo, dx)
-    c_50, p_50 = moving_percentiles(xs, ys, 50, dx)
-    c_hi, p_hi = moving_percentiles(xs, ys, p_hi, dx)
+    c_lo, p_lo = moving_percentiles(xs, ys, p_lo, dx, bins)
+    c_50, p_50 = moving_percentiles(xs, ys, 50, dx, bins)
+    c_hi, p_hi = moving_percentiles(xs, ys, p_hi, dx, bins)
 
     if log_x:
         c_lo = 10 ** c_lo

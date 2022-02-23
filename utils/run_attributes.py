@@ -102,18 +102,22 @@ names = defaultdict(
         old_ic("discrete_hn00_virial10_entropy_fboost1_sfe001"): {
             "old_ic_sfe": "$f_{boost}=1$, $\epsilon_{ff}=1$%",
             "old_ic_sfe_fb1": "$\epsilon_{ff}=1$%",
+            "old_ic_fb_sfe001": "$f_{boost}=1$",
         },
         old_ic("discrete_hn00_virial10_entropy_fboost1_sfe010"): {
             "old_ic_sfe": "$f_{boost}=1$, $\epsilon_{ff}=10$%",
             "old_ic_sfe_fb1": "$\epsilon_{ff}=10$%",
+            "old_ic_fb_sfe010": "$f_{boost}=1$",
         },
         old_ic("discrete_hn00_virial10_entropy_fboost2_sfe001"): {
             "old_ic_sfe": "$f_{boost}=2$, $\epsilon_{ff}=1$%",
             "old_ic_sfe_fb2": "$\epsilon_{ff}=1$%",
+            "old_ic_fb_sfe001": "$f_{boost}=2$",
         },
         old_ic("discrete_hn00_virial10_entropy_fboost2_sfe010"): {
             "old_ic_sfe": "$f_{boost}=2$, $\epsilon_{ff}=10$%",
             "old_ic_sfe_fb2": "$\epsilon_{ff}=10$%",
+            "old_ic_fb_sfe010": "$f_{boost}=2$",
         },
         old_ic("discrete_hn00_virial10_entropy_molvadim_fboost1"): {
             "old_ic_molecular": "$c_\\rho$=3, GK11 Shielding",
