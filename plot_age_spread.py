@@ -140,7 +140,7 @@ def plot_age_growth_base(
             )
 
         else:
-            ax.easy_add_text("M < $10^5 M_\odot$", "upper right")
+            ax.easy_add_text("M > $10^5 M_\odot$", "upper right")
     else:
         if high and label_mass:
             ax.easy_add_text("M > $10^5 M_\odot$", "upper left")
