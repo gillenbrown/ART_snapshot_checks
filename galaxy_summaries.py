@@ -309,6 +309,9 @@ for gal in sim.galaxies:
     gal_mpc = lg.Galaxy(
         sim.ds, center=gal.center, sphere_radius=1 * yt.units.Mpc, name="1 Mpc"
     )
+    gal_10kpc = lg.Galaxy(
+        sim.ds, center=gal.center, sphere_radius=10 * yt.units.kpc, name="10 kpc"
+    )
     gal_30kpc = lg.Galaxy(
         sim.ds, center=gal.center, sphere_radius=30 * yt.units.kpc, name="30 kpc"
     )
@@ -330,6 +333,8 @@ for gal in sim.galaxies:
     write_stellar_masses(gal_virial)
     out("")
     write_stellar_metallicity(gal_virial)
+    out("")
+    write_gas_masses(gal_10kpc)
     out("")
     write_gas_masses(gal_virial)
     out("")

@@ -74,13 +74,16 @@ def check_for_stellar_mass(line, halo_dict):
 
 
 gas_types = ["Total", "HI", "HII", "H2", "He1", "HeII", "HeIII", "Metals"]
+gas_radii = set()
 
 
 def check_for_gas_masses(line, halo_dict):
     for gas_type in gas_types:
         if line.startswith(gas_type + ": "):
             quantity = u.Quantity(line.split()[1], line.split()[2])
-            halo_dict[f"gas_mass_{gas_type}"] = quantity
+            radius = line.split("within")[1].strip()
+            gas_radii.add(radius)
+            halo_dict[f"gas_mass_{gas_type}_{radius}"] = quantity
 
 
 def check_for_metallicities(line, halo_dict):
@@ -332,19 +335,31 @@ for group in sim_groups:
     # -----------------------------------------------------------------------------
     # gas masses plots
     # -----------------------------------------------------------------------------
-    for gas_type in gas_types:
-        fig, ax = bpl.subplots()
-        plot_quantities(f"gas_mass_{gas_type}", u.Msun, group, ax)
-        ax.set_yscale("log")
-        plot_utils.add_legend(ax, fontsize=10)
-        ax.add_labels(
-            "Scale Factor", f"{gas_type} Gas Mass [M$_\odot$] within" + " R$_{vir}$"
-        )
-        if "H2" in gas_type:
-            ax.set_limits(y_min=1e5)
-
-        fig.savefig(plot_dir / f"galaxy_comparison_{group}_gas_mass_{gas_type}.pdf")
-        plt.close(fig)
+    for radius in gas_radii:
+        for gas_type in gas_types:
+            fig, ax = bpl.subplots()
+            plot_quantities(f"gas_mass_{gas_type}_{radius}", u.Msun, group, ax)
+            ax.set_yscale("log")
+            plot_utils.add_legend(ax, fontsize=10)
+            if radius == "r_vir":
+                ax.add_labels(
+                    "Scale Factor",
+                    f"{gas_type} Gas Mass [M$_\odot$] within" + " R$_{vir}$",
+                )
+            else:
+                ax.add_labels(
+                    "Scale Factor", f"{gas_type} Gas Mass [M$_\odot$] within {radius}"
+                )
+            if "H2" in gas_type:
+                ax.set_limits(y_min=1e5)
+            plot_name = (
+                f"galaxy_comparison_"
+                f"{group}_"
+                f"gas_mass_{gas_type}_"
+                f"{radius.replace(' ', '')}.pdf"
+            )
+            fig.savefig(plot_dir / plot_name)
+            plt.close(fig)
 
     # -----------------------------------------------------------------------------
     # neutral fraction plot
