@@ -32,6 +32,28 @@ direc_a = {
     # run_attributes.production("rj_sfe010_hn20"): "0.2645",
 }
 
+# see here for more on linestyles:
+# https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html
+success_ls = "-"
+fail_ls = (0, (5, 1))
+lss = {
+    run_attributes.old_ic("discrete_hn00_virial10_entropy_fboost1_sfe001"): fail_ls,
+    run_attributes.old_ic("discrete_hn00_virial10_entropy_fboost1_sfe010"): fail_ls,
+    run_attributes.old_ic("discrete_hn00_virial10_entropy_fboost1"): success_ls,
+    run_attributes.old_ic("discrete_hn00_virial10_entropy_fboost2_sfe001"): fail_ls,
+    run_attributes.old_ic("discrete_hn00_virial10_entropy_fboost2_sfe010"): success_ls,
+    # run_attributes.old_ic("discrete_hn00_virial10_entropy_fboost2"): success_ls,
+    # run_attributes.production("tl_sfe001_hn20"): "--",
+    # run_attributes.production("tl_sfe010_hn20"): success_ls,
+    # run_attributes.production("tl_sfe100_hn20"): success_ls,
+    # run_attributes.production("tl_sfe100_hn05"): success_ls,
+    # run_attributes.production("tl_sfe100_hn00"): success_ls,
+    # run_attributes.production("tl_sfe100_hn00_fboost1"): success_ls,
+    # run_attributes.production("tl_sfe100_hn00_fboost3"): success_ls,
+    # run_attributes.production("rj_sfe100_hn20"): success_ls,
+    # run_attributes.production("rj_sfe010_hn20"): success_ls,
+}
+
 # define my own names for this
 labels = {
     run_attributes.old_ic(
@@ -117,7 +139,7 @@ def read_gas_file(file_loc):
     return np.array(n_h2), np.array(m_h2)
 
 
-def plot_pdf(ax, values, weights, x_min, x_max, bin_size, color, label):
+def plot_pdf(ax, values, weights, x_min, x_max, bin_size, **kwargs):
     boundaries_log = np.arange(x_min - 0.5 * bin_size, x_max + 0.5 * bin_size, bin_size)
     centers_log = [
         np.mean([boundaries_log[idx], boundaries_log[idx + 1]])
@@ -130,14 +152,14 @@ def plot_pdf(ax, values, weights, x_min, x_max, bin_size, color, label):
     dx = np.histogram(a=values, bins=boundaries, weights=weights)[0]
     # make dx per log rho
     dx = dx / (bin_size * np.log(10))
-    ax.plot(centers, dx, color=color, label=label)
+    ax.plot(centers, dx, **kwargs)
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.add_labels("H$_2$ Number Density [$cm^{-3}$]", "dM/dlogn")
     ax.set_limits(1, 1e6, 1e4, 1e9)
 
 
-def plot_cumulative(ax, values, weights, normalize, color, label):
+def plot_cumulative(ax, values, weights, normalize, **kwargs):
     sort_idxs = np.argsort(values)
     values = values[sort_idxs]
     weights = weights[sort_idxs]
@@ -145,7 +167,7 @@ def plot_cumulative(ax, values, weights, normalize, color, label):
     if normalize:
         cumulative_weight = cumulative_weight / cumulative_weight[-1]
 
-    ax.plot(values, cumulative_weight, color=color, label=label)
+    ax.plot(values, cumulative_weight, **kwargs)
     ax.set_xscale("log")
     if normalize:
         ax.add_labels("H$_2$ Number Density [$cm^{-3}$]", "Cumulative Mass Fraction")
@@ -166,8 +188,9 @@ for direc, a in direc_a.items():
 
     color = run_attributes.colors[direc]
     label = labels[direc]
+    ls = lss[direc]
 
-    plot_pdf(ax, n_h2, m_h2, -4, 7, 0.2, color, label=label)
+    plot_pdf(ax, n_h2, m_h2, -4, 7, 0.2, color=color, ls=ls, label=label)
     # plot_cumulative(axs[1], n_h2, m_h2, False, color, label=None)
     # plot_cumulative(axs[2], n_h2, m_h2, True, color, label=label)
 
