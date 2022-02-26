@@ -81,7 +81,11 @@ def check_for_gas_masses(line, halo_dict):
     for gas_type in gas_types:
         if line.startswith(gas_type + ": "):
             quantity = u.Quantity(line.split()[1], line.split()[2])
-            radius = line.split("within")[1].strip()
+            # get the radius, if it's there. If not, assume the virial radius
+            if "within" in line:
+                radius = line.split("within")[1].strip()
+            else:
+                radius = "r_vir"
             gas_radii.add(radius)
             halo_dict[f"gas_mass_{gas_type}_{radius}"] = quantity
 
