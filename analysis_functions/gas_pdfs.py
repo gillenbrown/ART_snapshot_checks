@@ -16,13 +16,13 @@ def get_gas_number_density(region):
     m_H = yt.units.mass_hydrogen
     m_He = m_H * (4.002602 / 1.007825)
     m_b = X_H * m_H + X_He * m_He
-    n = region[("gas", "density")] / m_b
+    n = get_gas_density(region) / m_b
     return n.to("cm**(-3)")
 
 
 def get_gas_density(region):
-    n = region[("gas", "density")]
-    return n.to("g * cm**(-3)")
+    rho = region[("gas", "density")]
+    return rho.to("g * cm**(-3)")
 
 
 def get_gas_volume(region):
@@ -33,8 +33,17 @@ def get_gas_mass(region):
     return region[("gas", "cell_mass")].to("Msun")
 
 
+def get_h2_density(region):
+    return 2 * region[("artio", "RT_HVAR_H2")]
+
+
+def get_h2_number_density(region):
+    n = get_h2_density(region) / (2 * yt.units.mass_hydrogen)
+    return n.to("cm**(-3)")
+
+
 def get_h2_mass(region):
-    return 2 * region[("artio", "RT_HVAR_H2")] * get_gas_volume(region)
+    return get_h2_density(region) * get_gas_volume(region)
 
 
 def get_h2_frac(region):
@@ -148,7 +157,7 @@ def get_gas_level(region):
     return region[("index", "grid_level")].to("").value
 
 
-def cumulative_property(region, prop_func, weight_func):
+def cumulative_property(region, prop_func, prop_unit, weight_func, weight_unit):
     """
     Create the cumulative distribution of the given property.
 
@@ -165,12 +174,12 @@ def cumulative_property(region, prop_func, weight_func):
               the cumulative weights that are less than or equal to this value. This
               is done so that these two lists can simply be plotted as x and y.
     """
-    values = prop_func(region)
+    values = prop_func(region).to(prop_unit).value
 
     if weight_func is None:
         weights = np.ones(values.shape)
     else:
-        weights = weight_func(region)
+        weights = weight_func(region).to(weight_unit).value
 
     sort_idxs = np.argsort(values)
     values = values[sort_idxs]
@@ -181,7 +190,9 @@ def cumulative_property(region, prop_func, weight_func):
     return values, cumulative_weight
 
 
-def pdf_property(region, prop_func, weight_func, x_min, x_max, bin_size):
+def pdf_property(
+    region, prop_func, prop_unit, weight_func, weight_unit, x_min, x_max, bin_size
+):
     """
     Create a pdf of gas properties.
 
@@ -209,12 +220,12 @@ def pdf_property(region, prop_func, weight_func, x_min, x_max, bin_size):
     boundaries = 10 ** boundaries_log
     centers = 10 ** np.array(centers_log)
 
-    values = prop_func(region)
+    values = prop_func(region).to(prop_unit).value
 
     if weight_func is None:
         weights = np.ones(values.shape)
     else:
-        weights = weight_func(region)
+        weights = weight_func(region).to(weight_unit).value
 
     dx = np.histogram(a=values, bins=boundaries, weights=weights)[0]
     # make dx per log rho
