@@ -71,6 +71,7 @@ run_attributes_script = ./utils/run_attributes.py
 utils_scripts = $(gal_readin_script) $(plot_utils_script) $(run_attributes_script)
 age_spread_utils = ./analysis_functions/age_spreads.py
 cimf_utils = ./analysis_functions/cimf.py
+gas_pdf_utils = ./analysis_functions/gas_pdfs.py
 dt_history_script = ./dt_history.py
 cfl_script = ./cfl_violations.py
 tidal_consolidation_script = ./tidal_consolidation.py
@@ -474,7 +475,7 @@ $(galaxies): %: $(galaxies_script) $(rockstar_sentinels)
 $(forming_clusters): %: $(forming_clusters_script) $(rockstar_sentinels)
 	python $(forming_clusters_script) $@ $(call forming_to_sim, $@)
 
-$(gas_pdfs): %: $(gas_pdf_script) $(rockstar_sentinels)
+$(gas_pdfs): %: $(gas_pdf_script) $(gas_pdf_utils) $(rockstar_sentinels)
 	python $(gas_pdf_script) $@ $(call pdf_to_sim, $@)
 
 # Make the CIMF plots. We could use &: instead of : to indicate a grouped
