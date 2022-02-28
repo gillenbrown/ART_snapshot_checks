@@ -153,10 +153,11 @@ def plot_pdf(ax, values, weights, x_min, x_max, bin_size, **kwargs):
     # make dx per log rho
     dx = dx / (bin_size * np.log(10))
     ax.plot(centers, dx, **kwargs)
+    ax.axvline(500, ls=":", c=bpl.almost_black)
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.add_labels("H$_2$ Number Density [$cm^{-3}$]", "dM/dlogn")
-    ax.set_limits(1, 1e6, 1e4, 1e9)
+    ax.add_labels("H$_2$ Number Density [$cm^{-3}$]", "dM/dlogn [$M_\odot$]")
+    ax.set_limits(1, 2e5, 1e5, 1e9)
 
 
 def plot_cumulative(ax, values, weights, normalize, **kwargs):
@@ -177,6 +178,12 @@ def plot_cumulative(ax, values, weights, normalize, **kwargs):
         ax.set_limits(1e-3, 1e6, 0, 5e8)
 
 
+def format_exp(value):
+    exp = int(np.floor(np.log10(value)))
+    factor = value / 10 ** exp
+    return f"{factor:.2f}" + "$\\times 10^{" + str(exp) + "}$"
+
+
 # ======================================================================================
 #
 # Then make the plot
@@ -187,7 +194,7 @@ for direc, a in direc_a.items():
     n_h2, m_h2 = read_gas_file(direc / "checks" / f"gas_pdf_a{a}.txt")
 
     color = run_attributes.colors[direc]
-    label = labels[direc]
+    label = labels[direc] + "$M_{H_2}$ = " + format_exp(np.sum(m_h2)) + "$M_\odot$"
     ls = lss[direc]
 
     plot_pdf(ax, n_h2, m_h2, -4, 7, 0.2, color=color, ls=ls, label=label)
