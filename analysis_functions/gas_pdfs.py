@@ -38,7 +38,8 @@ def get_h2_density(region):
 
 
 def get_h2_number_density(region):
-    n = get_h2_density(region) / (2 * yt.units.mass_hydrogen)
+    # This is defined to be the number density of H atoms, not H2 molecules.
+    n = get_h2_density(region) / yt.units.mass_hydrogen
     return n.to("cm**(-3)")
 
 
