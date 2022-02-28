@@ -58,19 +58,19 @@ lss = {
 labels = {
     run_attributes.old_ic(
         "discrete_hn00_virial10_entropy_fboost1_sfe001"
-    ): "$f_{boost}=1$, $\epsilon_{ff}=1$%",
+    ): "$f_{boost}=1$, $\epsilon_{ff}=1$%,    ",
     run_attributes.old_ic(
         "discrete_hn00_virial10_entropy_fboost1_sfe010"
-    ): "$f_{boost}=1$, $\epsilon_{ff}=10$%",
+    ): "$f_{boost}=1$, $\epsilon_{ff}=10$%,  ",
     run_attributes.old_ic(
         "discrete_hn00_virial10_entropy_fboost1"
-    ): "$f_{boost}=1$, $\epsilon_{ff}=100$%",
+    ): "$f_{boost}=1$, $\epsilon_{ff}=100$%,",
     run_attributes.old_ic(
         "discrete_hn00_virial10_entropy_fboost2_sfe001"
-    ): "$f_{boost}=2$, $\epsilon_{ff}=1$%",
+    ): "$f_{boost}=2$, $\epsilon_{ff}=1$%,    ",
     run_attributes.old_ic(
         "discrete_hn00_virial10_entropy_fboost2_sfe010"
-    ): "$f_{boost}=2$, $\epsilon_{ff}=10$%",
+    ): "$f_{boost}=2$, $\epsilon_{ff}=10$%,  ",
     run_attributes.old_ic(
         "discrete_hn00_virial10_entropy_fboost2"
     ): "$f_{boost}=2$, $\epsilon_{ff}=100$%",
@@ -157,7 +157,7 @@ def plot_pdf(ax, values, weights, x_min, x_max, bin_size, **kwargs):
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.add_labels("H$_2$ Number Density [$cm^{-3}$]", "dM/dlogn [$M_\odot$]")
-    ax.set_limits(1, 2e5, 1e5, 1e9)
+    ax.set_limits(1, 2e5, 1e5, 3e8)
 
 
 def plot_cumulative(ax, values, weights, normalize, **kwargs):
@@ -181,7 +181,7 @@ def plot_cumulative(ax, values, weights, normalize, **kwargs):
 def format_exp(value):
     exp = int(np.floor(np.log10(value)))
     factor = value / 10 ** exp
-    return f"{factor:.2f}" + "$\\times 10^{" + str(exp) + "}$"
+    return f"{factor:.1f}" + "$\\times 10^{" + str(exp) + "}$"
 
 
 # ======================================================================================
@@ -194,14 +194,14 @@ for direc, a in direc_a.items():
     n_h2, m_h2 = read_gas_file(direc / "checks" / f"gas_pdf_a{a}.txt")
 
     color = run_attributes.colors[direc]
-    label = labels[direc] + "$M_{H_2}$ = " + format_exp(np.sum(m_h2)) + "$M_\odot$"
+    label = labels[direc] + " $M_{H_2}$ = " + format_exp(np.sum(m_h2)) + "$M_\odot$"
     ls = lss[direc]
 
     plot_pdf(ax, n_h2, m_h2, -4, 7, 0.2, color=color, ls=ls, label=label)
     # plot_cumulative(axs[1], n_h2, m_h2, False, color, label=None)
     # plot_cumulative(axs[2], n_h2, m_h2, True, color, label=label)
 
-legend = plot_utils.add_legend(ax, loc=1, fontsize=14)
+legend = plot_utils.add_legend(ax, loc=3, fontsize=13)
 # legend = plot_utils.add_legend(
 #     ax, bbox_to_anchor=(1.04, 1), loc="upper left", fontsize=10
 # )
