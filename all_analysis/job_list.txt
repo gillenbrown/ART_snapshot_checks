@@ -1,9 +1,0 @@
-python -u all_analysis.py rj_sfe010_hn20 > stdout_all_analysis_rj_sfe010_hn20.txt
-python -u all_analysis.py rj_sfe100_hn20 > stdout_all_analysis_rj_sfe100_hn20.txt
-python -u all_analysis.py tl_sfe001_hn20 > stdout_all_analysis_tl_sfe001_hn20.txt
-python -u all_analysis.py tl_sfe010_hn20 > stdout_all_analysis_tl_sfe010_hn20.txt
-python -u all_analysis.py tl_sfe100_hn00 > stdout_all_analysis_tl_sfe100_hn00.txt
-python -u all_analysis.py tl_sfe100_hn00_fboost1 > stdout_all_analysis_tl_sfe100_hn00_fboost1.txt
-python -u all_analysis.py tl_sfe100_hn00_fboost3 > stdout_all_analysis_tl_sfe100_hn00_fboost3.txt
-python -u all_analysis.py tl_sfe100_hn05 > stdout_all_analysis_tl_sfe100_hn05.txt
-python -u all_analysis.py tl_sfe100_hn20 > stdout_all_analysis_tl_sfe100_hn20.txt
