@@ -30,7 +30,6 @@ except:
     write(f"Error in creation! {output_loc}")
     exit()
 
-write(f"loaded {output_loc}")
 # then do analysis
 try:
     ad = sim.ds.all_data()
@@ -38,12 +37,8 @@ except:
     write(f"Error in ad! {output_loc}")
     exit()
 
-write(f"got all data {output_loc}")
-
 try:
     densities = gas_pdfs.get_gas_number_density(ad).to("cm**(-3)").value
     write(f"max number density = {np.max(densities):.2e} cm^-3 {output_loc}")
 except:
     write(f"Error in densities! {output_loc}")
-
-write(f"done {output_loc}")
