@@ -28,9 +28,10 @@ cimf_sentinel = Path(sys.argv[1])
 #
 # ======================================================================================
 sims_last = load_galaxies.get_simulations_last(sys.argv[2:])
-common_z = 4.0
-sims_common = load_galaxies.get_simulations_same_scale(sys.argv[2:], common_z)
-
+sims_common, scale_common = load_galaxies.get_simulations_common(sys.argv[2:])
+common_z = (1 / scale_common) - 1
+highz_z = 4.0
+sims_highz = load_galaxies.get_simulations_same_scale(sys.argv[2:], highz_z)
 
 # ======================================================================================
 #
@@ -107,6 +108,8 @@ def fit_power_law(sim_share_type, max_age_myr=np.inf, max_z=np.inf):
     # choose which simulations we're using
     if sim_share_type == "common":
         sims = sims_common
+    elif sim_share_type == "highz":
+        sims = sims_highz
     else:
         sims = sims_last
 
@@ -195,7 +198,7 @@ def plot_cimf(
                         default, which plots all stars.
     """
     # validate options given
-    if sim_share_type not in ["last", "common"]:
+    if sim_share_type not in ["last", "common", "highz"]:
         raise ValueError("bad sim_share_type")
     # if we plot current, it should be alone, with nothing else
     if ("current" in masses_to_plot or "evolved" in masses_to_plot) and len(
@@ -234,6 +237,8 @@ def plot_cimf(
     # choose which simulations we're using
     if sim_share_type == "common":
         sims = sims_common
+    elif sim_share_type == "highz":
+        sims = sims_highz
     else:
         sims = sims_last
 
@@ -310,7 +315,7 @@ def plot_cimf(
         and "initial" in masses_to_plot
     ):
         y_max = 1e6
-    elif sim_share_type == "common" or axis_name == "lg_sfe":
+    elif sim_share_type in ["common", "highz"] or axis_name == "lg_sfe":
         y_max = 1e5
     else:
         y_max = 1e6
@@ -326,6 +331,8 @@ def plot_cimf(
     # if there is a common redshift, annotate it
     if sim_share_type == "common":
         ax.easy_add_text(f"z = {common_z:.1f}", "upper left")
+    elif sim_share_type == "highz":
+        ax.easy_add_text(f"z = {highz_z:.1f}", "upper left")
 
     if "current" in masses_to_plot or "evolved" in masses_to_plot:
         ax.add_labels("$f_b$M [$M_\odot$]", "dN/dlogM")
@@ -346,23 +353,23 @@ def plot_cimf(
 # ======================================================================================
 # then actually call this function to build the plots
 for plot_name in load_galaxies.get_plot_names(sims_last):
-    for share_type in ["common", "last"]:
+    for share_type in ["common", "last", "highz"]:
         # plot particle masses with and without guiding lines.
-        plot_cimf(plot_name, share_type, ["initial"], guiding_lines=False)
+        # plot_cimf(plot_name, share_type, ["initial"], guiding_lines=False)
         plot_cimf(plot_name, share_type, ["initial"], guiding_lines=True)
         # plot main CIMF and unbound CIMF. Guiding lines off by default
-        plot_cimf(plot_name, share_type, ["initial_bound", "initial"])
-        # plot recently formed clusters
-        plot_cimf(plot_name, share_type, ["initial_bound", "initial"], max_age_myr=300)
-        # plot surviving clusters, with and without guiding lines
-        plot_cimf(plot_name, share_type, ["current"], guiding_lines=False)
-        plot_cimf(plot_name, share_type, ["current"], guiding_lines=True)
-    # plot low metallicity clusters. Only do this on the last output
-    plot_cimf(plot_name, "last", ["initial"], max_z=0.001)
-    # plot cluster population evolved to z=0. Only use the last output for this
-    # plot_cimf(plot_name, "last", ["evolved"])
-# fit the power law slope
-fit_power_law("last")
-fit_power_law("common")
+#         plot_cimf(plot_name, share_type, ["initial_bound", "initial"])
+#         # plot recently formed clusters
+#         plot_cimf(plot_name, share_type, ["initial_bound", "initial"], max_age_myr=300)
+#         # plot surviving clusters, with and without guiding lines
+#         plot_cimf(plot_name, share_type, ["current"], guiding_lines=False)
+#         plot_cimf(plot_name, share_type, ["current"], guiding_lines=True)
+#     # plot low metallicity clusters. Only do this on the last output
+#     plot_cimf(plot_name, "last", ["initial"], max_z=0.001)
+#     # plot cluster population evolved to z=0. Only use the last output for this
+#     # plot_cimf(plot_name, "last", ["evolved"])
+# # fit the power law slope
+# fit_power_law("last")
+# fit_power_law("highz")
 
 cimf_sentinel.touch()

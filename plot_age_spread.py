@@ -29,8 +29,8 @@ plot_dir = sentinel.parent
 #
 # ======================================================================================
 sims_last = load_galaxies.get_simulations_last(sys.argv[2:])
-common_redshift = 4
-sims_common = load_galaxies.get_simulations_same_scale(sys.argv[2:], common_redshift)
+sims_common, scale_common = load_galaxies.get_simulations_common(sys.argv[2:])
+common_redshift = (1 / scale_common) - 1
 
 
 def time_cumulative_hist(sim, time_func, mask_name):
