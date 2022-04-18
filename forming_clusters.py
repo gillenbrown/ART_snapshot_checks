@@ -10,12 +10,13 @@ Takes 2 required parameter.
     where this code was called from, or an absolute path.
 
 """
-from utils import load_galaxies as lg
-
 import sys
 from pathlib import Path
 
+import numpy as np
 import yt
+
+from utils import load_galaxies as lg
 from analysis_functions import gas_pdfs
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
@@ -73,6 +74,23 @@ yt.add_field(
 
 # =========================================================================
 #
+# function to calculate the amount of nearby stellar mass
+#
+# =========================================================================
+def find_nearby_mass(ds, center):
+    sphere = ds.sphere(center=center, radius=(100, "pc"))
+
+    # find star particles that are still forming and get properties
+    young_idx = sphere[("STAR", "age")].to("Myr").value < 15
+    star_radii = sphere[("STAR", "particle_position_spherical_radius")][young_idx]
+    star_mass = sphere[("STAR", "MASS")][young_idx]
+
+    nearby_idx = star_radii < 30 * yt.units.pc
+    return np.sum(star_mass.to("Msun").value[nearby_idx])
+
+
+# =========================================================================
+#
 # load sims and prep output file
 #
 # =========================================================================
@@ -89,11 +107,15 @@ def out(info):
 # print header for this output file
 out("# This catalog contains columns with the following info: ")
 out("# - Particle ID")
+out("# - Position x [kpc]")
+out("# - Position y [kpc]")
+out("# - Position z [kpc]")
 out("# - Cluster Age [Myr]")
 out("# - number density of cluster cell [cm^(-3)]")
 out("# - H2 mass of cluster cell [Msun]")
 out("# - H2 fraction in cluster cell")
 out("# - Temperature in cluster cell [K]")
+out("# - Mass of clusters younger than 15 Myr within 30 pc of this cluster [Msun]")
 
 # =========================================================================
 #
@@ -139,15 +161,22 @@ for galaxy in sim.galaxies:
     h2_frac = h2_frac.to("").value
     temp = temp.to("K").value
 
+    # also get the mass of other forming clusters
+    cluster_mass = [find_nearby_mass(sim.ds, cen) for cen in xyz]
+
     # then print info
     for i in range(len(x)):
         out(
             f"{ids[i]:.0f} "
+            f"{x[i].to('kpc').value:.4f} "
+            f"{y[i].to('kpc').value:.4f} "
+            f"{z[i].to('kpc').value:.4f} "
             f"{ages[i]:.2f} "
             f"{ns[i]:.2e} "
             f"{h2_mass[i]:.2e} "
             f"{h2_frac[i]:.2f} "
-            f"{temp[i]:.2e}"
+            f"{temp[i]:.2e} "
+            f"{cluster_mass[i]:.2e}"
         )
 
 
