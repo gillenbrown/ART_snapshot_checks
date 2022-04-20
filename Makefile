@@ -65,6 +65,7 @@ pdf_plot_script = ./plot_gas_pdf.py
 cluster_trends_script = ./plot_cluster_trends.py
 bound_fraction_script = ./plot_bound_fraction.py
 galaxy_mass_script = ./print_galaxy_masses.py
+massive_sf_regions_script = ./massive_sf_regions.py
 gal_readin_script = ./utils/load_galaxies.py
 plot_utils_script = ./utils/plot_utils.py
 run_attributes_script = ./utils/run_attributes.py
@@ -298,6 +299,7 @@ bound_fraction_sentinel = $(comparison_plots_dir)/bound_fraction_sentinel.txt
 pdf_plot = $(comparison_plots_dir)/h2_gas_pdf.pdf
 # also a text file with the masses of all sims. This is on all machines.
 galaxy_masses = $(comparison_plots_dir)/galaxy_masses.txt
+massive_sf_regions = $(comparison_plots_dir)/massive_sf_regions.txt
 
 # ------------------------------------------------------------------------------
 #
@@ -417,10 +419,10 @@ paper_plots = $(paper_halo_growth_plot)
 # 
 # ------------------------------------------------------------------------------
 ifeq ($(machine),shangrila)
-	outputs = $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(cluster_trends_sentinel) $(age_metallicity_z0_sentinel) $(bound_fraction_sentinel) $(cimf_evolution_plots) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(pdf_plot) $(galaxy_masses) $(debugs) $(forming_clusters_sentinel)
+	outputs = $(my_directories) $(timings) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(cluster_trends_sentinel) $(age_metallicity_z0_sentinel) $(bound_fraction_sentinel) $(cimf_evolution_plots) $(paper_plots) $(halo_growth_plot) $(galaxy_comparison_sentinel) $(pdf_plot) $(galaxy_masses) $(debugs) $(forming_clusters_sentinel) $(massive_sf_regions)
 	# $(dt_history_plots) $(cfl_plots) $(movies)
 else ifeq ($(machine),stampede2_analysis)
-	outputs = $(my_directories) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(cluster_trends_sentinel) $(age_metallicity_z0_sentinel) $(bound_fraction_sentinel)  $(cimf_evolution_plots)
+	outputs = $(my_directories) $(sfh_sentinel) $(cimf_sentinel) $(age_spread_sentinel) $(cluster_trends_sentinel) $(age_metallicity_z0_sentinel) $(bound_fraction_sentinel)  $(cimf_evolution_plots) $(massive_sf_regions)
 else ifeq ($(machine),stampede2_halos)
 	outputs = $(my_directories) $(gas_pdfs) $(galaxy_masses) $(debugs) $(forming_clusters_sentinel)
 endif
@@ -519,6 +521,10 @@ $(bound_fraction_sentinel): $(rockstar_sentinels) $(bound_fraction_script) $(uti
 # the list of galaxy stellar masses
 $(galaxy_masses): $(galaxy_mass_script) $(galaxies)
 	python $(galaxy_mass_script) $(galaxy_masses) $(galaxies)
+
+# parse the forming clusters outputs to get the most massive star forming regions
+$(massive_sf_regions): $(massive_sf_regions_script) $(forming_clusters)
+	python $(massive_sf_regions_script) $@ $(sim_dirs_hydro)
 
 # Make the individual nbody plots - several examples of very similar things here
 $(halo_1_full_plots): %: $(nbody_single_halo_plots_script) $(nbody_full_plot_script)
