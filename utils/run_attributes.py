@@ -214,7 +214,7 @@ colors = defaultdict(
         old_ic("discrete_hn00_virial10_entropy_fboost1_crho30"): h(0.85, 0.30, 0.80),
         old_ic("discrete_hn00_virial10_entropy_molvadim_fboost1"): h(0.95, 0.4, 0.3),
         old_ic("discrete_hn00_virial10_entropy_newagediff"): h(0.55, 0.35, 0.45),
-        old_ic("discrete_hn00_virial10_entropy_newagediffallave"): h(0.35, 0.45, 0.57),
+        old_ic("discrete_hn00_virial10_entropy_newagediffallave"): h(0.35, 0.45, 0.65),
         old_ic("discrete_hn00_virial10_entropy_newagediffallbirth"): h(0.2, 0.4, 0.85),
         # These colors are very carefully chosen to avoid colorblindness issues. The hue
         # changes between the SFE variations (blue) to the HN variations (purple), with
