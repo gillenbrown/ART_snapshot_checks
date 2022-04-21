@@ -195,7 +195,7 @@ def default_color():
 colors = defaultdict(
     default_color,
     {
-        hui("sfe_100"): "#AAAAAA",
+        hui("sfe_100"): h(0.06, 0.90, 0.60),
         old_ic("discrete_hn00_virial10_entropy_fboost1"): h(0.00, 0.70, 0.5),
         old_ic("discrete_hn00_virial10_entropy_fboost2"): h(0.05, 0.70, 0.75),
         old_ic("discrete_hn00_virial10_entropy_fboost3"): h(0.08, 0.70, 0.95),
@@ -207,15 +207,15 @@ colors = defaultdict(
         old_ic("discrete_hn00_virial10_entropy_fboost2_sfe010"): h(0.08, 0.70, 0.80),
         old_ic("discrete_hn00_virial10_entropy_fboost2_sfe001"): h(0.10, 0.50, 0.850),
         old_ic("discrete_hn00_virial10_advect"): bpl.almost_black,
-        old_ic("discrete_hn00_virial10"): h(0.06, 0.70, 0.80),
-        old_ic("continuoushui_hn00_novirial"): h(0.06, 0.30, 0.85),
+        old_ic("discrete_hn00_virial10"): "#CCCCCC",
+        old_ic("continuoushui_hn00_novirial"): h(0.06, 0.40, 0.85),
         old_ic("discrete_hn00_novirial_entropy_fboost1"): bpl.color_cycle[1],
         old_ic("discrete_hn00_virial10_entropy_fboost1_crho03"): h(0.05, 0.50, 0.60),
         old_ic("discrete_hn00_virial10_entropy_fboost1_crho30"): h(0.85, 0.30, 0.80),
         old_ic("discrete_hn00_virial10_entropy_molvadim_fboost1"): h(0.95, 0.4, 0.3),
         old_ic("discrete_hn00_virial10_entropy_newagediff"): h(0.55, 0.35, 0.45),
-        old_ic("discrete_hn00_virial10_entropy_newagediffallave"): h(0.35, 0.45, 0.75),
-        old_ic("discrete_hn00_virial10_entropy_newagediffallbirth"): h(0.2, 0.6, 0.8),
+        old_ic("discrete_hn00_virial10_entropy_newagediffallave"): h(0.35, 0.45, 0.57),
+        old_ic("discrete_hn00_virial10_entropy_newagediffallbirth"): h(0.2, 0.4, 0.85),
         # These colors are very carefully chosen to avoid colorblindness issues. The hue
         # changes between the SFE variations (blue) to the HN variations (purple), with
         # the shared SFE 100 HN 20 run in the middle. The blues are more saturated,
