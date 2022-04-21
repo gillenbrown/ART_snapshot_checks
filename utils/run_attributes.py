@@ -195,7 +195,7 @@ def default_color():
 colors = defaultdict(
     default_color,
     {
-        hui("sfe_100"): h(0.06, 0.90, 0.60),
+        hui("sfe_100"): h(0.06, 0.80, 0.80),
         old_ic("discrete_hn00_virial10_entropy_fboost1"): h(0.00, 0.70, 0.5),
         old_ic("discrete_hn00_virial10_entropy_fboost2"): h(0.05, 0.70, 0.75),
         old_ic("discrete_hn00_virial10_entropy_fboost3"): h(0.08, 0.70, 0.95),
