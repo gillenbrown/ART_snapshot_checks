@@ -4,10 +4,10 @@ import numpy as np
 import yt
 
 # add path to sys to import utils
-sys.path.append(str(Path("..").resolve() / "utils"))
-sys.path.append(str(Path("..").resolve() / "analysis_functions"))
-import load_galaxies
-import gas_pdfs
+sys.path.append(str(Path("..").resolve()))
+sys.path.append(str(Path("..").resolve()))
+from utils import load_galaxies
+from analysis_functions import gas_pdfs
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
