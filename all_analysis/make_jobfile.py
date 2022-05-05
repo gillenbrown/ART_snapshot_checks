@@ -1,8 +1,9 @@
+import os
 from pathlib import Path
 
 out_file = open("./job_list.txt", "w")
 
-scratch_dir = Path("/scratch/06912/tg862118/art_runs/analysis/production")
+scratch_dir = Path(os.getenv("SCRATCH")) / "art_runs" / "analysis" / "production"
 
 directories = [
     scratch_dir / "rj_sfe010_hn20",

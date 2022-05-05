@@ -34,6 +34,6 @@ module load launcher
 export LAUNCHER_RMI=SLURM
 export LAUNCHER_PLUGIN_DIR=$LAUNCHER_DIR/plugins
 # setup of my tasks
-export LAUNCHER_WORKDIR="/work/06912/tg862118/stampede2/ART_snapshot_checks/all_analysis"
-export LAUNCHER_JOB_FILE="job_list.txt"
+export LAUNCHER_WORKDIR=$WORK/stampede2/ART_snapshot_checks/all_analysis
+export LAUNCHER_JOB_FILE=job_list.txt
 $LAUNCHER_DIR/paramrun

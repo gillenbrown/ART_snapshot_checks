@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 from collections import defaultdict
 
 from matplotlib import cm
@@ -12,7 +13,8 @@ import betterplotlib as bpl
 #
 # ======================================================================================
 # I have to hardcode some labels to make this easier, parsing them won't work
-# nearly as well
+# nearly as well. Most of these are defined to work on shangrila. Only the
+# stampede2_analysis one (which used at the very end) uses paths on Stampede2.
 base_dir = Path.home() / "art_runs" / "runs"
 
 
@@ -35,7 +37,9 @@ def rj_nbody(suffix):
 
 
 def stampede2_analysis(suffix):
-    analysis_dir = Path("/scratch/06912/tg862118/art_runs/analysis/production")
+    # This is only needed on Stampede2. On shangrila the scratch variable is not
+    # defined, but then these won't be used, so it doesn't matter
+    analysis_dir = Path(os.getenv("SCRATCH")) / "art_runs" / "analysis" / "production"
     return analysis_dir / suffix / "run"
 
 

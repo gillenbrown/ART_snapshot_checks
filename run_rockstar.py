@@ -39,7 +39,7 @@ if machine == "shangrila":
     if "old_ic_comparison_production_analog" not in str(sim_dir):
         raise RuntimeError("Trying to do halo finding somewhere other than Stampede2!")
 elif machine == "stampede2_halos":
-    if "/scratch/06912/tg862118/art_runs/runs/production" not in str(sim_dir):
+    if os.getenv("SCRATCH") + "/art_runs/runs/production" not in str(sim_dir):
         raise RuntimeError("Doing halo finding somewhere other than runtime directory!")
 else:
     raise ValueError("Machine not recognized")
