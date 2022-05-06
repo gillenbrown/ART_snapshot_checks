@@ -198,9 +198,9 @@ for galaxy in sim.galaxies:
             f"{h2_mass[i]:.2e} "
             f"{h2_frac[i]:.2f} "
             f"{temp[i]:.2e} "
-            f"{clustered_mass[i]:.2e}"
-            f"{clustered_sfr[i]:.2e}"
-            f"{clustered_age[i]:.3f}"
+            f"{clustered_mass[i]:.2e} "
+            f"{clustered_sfr[i]:.2e} "
+            f"{clustered_age[i]:.3f} "
         )
 
 
