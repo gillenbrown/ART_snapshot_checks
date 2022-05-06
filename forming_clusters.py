@@ -17,7 +17,7 @@ import numpy as np
 import yt
 
 from utils import load_galaxies as lg
-from analysis_functions import gas_pdfs
+from analysis_functions import gas_pdfs, age_spreads
 
 yt.funcs.mylog.setLevel(50)  # ignore yt's output
 
@@ -77,16 +77,31 @@ yt.add_field(
 # function to calculate the amount of nearby stellar mass
 #
 # =========================================================================
-def find_nearby_mass(ds, center):
+def find_nearby_mass_sfr_age(ds, center):
     sphere = ds.sphere(center=center, radius=(100, "pc"))
 
     # find star particles that are still forming and get properties
-    young_idx = sphere[("STAR", "age")].to("Myr").value < 15
+    star_age = sphere[("STAR", "age")]
+    young_idx = star_age.to("Myr").value < 15
+    star_age = star_age[young_idx]
     star_radii = sphere[("STAR", "particle_position_spherical_radius")][young_idx]
     star_mass = sphere[("STAR", "MASS")][young_idx]
 
     nearby_idx = star_radii < 30 * yt.units.pc
-    return np.sum(star_mass.to("Msun").value[nearby_idx])
+    return_mass = np.sum(star_mass.to("Msun").value[nearby_idx])
+
+    # Also calculate the star formation rate within this sphere
+    # in units of stellar masses per year
+    each_sfr = star_mass / star_age
+    return_sfr = np.sum(each_sfr.to("Msun/yr").value)
+
+    # and average age
+    star_average_age = star_age - age_spreads.ave_time(sphere)[young_idx]
+    return_age = np.average(
+        star_average_age.to("Myr").value, weights=star_mass.to("Msun").value
+    )
+
+    return return_mass, return_sfr, return_age
 
 
 # =========================================================================
@@ -116,6 +131,8 @@ out("# - H2 mass of cluster cell [Msun]")
 out("# - H2 fraction in cluster cell")
 out("# - Temperature in cluster cell [K]")
 out("# - Mass of clusters younger than 15 Myr within 30 pc of this cluster [Msun]")
+out("# - Star formation rate within 30 pc of this cluster [Msun/year]")
+out("# - Ave age of clusters younger than 15 Myr within 30 pc of this cluster [Myr]")
 
 # =========================================================================
 #
@@ -162,7 +179,12 @@ for galaxy in sim.galaxies:
     temp = temp.to("K").value
 
     # also get the mass of other forming clusters
-    cluster_mass = [find_nearby_mass(sim.ds, cen) for cen in xyz]
+    clustered_mass, clustered_sfr, clustered_age = [], [], []
+    for cen in xyz:
+        this_mass, this_sfr, this_age = find_nearby_mass_sfr_age(sim.ds, cen)
+        clustered_mass.append(this_mass)
+        clustered_sfr.append(this_sfr)
+        clustered_age.append(this_age)
 
     # then print info
     for i in range(len(x)):
@@ -176,7 +198,9 @@ for galaxy in sim.galaxies:
             f"{h2_mass[i]:.2e} "
             f"{h2_frac[i]:.2f} "
             f"{temp[i]:.2e} "
-            f"{cluster_mass[i]:.2e}"
+            f"{clustered_mass[i]:.2e}"
+            f"{clustered_sfr[i]:.2e}"
+            f"{clustered_age[i]:.3f}"
         )
 
 
