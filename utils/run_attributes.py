@@ -38,8 +38,10 @@ def rj_nbody(suffix):
 
 def stampede2_analysis(suffix):
     # This is only needed on Stampede2. On shangrila the scratch variable is not
-    # defined, but then these won't be used, so it doesn't matter
-    analysis_dir = Path(os.getenv("SCRATCH")) / "art_runs" / "analysis" / "production"
+    # defined, but then these won't be used, so it doesn't matter. I do need to turn it
+    # into a string in case it is None, otherwise it will break Path
+    scratch_dir = Path(str(os.getenv("SCRATCH")))
+    analysis_dir = scratch_dir / "art_runs" / "analysis" / "production"
     return analysis_dir / suffix / "run"
 
 
