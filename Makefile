@@ -24,67 +24,6 @@ endif
 
 # ------------------------------------------------------------------------------
 #
-#  Code locations - depend on the machine
-# 
-# ------------------------------------------------------------------------------
-ifeq ($(machine),shangrila)
-	tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
-	tree_dir = /u/home/gillenb/code/not_mine/consistent-trees
-	timing_script = /u/home/gillenb/code/mine/cart/utils/scripts/parse_timing2.pl
-endif
-ifneq (,$(findstring stampede2,$(machine)))
-	tree_config_script = $(HOME)/code/rockstar-galaxies/scripts/gen_merger_cfg.pl
-	tree_dir = $(HOME)/code/consistent-trees
-	timing_script = $(HOME)/code/cart/utils/scripts/parse_timing2.pl
-endif
-
-# ------------------------------------------------------------------------------
-#
-#  Code locations that are relative to this file
-# 
-# ------------------------------------------------------------------------------
-halo_finding_script = ./run_rockstar.py
-debug_script = ./debug_output.py
-galaxies_script = ./galaxy_summaries.py
-forming_clusters_script = ./forming_clusters.py
-gas_pdf_script = ./write_gas_pdf.py
-nbody_single_halo_plots_script = ./plot_single_halo_nbody.py
-nbody_refined_plot_script = ./plot_refined_region_nbody.py
-nbody_local_group_plot_script = ./plot_local_group_nbody.py
-nbody_full_plot_script = ./utils/nbody_projection_all_species.py
-nbody_split_plot_script = ./utils/nbody_projection_split_species.py
-halo_growth_comp_script = ./halo_growth_comparison.py
-sfh_plots_script = ./plot_sfh.py
-cimf_plots_script = ./plot_cimf.py
-cimf_evolution_script = ./plot_cimf_evolution.py
-age_metallicity_z0_script = ./plot_z0_age_metallicity.py
-age_plot_script = ./plot_age_spread.py
-galaxies_comparison_script = ./plot_galaxy_comparisons.py
-plot_forming_clusters_script = ./plot_forming_clusters.py
-pdf_plot_script = ./plot_gas_pdf.py
-cluster_trends_script = ./plot_cluster_trends.py
-bound_fraction_script = ./plot_bound_fraction.py
-galaxy_mass_script = ./print_galaxy_masses.py
-massive_sf_regions_script = ./massive_sf_regions.py
-gal_readin_script = ./utils/load_galaxies.py
-plot_utils_script = ./utils/plot_utils.py
-run_attributes_script = ./utils/run_attributes.py
-utils_scripts = $(gal_readin_script) $(plot_utils_script) $(run_attributes_script)
-age_spread_utils = ./analysis_functions/age_spreads.py
-cimf_utils = ./analysis_functions/cimf.py
-gas_pdf_utils = ./analysis_functions/gas_pdfs.py
-dt_history_script = ./dt_history.py
-cfl_script = ./cfl_violations.py
-tidal_consolidation_script = ./tidal_consolidation.py
-tree_script = ./build_trees.py
-read_tree_dir = ./read_tree
-read_tree_exe = $(read_tree_dir)/halo_history
-read_tree_src = $(read_tree_dir)/halo_history.c
-comparison_plots_dir = ./comparison_plots
-paper_plots_dir = ./paper_plots
-
-# ------------------------------------------------------------------------------
-#
 #  Simulation outputs to run this on - depend on the machine
 # 
 # ------------------------------------------------------------------------------
@@ -180,6 +119,23 @@ endif
 
 # combine the N-Body and Hydro into one big list
 sim_dirs = $(sim_dirs_nbody) $(sim_dirs_hydro)
+
+# ------------------------------------------------------------------------------
+#
+#  Code locations - depend on the machine
+#
+# ------------------------------------------------------------------------------
+ifeq ($(machine),shangrila)
+	tree_config_script = /u/home/gillenb/code/not_mine/rockstar/scripts/gen_merger_cfg.pl
+	tree_dir = /u/home/gillenb/code/not_mine/consistent-trees
+	timing_script = /u/home/gillenb/code/mine/cart/utils/scripts/parse_timing2.pl
+endif
+ifneq (,$(findstring stampede2,$(machine)))
+	tree_config_script = $(HOME)/code/rockstar-galaxies/scripts/gen_merger_cfg.pl
+	tree_dir = $(HOME)/code/consistent-trees
+	timing_script = $(HOME)/code/cart/utils/scripts/parse_timing2.pl
+endif
+
 # ------------------------------------------------------------------------------
 #
 #  Directories for each simulation, where outputs will be stored
@@ -194,6 +150,10 @@ sim_plots_dirs = $(foreach dir,$(sim_dirs),$(dir)/plots)
 # tidal directories are only needed for production runs
 prod_sim_dirs = $(filter $(runs_home)/stampede2/production%,$(sim_dirs))
 sim_tidal_dirs = $(foreach dir,$(prod_sim_dirs),$(dir)/tidal)
+
+# other directories for plots
+comparison_plots_dir = ./comparison_plots
+paper_plots_dir = ./paper_plots
 my_directories = $(sim_checks_dirs) $(sim_human_halos_dirs) $(sim_rockstar_halos_dirs) $(sim_plots_dirs) $(sim_tidal_dirs) $(comparison_plots_dir) $(paper_plots_dir)
 
 # ------------------------------------------------------------------------------
@@ -224,6 +184,7 @@ sentinel_to_out_dir = $(subst rockstar_halos/sentinel.txt,out/,$(1))
 sentinel_to_rh_dir = $(subst rockstar_halos/sentinel.txt,rockstar_halos/,$(1))
 sentinel_to_halos_dir = $(subst rockstar_halos/sentinel.txt,halos/,$(1))
 
+halo_finding_script = ./run_rockstar.py
 # Then some complex functions to find the rockstar sentinel file for a given 
 # halo catalog. This is hard and ugly since we have to mess around with
 # wildcards, which require $(patsubst), which requires words, not a path.
@@ -241,6 +202,7 @@ halo_to_sentinel = $(call words_to_path,$(call halo_words_to_sentinel_words,$(ca
 #  Debug output files
 # 
 # ------------------------------------------------------------------------------
+debug_script = ./debug_output.py
 sim_to_debug = $(subst .art,.txt,$(subst out/continuous,checks/debug, $(1)))
 debug_to_sim = $(subst .txt,.art,$(subst checks/debug,out/continuous, $(1)))
 debugs = $(foreach snapshot,$(snapshots),$(call sim_to_debug,$(snapshot)))
@@ -250,6 +212,7 @@ debugs = $(foreach snapshot,$(snapshots),$(call sim_to_debug,$(snapshot)))
 #  Galaxies output files
 # 
 # ------------------------------------------------------------------------------
+galaxies_script = ./galaxy_summaries.py
 sim_to_galaxies = $(subst .art,.txt,$(subst out/continuous,checks/galaxy_summaries, $(1)))
 galaxies_to_sim = $(subst .txt,.art,$(subst checks/galaxy_summaries,out/continuous, $(1)))
 galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
@@ -259,6 +222,7 @@ galaxies = $(foreach snapshot,$(snapshots),$(call sim_to_galaxies,$(snapshot)))
 #  forming clusters output files
 #
 # ------------------------------------------------------------------------------
+forming_clusters_script = ./forming_clusters.py
 sim_to_forming = $(subst .art,.txt,$(subst out/continuous,checks/forming_clusters, $(1)))
 forming_to_sim = $(subst .txt,.art,$(subst checks/forming_clusters,out/continuous, $(1)))
 forming_clusters = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_forming,$(snapshot)))
@@ -268,6 +232,7 @@ forming_clusters = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_forming,$
 #  gas pdf output files
 #
 # ------------------------------------------------------------------------------
+gas_pdf_script = ./write_gas_pdf.py
 sim_to_pdf = $(subst .art,.txt,$(subst out/continuous,checks/gas_pdf, $(1)))
 pdf_to_sim = $(subst .txt,.art,$(subst checks/gas_pdf,out/continuous, $(1)))
 gas_pdfs = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_pdf,$(snapshot)))
@@ -279,6 +244,7 @@ gas_pdfs = $(foreach snapshot,$(snapshots_hydro),$(call sim_to_pdf,$(snapshot)))
 # ------------------------------------------------------------------------------
 # This needs to be its own script since it takes a lot of memory, and doing it
 # for all galaxies at once crashes. This method is horribly ugly, I apologize
+cimf_evolution_script = ./plot_cimf_evolution.py
 sim_dir_to_cimf_evolution_plot = $(comparison_plots_dir)/cimf_zevolution_$(subst /,__,$(1)).pdf
 cimf_evolution_plots = $(foreach sim_dir,$(sim_dirs_hydro),$(call sim_dir_to_cimf_evolution_plot,$(sim_dir)))
 
@@ -287,18 +253,42 @@ cimf_evolution_plots = $(foreach sim_dir,$(sim_dirs_hydro),$(call sim_dir_to_cim
 #  comparison plots that have all sims on one plot
 # 
 # ------------------------------------------------------------------------------
+sfh_plots_script = ./plot_sfh.py
 sfh_sentinel = $(comparison_plots_dir)/sfh_sentinel.txt
+
+cimf_plots_script = ./plot_cimf.py
 cimf_sentinel = $(comparison_plots_dir)/cimf_sentinel.txt
+
+halo_growth_comp_script = ./halo_growth_comparison.py
 halo_growth_plot = $(comparison_plots_dir)/halo_growth.pdf
+
+age_plot_script = ./plot_age_spread.py
 age_spread_sentinel = $(comparison_plots_dir)/age_spread_sentinel.txt
+
+galaxies_comparison_script = ./plot_galaxy_comparisons.py
 galaxy_comparison_sentinel = $(comparison_plots_dir)/comparison_sentinel.txt
+
+plot_forming_clusters_script = ./plot_forming_clusters.py
 forming_clusters_sentinel = $(comparison_plots_dir)/forming_clusters_sentinel.txt
+
+cluster_trends_script = ./plot_cluster_trends.py
 cluster_trends_sentinel = $(comparison_plots_dir)/cluster_trends_sentinel.txt
+
+age_metallicity_z0_script = ./plot_z0_age_metallicity.py
 age_metallicity_z0_sentinel = $(comparison_plots_dir)/age_metallicity_z0_sentinel.txt
+
+bound_fraction_script = ./plot_bound_fraction.py
 bound_fraction_sentinel = $(comparison_plots_dir)/bound_fraction_sentinel.txt
+
+pdf_plot_script = ./plot_gas_pdf.py
 pdf_plot = $(comparison_plots_dir)/h2_gas_pdf.pdf
+
+
 # also a text file with the masses of all sims. This is on all machines.
+galaxy_mass_script = ./print_galaxy_masses.py
 galaxy_masses = $(comparison_plots_dir)/galaxy_masses.txt
+
+massive_sf_regions_script = ./massive_sf_regions.py
 massive_sf_regions = $(comparison_plots_dir)/massive_sf_regions.txt
 
 # ------------------------------------------------------------------------------
@@ -306,6 +296,12 @@ massive_sf_regions = $(comparison_plots_dir)/massive_sf_regions.txt
 #  Nbody plots
 # 
 # ------------------------------------------------------------------------------
+nbody_single_halo_plots_script = ./plot_single_halo_nbody.py
+nbody_refined_plot_script = ./plot_refined_region_nbody.py
+nbody_local_group_plot_script = ./plot_local_group_nbody.py
+nbody_full_plot_script = ./utils/nbody_projection_all_species.py
+nbody_split_plot_script = ./utils/nbody_projection_split_species.py
+
 sim_to_halo_1_full = $(subst .art,.png,$(subst out/continuous,plots/n_body_halo_rank_1, $(1)))
 sim_to_halo_2_full = $(subst .art,.png,$(subst out/continuous,plots/n_body_halo_rank_2, $(1)))
 sim_to_halo_1_split = $(subst .art,.png,$(subst out/continuous,plots/n_body_split_halo_rank_1, $(1)))
@@ -341,14 +337,15 @@ nbody_plots = $(halo_1_full_plots) $(halo_2_full_plots) $(halo_1_split_plots) $(
 # 
 # ------------------------------------------------------------------------------
 # then the actual halo trees
+tree_script = ./build_trees.py
+
 trees = $(foreach dir,$(sim_rockstar_halos_dirs),$(dir)/trees/tree_0_0_0.dat)
 tree_to_halo_sentinel = $(subst trees/tree_0_0_0.dat,sentinel.txt,$(1))
 
-# ----------------------------------------------------------------------------
-#
-#  Parsing merger trees
-#
-# ----------------------------------------------------------------------------
+# Then parse the merger trees.
+read_tree_dir = ./read_tree
+read_tree_exe = $(read_tree_dir)/halo_history
+read_tree_src = $(read_tree_dir)/halo_history.c
 # Here I again use a sentinel file, since there will be multiple files created
 # by the one C file:
 merger_sentinels = $(foreach dir,$(sim_checks_dirs),$(dir)/merger_sentinel.txt)
@@ -360,6 +357,8 @@ merger_to_tree = $(subst checks/merger_sentinel.txt,rockstar_halos/trees/tree_0_
 #  timing output and dt history
 # 
 # ------------------------------------------------------------------------------
+dt_history_script = ./dt_history.py
+cfl_script = ./cfl_violations.py
 # Here we assume all log files are located as follows. Each `log` directory
 # has several subdirectories holding the runtime outputs for each run, starting
 # with `runtime_`. The log directories are inside that directory. Any other
@@ -380,6 +379,7 @@ cfl_plots = $(foreach t_dir,$(timing_dirs),$(t_dir)/cfl_cell_speeds.png)
 # ------------------------------------------------------------------------------
 # Take the tidal ouput files from each run and consolidate them together into one
 # big file for each star.
+tidal_consolidation_script = ./tidal_consolidation.py
 tidal_sentinels = $(foreach dir,$(sim_tidal_dirs),$(dir)/sentinel.txt)
 
 
@@ -412,6 +412,20 @@ movies = $(call movies_all,n_body_refined) $(call movies_all,n_body_split_refine
 paper_halo_growth_plot = $(paper_plots_dir)/halo_growth.pdf
 paper_halo_growth_script = paper_halo_growth.py
 paper_plots = $(paper_halo_growth_plot)
+
+# ------------------------------------------------------------------------------
+#
+#  various utilities used by multiple scripts
+#
+# ------------------------------------------------------------------------------
+gal_readin_script = ./utils/load_galaxies.py
+plot_utils_script = ./utils/plot_utils.py
+run_attributes_script = ./utils/run_attributes.py
+utils_scripts = $(gal_readin_script) $(plot_utils_script) $(run_attributes_script)
+
+age_spread_utils = ./analysis_functions/age_spreads.py
+cimf_utils = ./analysis_functions/cimf.py
+gas_pdf_utils = ./analysis_functions/gas_pdfs.py
 
 # ------------------------------------------------------------------------------
 #
