@@ -52,7 +52,7 @@ class Cosmology(cosmology.FlatLambdaCDM):
 
 
 dir_tl = Path(
-    "/u/home/gillenb/art_runs/runs/pleiades/nbody/new_ic_trim_25mpc/root_08/run/outputs/vel_offset/"
+    "/u/home/gillenb/art_runs/runs/pleiades/nbody/new_ic_trim_25mpc/root_08/run"
 )
 dir_rj = Path(
     "/u/home/gillenb/art_runs/runs/stampede2/rj_nbody/hybrid_23.12mpc_level08/run/"
